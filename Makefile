@@ -46,7 +46,7 @@ CHECK		=	\xE2\x9C\x94
 CROSS		=	\xE2\x9D\x8C
 
 # DISPLAY
-HEAD_SIZE	=	32
+HEAD_SIZE	=	64
 NAME_SIZE	=	$(shell NAME='$(NAME)'; printf "$${\#NAME}")
 PAD_WIDTH	=	$(shell printf "$$((($(HEAD_SIZE) - $(NAME_SIZE)) / 2))")
 PAD_PREC	=	$(shell printf "$$(($(PAD_WIDTH) / 2))")
@@ -63,7 +63,7 @@ BODY_WIDTH	=	$(shell printf "$$(($(HEAD_SIZE) - 1))")
 
 .PHONY:			all bonus clean fclean header lib re verbose
 
-all:			$(NAME)
+all:			header $(NAME)
 
 $(BUILDIR)/%.o:	%.cpp | $(DEPDIR)
 				@printf "$(YELLOW)Compiling $@ and generating/checking make dependency file...$(DEFAULT)\n"
@@ -81,6 +81,9 @@ $(DEPDIR):
 				@printf "$(DELPREV)"
 $(DEP):
 -include $(wildcard $(DEP))
+
+header:
+				@printf "\n$(LEFT_PAD)$(BLUE)$(NAME)$(DEFAULT)$(RIGHT_PAD)\n"
 
 clean:
 				@printf "$(YELLOW)Deleting object and dependency files...$(DEFAULT)\n"
