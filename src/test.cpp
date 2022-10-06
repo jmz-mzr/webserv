@@ -1,4 +1,4 @@
-#include "doctest.h"
+#include "config.hpp"
 
 int factorial(int number)
 {
