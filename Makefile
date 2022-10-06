@@ -34,7 +34,6 @@ endif
 #>	ENVIRONMENT
 CXX			=	/usr/bin/c++
 RM			=	/bin/rm -rf
-SHELL		=	/bin/zsh
 UNAME		:=	$(shell uname -s)
 
 #>	FG COLORS
