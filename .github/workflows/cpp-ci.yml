@@ -1,0 +1,13 @@
+name: C++ CI
+
+on: [push, pull_request]
+
+jobs:
+  unit-testing:
+    name: Build and run unit tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Run tests
+      run: make test
