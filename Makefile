@@ -23,10 +23,11 @@ CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
 LDFLAGS		=	$(addprefix -L, $(LIBDIR)) $(addprefix -l, $(LIB))
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
-ifeq (,$(strip $(findstring test, $(MAKECMDGOALS))))		# if not building tester
+ifeq (,$(strip $(findstring test, $(MAKECMDGOALS))))		# if not testing
 	CXXFLAGS 	+=	-DDOCTEST_CONFIG_DISABLE
 	BIN			=	$(NAME)
 else
+	CXXFLAGS	+=	-fsanitize=address -fno-omit-frame-pointer -O1 -g3
 	BIN			=	test_runner
 endif
 
@@ -55,6 +56,7 @@ DELPREV		=	$(DELETE)\r$(UP)
 #>	EMOJIS
 CHECK		=	\xE2\x9C\x94
 CROSS		=	\xE2\x9D\x8C
+TRASH		=	\xF0\x9F\x97\x91
 
 #>	BOX DRAWING
 DHORIZ		=	\xE2\x95\x90
@@ -70,8 +72,8 @@ BOT-LEFT2	=	\xE2\x94\x97
 BOT-RIGHT2	=	\xE2\x94\x9B
 
 #>	DISPLAY
-WIDTH		=	64
-NAME_SIZE	=	$(shell NAME='$(BIN)'; printf "$${\#NAME}")
+WIDTH		=	48
+NAME_SIZE	=	$(shell NAME='$(NAME)'; printf "$${\#NAME}")
 PAD_WIDTH	=	$(shell printf "$$(((($(WIDTH) - $(NAME_SIZE)) / 2) - 1))")
 PAD_PREC	=	$(shell printf "$$(($(PAD_WIDTH) / 1.5))")
 PAD_STR		=	$(shell printf '$(PAD_CHAR)%.0s' {1..$$(($(WIDTH) - 2))})
@@ -94,12 +96,12 @@ all:			header $(BIN)
 $(BUILDIR)/%.o:	%.cpp | $(DEPDIR)
 				@printf "\n$(YELLOW)Compiling $@ and generating/checking make dependency file...$(DEFAULT)"
 				@$(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
-				@printf '$(DELPREV)$(VERT) %-*s$(GREEN)$(CHECK)$(DEFAULT) $(VERT)\n' $(BODY_WIDTH) $(notdir $@)
+				@printf '$(DELPREV)$(VERT) %-*s$(GREEN)$(CHECK)$(DEFAULT) $(VERT)\n' $(BODY_WIDTH) "$(notdir $<) -> $(notdir $@)"
 
 $(BIN):			$(OBJ)
 				@printf "\n$(YELLOW)Linking source files and generating $@ binary...$(DEFAULT)"
 				@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
-				@printf "$(DELPREV)$(VERT)  $(GREEN)%*s$(DEFAULT) $(VERT)\n" $(BODY_WIDTH) "Binary generated"
+				@printf "$(DELPREV)$(VERT) $(GREEN)%-*s$(CHECK)$(DEFAULT) $(VERT)\n" $(BODY_WIDTH) "./$(BIN)"
 				@printf "$(FOOTER)\n"
 
 $(DEPDIR):
@@ -112,7 +114,7 @@ $(DEP):
 clean:			header
 				@printf "\n$(YELLOW)Deleting object and dependency files...$(DEFAULT)"
 				@$(RM) $(OBJ)
-				@printf "$(DELPREV)$(VERT) %-*s$(DEFAULT)  $(VERT)\n" $(BODY_WIDTH) "Build files deleted"
+				@printf "$(DELPREV)$(VERT) %-*s$(DEFAULT)$(TRASH) $(VERT)\n" $(BODY_WIDTH) "Build files"
 ifeq (clean,$(MAKECMDGOALS))
 	@printf "$(FOOTER)\n"
 endif
@@ -120,16 +122,19 @@ endif
 fclean:			clean
 				@printf "\n$(YELLOW)Deleting build directory...$(DEFAULT)"
 				@$(RM) $(BUILDIR) webserv test_runner
-				@printf "$(DELPREV)$(VERT) %-*s$(DEFAULT)  $(VERT)\n" $(BODY_WIDTH) "Build directory and binary deleted"
+				@printf "$(DELPREV)$(VERT) %-*s$(DEFAULT)$(TRASH) $(VERT)\n" $(BODY_WIDTH) "Build directory"
+				@printf "$(VERT) %-*s$(DEFAULT)$(TRASH) $(VERT)\n" $(BODY_WIDTH) "ELF files"
 ifeq (fclean,$(MAKECMDGOALS))
 	@printf "$(FOOTER)\n"
 endif
 
 header:
 				@printf "$(TOP-LEFT)$(HORIZ_PAD)$(TOP-RIGHT)\n"
-				@printf "$(LEFT_PAD)$(BLUE)$(BIN)$(DEFAULT)$(RIGHT_PAD)\n"
+				@printf "$(LEFT_PAD)$(BLUE)$(NAME)$(DEFAULT)$(RIGHT_PAD)\n"
 				@printf "$(BOT-LEFT)$(HORIZ_PAD)$(BOT-RIGHT)\n"
 
 re:				fclean $(BIN)
 
 test:			all
+				@chmod +x $(BIN)
+				@./$(BIN)
