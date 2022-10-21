@@ -8,13 +8,11 @@ static void	handle_sigint(int signum)
 	exit(signum);
 }
 
-wsrv::Logger& logger = wsrv::Logger::get_instance();
-
 int	main(int argc, char **argv)
 {
 	if ( argc != 2 )
 	{
-		LOG("ERROR", "Bad number of arguments");
+		LOG(wsrv::LL_ERROR, "Bad number of arguments");
 		exit(EXIT_FAILURE);
 	}
 

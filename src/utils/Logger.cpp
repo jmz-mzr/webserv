@@ -5,15 +5,21 @@ namespace wsrv {
 wsrv::Logger& logger = wsrv::Logger::get_instance();
 
 Logger::Logger()
-: level(CONF_LOG_LVL), output(CONF_LOG_OUT)
+: threshold(CONF_LOG_LVL), channel(CONF_LOG_OUT)
 {
+	cc[0].str = "ERROR", cc[0].color = RED;
+	cc[1].str = "WARN", cc[1].color = YEL;
+	cc[2].str = "INFO", cc[2].color = WHT;
+	cc[3].str = "DEBUG", cc[3].color = WHT;
+
 	if (CONF_LOG_OUT)
 	{
 		logfile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
 		try {
 			logfile.open(CONF_LOG_FILE);
 		} catch (std::ofstream::failure &e) {
-			std::cerr << "[WARN]\t" << __FILE__ << ": line " << __LINE__  << "\t" << e.what() << std::endl;
+			log(__FILE__, __LINE__, LL_ERROR, e.what());
+			channel &= ~LO_FILE;
 		}
 	}
 	return;
@@ -36,37 +42,25 @@ Logger::operator=(const Logger& rhs)
 }
 
 std::string
-Logger::format(std::string file, int line, std::string level, std::string msg)
+Logger::format(std::string file, int line, int level, std::string msg)
 {
 	std::stringstream stream;
-	struct lvl	lvls[4] =
-	{
-		{ "ERROR", RED },
-		{ "WARN", YEL },
-		{ "INFO", YEL },
-		{ "DEBUG", YEL },
-	};
-	int i;
 
-	for (i = 0; i < 4; i++)
-		if (level == lvls[i].str)
-			break;
-	if (i <= CONF_LOG_LVL)
-		stream << "[" << lvls[i].color << lvls[i].str << RESET << "]\t" + file << " (line " << line << "):\t" << msg;
+	stream << "[" << cc[level].color << cc[level].str << RESET << "]\t" + file << " (line " << line << "):\t" << msg;
 	return (stream.str());
 }
 
 void
-Logger::log(std::string file, int line, std::string level, std::string msg)
+Logger::log(std::string file, int line, int level, std::string msg)
 {
 	std::string output;
 
-	output = format(file, line, level, msg);
-	if (!output.empty())
+	if ( (!((level < LL_INFO) || (level > LL_DEBUG)) ) && (level <= threshold))
 	{
-		if (CONF_LOG_OUT)
+		output = format(file, line, level, msg);
+		if (channel & LO_CONSOLE)
 			logfile << output << std::endl;
-		else
+		if (channel & LO_FILE)
 			std::cerr << output << std::endl;
 	}
 }
