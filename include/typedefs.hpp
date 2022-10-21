@@ -1,6 +1,8 @@
 #ifndef TYPEDEFS_HPP
 #define TYPEDEFS_HPP
 
+#include "bitwise_op.hpp"
+
 namespace wsrv {
 
 enum SocketType {
@@ -10,17 +12,17 @@ enum SocketType {
 };
 
 enum LogLevel {
-	LL_NONE,
-	LL_WARN,
-	LL_ERROR,
-	LL_INFO,
-	LL_DEBUG
+	LL_NONE = -1,
+	LL_ERROR = 0,
+	LL_WARN = 1,
+	LL_INFO = 2,
+	LL_DEBUG = 3
 };
 
 enum LogOutput {
-	LO_CONSOLE,
-	LO_FILE,
-	LO_BOTH
+	LO_CONSOLE = 0x01,
+	LO_FILE = 0x10,
+	LO_BOTH = 0x11
 };
 
 #define	LOG(level, msg)	wsrv::Logger::get_instance().log(__FILE__, __LINE__, level, msg)

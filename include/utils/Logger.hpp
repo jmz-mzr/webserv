@@ -14,6 +14,13 @@ namespace wsrv {
 class Logger
 {
 
+////////////////////////////////////////////////////////////////////////////////
+//
+//		Manage different level of logging information
+//		Implemented as a Singleton
+//		TODO: unit tests
+//
+
 public:
 	static Logger& get_instance()
 	{
@@ -22,28 +29,28 @@ public:
 	}
 
 	void
-	log(std::string file, int line, std::string level, std::string msg);
+	log(std::string file, int line, int level, std::string msg);
 
 private:
 	Logger();
-	~Logger();
-
 	Logger(const Logger& src);
+	~Logger();
 
 	Logger&
 	operator=(const Logger& rhs);
 
 	std::string
-	format(std::string file, int line, std::string level, std::string msg);
+	format(std::string file, int line, int level, std::string msg);
 
-	struct lvl {
+	struct color_code {
 		std::string	str;
 		std::string	color;
 	};
 
-	enum LogLevel	level;
-	enum LogOutput	output;
-	std::ofstream	logfile;
+	struct color_code	cc[4];
+	enum LogLevel		threshold;
+	enum LogOutput		channel;
+	std::ofstream		logfile;
 
 };	/* class Logger */
 

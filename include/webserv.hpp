@@ -12,6 +12,7 @@
 #include <unistd.h>
 
 #include "config.hpp"
+#include "typedefs.hpp"
 #include "ansi_colors.hpp"
 
 #include "Server.hpp"
