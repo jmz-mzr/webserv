@@ -1,6 +1,10 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-#include "doctest.h"
+#include "typedefs.hpp"
 
-#endif /* CONFIG_HPP */
+#define CONF_LOG_LVL	LL_ERROR
+#define CONF_LOG_OUT	LO_CONSOLE
+#define CONF_LOG_FILE	"wsrv.log"
+
+#endif	/* CONFIG_HPP */

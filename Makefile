@@ -5,20 +5,25 @@
 NAME		=	webserv
 
 #>	DIRECTORIES
-VPATH		=	src
-LIBDIR		=	doctest
-INCLDIR		=	$(addsuffix /include,$(LIBDIR) .)
+DIRS		=	core utils
+VPATH		=	$(addprefix src/,$(DIRS)) src
+LIBDIR		=
+INCLDIR		=	$(addprefix include/,$(DIRS)) include
 BUILDIR		=	build
 DEPDIR		=	$(BUILDIR)/.deps
 
 #>	FILES
-SRC			=	main.cpp \
-				test.cpp
+SRC			=	webserv.cpp \
+				Socket.cpp \
+				ListenSock.cpp \
+				ConnectSock.cpp \
+				Server.cpp \
+				Logger.cpp
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
 
 #>	COMPILATION FLAGS
-CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
+CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98 -fsanitize=address -g3
 CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
 LDFLAGS		=	$(addprefix -L, $(LIBDIR)) $(addprefix -l, $(LIB))
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
@@ -34,6 +39,7 @@ endif
 #>	ENVIRONMENT
 CXX			=	/usr/bin/c++
 RM			=	/bin/rm -rf
+SHELL		=	/usr/bin/zsh
 UNAME		:=	$(shell uname -s)
 
 #>	FG COLORS
