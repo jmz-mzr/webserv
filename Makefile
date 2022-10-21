@@ -142,4 +142,4 @@ re:				fclean $(BIN)
 
 test:			all
 				@chmod +x $(BIN)
-				@./$(BIN)
+				@./$(BIN) 4444

@@ -33,7 +33,10 @@ private:
 	Logger&
 	operator=(const Logger& rhs);
 
-	struct level {
+	std::string
+	format(std::string file, int line, std::string level, std::string msg);
+
+	struct lvl {
 		std::string	str;
 		std::string	color;
 	};

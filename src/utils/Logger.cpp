@@ -2,6 +2,8 @@
 
 namespace wsrv {
 
+wsrv::Logger& logger = wsrv::Logger::get_instance();
+
 Logger::Logger()
 : level(CONF_LOG_LVL), output(CONF_LOG_OUT)
 {
@@ -34,10 +36,10 @@ Logger::operator=(const Logger& rhs)
 }
 
 std::string
-format(std::string file, int line, std::string level, std::string msg)
+Logger::format(std::string file, int line, std::string level, std::string msg)
 {
 	std::stringstream stream;
-	struct level	lvls[4] =
+	struct lvl	lvls[4] =
 	{
 		{ "ERROR", RED },
 		{ "WARN", YEL },
@@ -47,10 +49,10 @@ format(std::string file, int line, std::string level, std::string msg)
 	int i;
 
 	for (i = 0; i < 4; i++)
-		if (level == lvls[i].s)
+		if (level == lvls[i].str)
 			break;
 	if (i <= CONF_LOG_LVL)
-		stream << "[" << lvls[i].c << lvls[i].s << RESET << "]\t" + file << " (line " << line << "):\t" << msg;
+		stream << "[" << lvls[i].color << lvls[i].str << RESET << "]\t" + file << " (line " << line << "):\t" << msg;
 	return (stream.str());
 }
 

@@ -18,8 +18,6 @@ int	main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	LOG("ERROR", "Ceci est un test");
-
 	signal(SIGINT, handle_sigint);
 //	wsrv::Server server("127.0.0.1", (uint16_t)atoi(argv[1]));
 	(void)argv;
