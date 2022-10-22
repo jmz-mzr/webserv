@@ -1,33 +1,27 @@
-#include "Server.hpp"
+#include "core/Server.hpp"
 
-namespace wsrv {
+#include <cstdlib>
 
-Server::Server()
-: listener(NULL, 0), clients()
-{
-	return;
-}
+#include <unistd.h>
+
+namespace webserv {
+
+Server::Server() : listener(NULL, 0), clients() { }
 
 Server::Server(const char* ip_addr, uint16_t port)
-: listener(ip_addr, port), clients()
+		: listener(ip_addr, port), clients()
 {
-	// create an epoll instance
-    if ((epoll_fd = epoll_create1(0)) < 0)
-        exit(EXIT_FAILURE);
+	if ((epoll_fd = epoll_create1(0)) < 0)
+		exit(EXIT_FAILURE);
 
-    // add listening socket to epoll instance
-    epoll_mod(EPOLL_CTL_ADD, EPOLLIN, &listener);
+	epollMod(EPOLL_CTL_ADD, EPOLLIN, &listener);
 }
 
 Server::Server(const Server& src)
-: listener(src.listener), clients(src.clients)
-{ return; }
+		: listener(src.listener), clients(src.clients)
+{ }
 
-Server::~Server(void)
-{
-	close(epoll_fd);
-	return;
-}
+Server::~Server(void) { close(epoll_fd); }
 
 Server&
 Server::operator=(const Server& rhs)
@@ -39,14 +33,14 @@ Server::operator=(const Server& rhs)
 }
 
 void
-Server::epoll_mod(int op, int events, Socket *socket)
+Server::epollMod(int op, int events, Socket *socket)
 {
 	struct epoll_event	ev;
 
 	ev.events = events;
 	ev.data.ptr = socket;
-	if (epoll_ctl(epoll_fd, op, socket->get_fd(), &ev) < 1)
+	if (epoll_ctl(epoll_fd, op, socket->getFd(), &ev) < 1)
 		exit(EXIT_FAILURE);
 }
 
-}	/* namespace wsrv */
+}	// namespace webserv

@@ -4,11 +4,11 @@
 #include <map>
 
 #include <sys/epoll.h>
-#include "ListenSock.hpp"
 
-#include "Logger.hpp"
+#include "core/Socket.hpp"
+#include "core/ListenSock.hpp"
 
-namespace wsrv {
+namespace webserv {
 
 class Server
 {
@@ -21,7 +21,7 @@ private:
 	operator=(const Server& rhs);
 
 	void
-	epoll_mod(int op, int events, Socket *socket);
+	epollMod(int op, int events, Socket *socket);
 
 public:
 	Server(const char* ip_addr, uint16_t port);
@@ -35,8 +35,8 @@ private:
 	static const int		kMaxEvent = 65536;
 	struct epoll_event      events[Server::kMaxEvent];
 
-};	/* class Server */
+};
 
-}	/* namespace wsrv */
+}	// namespace webserv
 
-#endif /* SERVER_HPP */
+#endif	// SERVER_HPP

@@ -1,20 +1,9 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-// Test library
-#include "doctest.h"
+#include "utils/Logger.hpp"
 
-#include <string>
-#include <map>
-
-#include <cstdlib>
-#include <csignal>
-#include <unistd.h>
-
-#include "config.hpp"
-#include "typedefs.hpp"
-#include "ansi_colors.hpp"
-
-#include "Server.hpp"
+#define	LOG(level, msg)	\
+webserv::Logger::getInstance().log(__FILE__, __LINE__, level, msg)
 
 #endif /* WEBSERV_HPP */

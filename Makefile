@@ -8,7 +8,7 @@ NAME		=	webserv
 DIRS		=	core utils
 VPATH		=	$(addprefix src/,$(DIRS)) src
 LIBDIR		=
-INCLDIR		=	$(addprefix include/,$(DIRS)) include
+INCLDIR		=	$(addprefix include/,$(LIBDIR)) include
 BUILDIR		=	build
 DEPDIR		=	$(BUILDIR)/.deps
 

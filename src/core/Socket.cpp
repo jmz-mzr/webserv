@@ -1,30 +1,22 @@
-#include "Socket.hpp"
+#include "core/Socket.hpp"
 
-namespace wsrv {
+#include <unistd.h>
 
-Socket::Socket()
-{ return ; }
+namespace webserv {
 
-Socket::Socket(const Socket& src)
-: fd(src.fd), addr(src.addr)
-{ return ; }
+Socket::Socket() { }
 
-Socket::~Socket()
-{
-	close(fd);
-	return ;
-}
+Socket::~Socket() { close(fd); }
 
-Socket&
-Socket::operator=(const Socket& rhs)
+Socket::Socket(const Socket& src) : fd(src.fd), addr(src.addr) { }
+
+Socket&	Socket::operator=(const Socket& rhs)
 {
 	fd = rhs.fd;
 	addr = rhs.addr;
-	return (*this);
+	return *this;
 }
 
-int
-Socket::get_fd()
-{ return (fd); }
+const int&	Socket::getFd() const { return fd; }
 
-}	/* namespace wsrv */
+}	// namespace webserv

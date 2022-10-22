@@ -1,15 +1,16 @@
 #ifndef SOCKET_HPP
 #define SOCKET_HPP
 
-#include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <cstdlib>
+#include <sys/socket.h>
 
-#include "Logger.hpp"
+namespace webserv {
 
-namespace wsrv {
+enum SocketType {
+	kAny = 0x01,
+	kListen = 0x10,
+	kConnection = 0x11
+};
 
 class Socket
 {
@@ -19,23 +20,20 @@ public:
 	Socket(const Socket& src);
 	virtual ~Socket();
 
-	Socket&
-	operator=(const Socket& rhs);
+	Socket&	operator=(const Socket& rhs);
 
-	int
-	get_fd();
+	const int&	getFd() const;
 
 protected:
 	int						fd;
 	struct sockaddr_in		addr;
-	static const socklen_t	addr_len = sizeof(addr);
+	static const socklen_t	kAddrLen = sizeof(addr);
 
 public:
-	enum { type = ST_ANY };
+	enum { type = kAny };
 
+};
 
-};	/* class Socket */
+}	// namespace webserv
 
-}	/* namespace wsrv */
-
-#endif	/* SOCKET_HPP */
+#endif	// SOCKET_HPP

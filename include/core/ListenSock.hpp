@@ -1,22 +1,20 @@
 #ifndef LISTENSOCK_HPP
 #define LISTENSOCK_HPP
 
-#include "Socket.hpp"
+#include "core/Socket.hpp"
 
-namespace wsrv {
+namespace webserv {
 
 class ListenSock : public Socket
 {
 
 public:
 	ListenSock(const char* ip_addr, uint16_t port);
-	ListenSock(const ListenSock& src);
 
-public:
-	enum { type = ST_LIST };
+	enum { type = kListen };
 
-};	/* class ListenSock */
+};
 
-}	/* namespace wsrv */
+}	// namespace webserv
 
-#endif	/* LISTENSOCK_HPP */
+#endif	// LISTENSOCK_HPP

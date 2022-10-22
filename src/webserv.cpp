@@ -1,6 +1,9 @@
 #ifdef DOCTEST_CONFIG_DISABLE	// Compile without tests
 
-# include "webserv.hpp"
+#include <cstdlib>
+#include <csignal>
+
+#include "utils/Logger.hpp"
 
 static void	handle_sigint(int signum)
 {
@@ -12,12 +15,12 @@ int	main(int argc, char **argv)
 {
 	if ( argc != 2 )
 	{
-		LOG(wsrv::LL_ERROR, "Bad number of arguments");
+		LOG(webserv::kError, "Bad number of arguments");
 		exit(EXIT_FAILURE);
 	}
 
 	signal(SIGINT, handle_sigint);
-//	wsrv::Server server("127.0.0.1", (uint16_t)atoi(argv[1]));
+//	webserv::Server server("127.0.0.1", (uint16_t)atoi(argv[1]));
 	(void)argv;
 
 	// event_loop();
@@ -25,9 +28,9 @@ int	main(int argc, char **argv)
 	return (EXIT_SUCCESS);
 }
 
-#else							// Generate a main function for testing
+#else	// Generate a main function for testing
 
-# define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-# include "webserv.hpp"
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest/doctest.h"
 
 #endif

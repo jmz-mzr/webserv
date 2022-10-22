@@ -10,5 +10,8 @@
 			"binaryPath": "/home/gmorizur/code/webserv/test_runner",
 			"binaryArgs": []
 		}
-	]
+	],
+	"files.associations": {
+		"sstream": "cpp"
+	}
 }
