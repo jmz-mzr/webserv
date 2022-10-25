@@ -10,11 +10,15 @@ class ListenSock : public Socket
 
 public:
 	ListenSock(const char* ip_addr, uint16_t port);
+	ListenSock(const ListenSock& src);
+	~ListenSock();
 
-	enum { type = kListen };
+private:
+	ListenSock();
+
 
 };
 
 }	// namespace webserv
 
-#endif	// LISTENSOCK_HPP
+#endif /* LISTENSOCK_HPP */

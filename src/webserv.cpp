@@ -1,31 +1,34 @@
 #ifdef DOCTEST_CONFIG_DISABLE	// Compile without tests
 
+#include <iostream>
 #include <cstdlib>
 #include <csignal>
 
 #include "utils/Logger.hpp"
+#include "core/Server.hpp"
 
-static void	handle_sigint(int signum)
+static void	handleSigint(int signum)
 {
 	//clean();
+	std::cout << "\r\033[2K";
+	LOG_INFO("SIGINT received");
 	exit(signum);
 }
 
 int	main(int argc, char **argv)
 {
-	if ( argc != 2 )
-	{
-		LOG(webserv::kError, "Bad number of arguments");
+	if (argc != 2) {
+		LOG_ERROR("Bad number of arguments");
 		exit(EXIT_FAILURE);
 	}
 
-	signal(SIGINT, handle_sigint);
-//	webserv::Server server("127.0.0.1", (uint16_t)atoi(argv[1]));
+	signal(SIGINT, handleSigint);
+	webserv::Server server("127.0.0.1", (uint16_t)atoi(argv[1]));
 	(void)argv;
 
-	// event_loop();
-	// clean();
-	return (EXIT_SUCCESS);
+	int ret = server.eventLoop();
+
+	return ret;
 }
 
 #else	// Generate a main function for testing

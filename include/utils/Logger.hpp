@@ -1,16 +1,22 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
+#include <sstream>
 #include <fstream>
 #include <string>
 
-#define	LOG(level, msg)	\
-webserv::Logger::getInstance().log(__FILE__, __LINE__, level, msg)
+#define	LOG(level, msg)	{std::stringstream stream;							\
+stream << msg;																\
+webserv::Logger::getInstance().log(__FILE__, __LINE__, level, stream.str());}
+
+#define LOG_ERROR(msg)	LOG(webserv::kError, msg)
+#define	LOG_WARN(msg)	LOG(webserv::kWarn, msg)
+#define LOG_INFO(msg)	LOG(webserv::kInfo, msg)
+#define LOG_DEBUG(msg)	LOG(webserv::kDebug, msg)
 
 namespace webserv {
 
 enum LogLevel {
-	kNone = -1,
 	kError = 0,
 	kWarn = 1,
 	kInfo = 2,
@@ -18,6 +24,7 @@ enum LogLevel {
 };
 
 enum LogOutput {
+	kNone = 0x00,
 	kConsole = 0x01,
 	kFile = 0x10,
 	kBoth = 0x11
@@ -46,12 +53,9 @@ public:
 
 private:
 	Logger();
-	Logger(const Logger& src);
 	~Logger();
 
-	Logger&	operator=(const Logger& rhs);
-
-	std::string	format(std::string file, int line, int level, std::string msg);
+	// std::stringstream	format(std::string file, int line, int level);
 
 	struct ColorCode	cc[4];
 	enum LogLevel		threshold;
@@ -62,4 +66,4 @@ private:
 
 }	// namespace webserv
 
-#endif	// LOGGER_HPP
+#endif /* LOGGER_HPP */

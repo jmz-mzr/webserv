@@ -15,10 +15,10 @@ webserv::Logger& logger = webserv::Logger::getInstance();
 
 Logger::Logger() : threshold(CONF_LOG_LVL), channel(CONF_LOG_OUT)
 {
-	cc[0].str = "ERROR", cc[0].color = RED;
-	cc[1].str = "WARN", cc[1].color = YEL;
-	cc[2].str = "INFO", cc[2].color = WHT;
-	cc[3].str = "DEBUG", cc[3].color = WHT;
+	cc[0].str = "ERROR", cc[0].color = BHRED;
+	cc[1].str = "WARN", cc[1].color = BHYEL;
+	cc[2].str = "INFO", cc[2].color = BHWHT;
+	cc[3].str = "DEBUG", cc[3].color = BBLU;
 
 	if (channel & kFile)
 	{
@@ -26,46 +26,24 @@ Logger::Logger() : threshold(CONF_LOG_LVL), channel(CONF_LOG_OUT)
 		try {
 			logfile.open(CONF_LOG_FILE);
 		} catch (std::ofstream::failure &e) {
-			log(__FILE__, __LINE__, kError, e.what());
+			std::string	msg(e.what());
+			log(__FILE__, __LINE__, kError, msg);
 			channel &= ~kFile;
 		}
 	}
-	return;
 }
 
-Logger::Logger(const Logger& src)
-{
-	(void)src;
-	return;
-}
-
-Logger::~Logger()
-{ return; }
-
-Logger&
-Logger::operator=(const Logger& rhs)
-{
-	(void)rhs;
-	return *this;
-}
-
-std::string
-Logger::format(std::string file, int line, int level, std::string msg)
-{
-	std::stringstream stream;
-
-	stream << "[" << cc[level].color << cc[level].str << RESET
-			<< "]\t" + file << " (line " << line << "):\t" << msg;
-	return stream.str();
-}
+Logger::~Logger() { }
 
 void	Logger::log(std::string file, int line, int level, std::string msg)
 {
-	std::string output;
+	std::stringstream	stream;
+	std::string			output;
 
-	if ( (!((level < kInfo) || (level > kDebug)) ) && (level <= threshold))
-	{
-		output = format(file, line, level, msg);
+	if (!(channel == kNone) && (level <= threshold)) {
+		stream << "[" << cc[level].color << cc[level].str << RESET
+				<< "]\t" + file << ":" << line << ": " << BHWHT << msg << RESET;
+		output = stream.str();
 		if (channel & kConsole)
 			logfile << output << std::endl;
 		if (channel & kFile)
@@ -86,21 +64,19 @@ TEST_SUITE("Logger class") {
 
 	Logger &L = Logger::getInstance();
 
-	TEST_CASE("get_instance() function") {
+	TEST_CASE("getInstance() function") {
 		Logger	&L1 = Logger::getInstance();
 		REQUIRE_EQ(&L1, &L);
 	}
 
-	TEST_CASE("attribute value") {
+	TEST_CASE("Output channel") {
 		if (CONF_LOG_OUT & kFile) {
-			const std::ofstream& fstream = L.getLogfile();
-			CHECK_EQ(fstream, CONF_LOG_FILE);
-			CHECK(fstream.is_open());
-		// } else {
-		// 	enum const webserv::LogOuput& chan = L.get_channel();
-		// 	CHECK(chan & kConsole);
-		// }
+			SUBCASE("file") {
+				const std::ofstream& fstream = L.getLogfile();
+				CHECK(fstream.is_open());
+			}
 		}
 	}
 }
+
 }	// namespace webserv

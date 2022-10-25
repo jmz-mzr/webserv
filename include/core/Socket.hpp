@@ -7,9 +7,9 @@
 namespace webserv {
 
 enum SocketType {
-	kAny = 0x01,
-	kListen = 0x10,
-	kConnection = 0x11
+	kAny,
+	kListen,
+	kConnection
 };
 
 class Socket
@@ -24,13 +24,15 @@ public:
 
 	const int&	getFd() const;
 
+	const enum SocketType	type;
+
+
 protected:
+	Socket(enum SocketType type);
+
 	int						fd;
 	struct sockaddr_in		addr;
-	static const socklen_t	kAddrLen = sizeof(addr);
-
-public:
-	enum { type = kAny };
+	socklen_t				addr_len;
 
 };
 

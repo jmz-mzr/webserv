@@ -8,6 +8,7 @@ NAME		=	webserv
 DIRS		=	core utils
 VPATH		=	$(addprefix src/,$(DIRS)) src
 LIBDIR		=
+LOGFILE		=	$(NAME).log
 INCLDIR		=	$(addprefix include/,$(LIBDIR)) include
 BUILDIR		=	build
 DEPDIR		=	$(BUILDIR)/.deps
@@ -18,7 +19,8 @@ SRC			=	webserv.cpp \
 				ListenSock.cpp \
 				ConnectSock.cpp \
 				Server.cpp \
-				Logger.cpp
+				Logger.cpp \
+				memset.cpp
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
 
@@ -32,7 +34,7 @@ ifeq (,$(strip $(findstring test, $(MAKECMDGOALS))))		# if not testing
 	CXXFLAGS 	+=	-DDOCTEST_CONFIG_DISABLE
 	BIN			=	$(NAME)
 else
-	CXXFLAGS	+=	-fsanitize=address -fno-omit-frame-pointer -O1 -g3
+	CXXFLAGS	+=	-fsanitize=address -fno-omit-frame-pointer -O1 -g3 -DCONF_LOG_OUT=kNone
 	BIN			=	test_runner
 endif
 
@@ -140,6 +142,6 @@ header:
 
 re:				fclean $(BIN)
 
-test:			all
+test:			fclean all
 				@chmod +x $(BIN)
 				@./$(BIN) 4444
