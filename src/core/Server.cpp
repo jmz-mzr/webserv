@@ -70,12 +70,28 @@ int		Server::handle_event(Socket* socket, uint event)
 	} else if (event & (EPOLLERR | EPOLLHUP)) {
 		rmClient(socket->getFd());
 	}
-	// if (ev & EPOLLIN) {
-	// 	if (handle_recv(fd) < 0)
-	// 		continue ;
-	// }
-	// if (ev & EPOLLOUT)
-	// 	handle_send(fd);
+	if (event & EPOLLIN) {
+		LOG_INFO("fd " << socket->getFd() << " is ready to read");
+		char	buffer[1024];
+		int		bytes_recv;
+		while ((bytes_recv = recv(socket->getFd(), buffer, 1024 - 1, 0))) {
+			buffer[bytes_recv] = '\0';
+			LOG_INFO("recv: " << buffer);
+		}
+		if (bytes_recv == -1) {
+			if (errno != EWOULDBLOCK || errno != EAGAIN) {
+				LOG_ERROR("recv() error");
+				return (-1);
+			}
+			return (0);
+		}
+		else if (bytes_recv == 0) {
+			rmClient(socket->getFd());
+			return (0);
+		}
+	}
+	// if (event & EPOLLOUT)
+	// 	LOG_INFO("fd " << socket->getFd() << " is ready to write");
 	return (0);
 }
 
@@ -93,7 +109,7 @@ int		Server::eventLoop()
 		}
 		for (int i = 0; i < nevent; i++) {
 			stop = handle_event(reinterpret_cast<Socket *>(events[i].data.ptr),
-							events[i].events);
+								events[i].events);
 			if (stop == true)
 				break ;
 		}
@@ -103,6 +119,7 @@ int		Server::eventLoop()
 
 int	Server::addClient(void)
 {
+	ConnectSock*		client;
 	struct sockaddr_in	addr;
 	socklen_t			addr_len;
 	int					conn_fd;
@@ -110,8 +127,8 @@ int	Server::addClient(void)
 
 	while (true) {
 		conn_fd = accept(listen_fd,
-						(struct sockaddr *)&addr,
-						(socklen_t *)&addr_len);
+						reinterpret_cast<struct sockaddr *>(&addr),
+						reinterpret_cast<socklen_t *>(&addr_len));
 		if (conn_fd < 0) {
 			if (errno != EWOULDBLOCK) {
 				LOG_ERROR("accept() failed");
@@ -119,7 +136,9 @@ int	Server::addClient(void)
 			}
 			break ;
 		}	
-		clients[conn_fd] = new ConnectSock(conn_fd, addr, addr_len);
+		client = new ConnectSock(conn_fd, addr, addr_len);
+		clients[conn_fd] = client;
+		epollMod(EPOLL_CTL_ADD, EPOLLIN, client);
 		LOG_INFO("New client accepted");
 	}
 	LOG_INFO("No more pending connection");
@@ -129,6 +148,7 @@ int	Server::addClient(void)
 void	Server::rmClient(int fd)
 {
 	std::map<int, ConnectSock *>::iterator it = clients.find(fd);
+	epollMod(EPOLL_CTL_DEL, 0, it->second);
 	delete it->second;
 	clients.erase(fd);
 	LOG_INFO("Client deleted");
