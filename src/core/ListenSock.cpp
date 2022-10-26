@@ -24,13 +24,13 @@ ListenSock::ListenSock(const char* ip_addr, uint16_t port) : Socket(kListen)
 	if ((bind(fd, reinterpret_cast<struct sockaddr*>(&addr), addr_len)) < 0)
 		exit(EXIT_FAILURE);
 
-	if (listen(fd, 10) < 0)
+	if (listen(fd, kListenBacklog) < 0)
 		exit(EXIT_FAILURE);
 	
 	LOG_INFO("New listening socket");
 	LOG_DEBUG("fd=" << fd << " ; "
-            << "addr=" << addr.sin_addr.s_addr << " ; "
-            << "port=" << addr.sin_port);
+            << "addr=" << ip_addr << " ; "
+            << "port=" << port);
 }
 
 ListenSock::ListenSock(const ListenSock& src) : Socket(kListen)

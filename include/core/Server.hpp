@@ -20,6 +20,12 @@ public:
 
 	int		eventLoop();
 
+	class AcceptFailedException: public std::exception
+	{
+		public:
+			virtual char const*	what() const throw();
+	};
+
 
 private:
 	Server();
@@ -27,16 +33,17 @@ private:
 
 	Server&	operator=(const Server& rhs);
 
+	int		handle_event(Socket* socket, uint event);
 	void	epollMod(int op, int events, Socket *socket);
-	void	addClient(void);
+	int		addClient(void);
 	void	rmClient(int fd);
 
 	static const int			kMaxEvent = 65536;
 
-	ListenSock					listener;
-	std::map<int, ConnectSock>	clients;
-	int							epoll_fd;
-	struct epoll_event			events[Server::kMaxEvent];
+	ListenSock						listener;
+	std::map<int, ConnectSock *>	clients;
+	int								epoll_fd;
+	struct epoll_event				events[Server::kMaxEvent];
 
 };
 

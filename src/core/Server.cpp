@@ -35,8 +35,14 @@ Server::Server(const Server& src)
 
 Server::~Server(void)
 {
+	for (std::map<int, ConnectSock *>::iterator it = clients.begin();
+			it != clients.end();
+			it++) {
+		delete it->second;
+	}
 	if (close(epoll_fd) < 0)
-		LOG_WARN("epoll instance didn't close");
+		LOG_WARN("Bad close() on fd=" << epoll_fd);
+	LOG_INFO("close(" << epoll_fd << ")");
 }
 
 Server&	Server::operator=(const Server& rhs)
@@ -53,54 +59,84 @@ void	Server::epollMod(int op, int events, Socket *socket)
 
 	ev.events = events;
 	ev.data.ptr = socket;
-	if (epoll_ctl(epoll_fd, op, socket->getFd(), &ev) < 1)
+	if (epoll_ctl(epoll_fd, op, socket->getFd(), &ev) < 0)
 		LOG_WARN("epoll_ctl() failed");
+}
+
+int		Server::handle_event(Socket* socket, uint event)
+{
+	if (socket->type == kListen) {
+		return addClient();
+	} else if (event & (EPOLLERR | EPOLLHUP)) {
+		rmClient(socket->getFd());
+	}
+	// if (ev & EPOLLIN) {
+	// 	if (handle_recv(fd) < 0)
+	// 		continue ;
+	// }
+	// if (ev & EPOLLOUT)
+	// 	handle_send(fd);
+	return (0);
 }
 
 int		Server::eventLoop()
 {
 	int     nevent;
+	bool	stop = false;
 
-	while (1)
-	{
+	do {
 		if ((nevent = epoll_wait(epoll_fd, events, kMaxEvent, -1)) < 0) {
+			if (errno == EINTR)
+				return EXIT_SUCCESS;
 			LOG_ERROR("epoll_wait() failed");
 			return EXIT_FAILURE;
 		}
 		for (int i = 0; i < nevent; i++) {
-			Socket	*sock = reinterpret_cast<Socket *>(events[i].data.ptr);
-			uint    ev = events[i].events;
-
-			if (sock->type == kListen) {
-				addClient();
-				continue ;
-			}
-			else if (ev & (EPOLLERR | EPOLLHUP)) {
-				rmClient(sock->getFd());
-				continue ;
-			}
-			// if (ev & EPOLLIN) {
-			// 	if (handle_recv(fd) < 0)
-			// 		continue ;
-			// }
-			// if (ev & EPOLLOUT)
-			// 	handle_send(fd);
+			stop = handle_event(reinterpret_cast<Socket *>(events[i].data.ptr),
+							events[i].events);
+			if (stop == true)
+				break ;
 		}
-	}
+	} while (stop == false);
+	return (EXIT_FAILURE);
 }
 
-void	Server::addClient(void)
+int	Server::addClient(void)
 {
-	ConnectSock	client(listener.getFd());
+	struct sockaddr_in	addr;
+	socklen_t			addr_len;
+	int					conn_fd;
+	int					listen_fd = listener.getFd();
 
-	clients[client.getFd()] = client;
-	LOG_INFO("New client accepted");
+	while (true) {
+		conn_fd = accept(listen_fd,
+						(struct sockaddr *)&addr,
+						(socklen_t *)&addr_len);
+		if (conn_fd < 0) {
+			if (errno != EWOULDBLOCK) {
+				LOG_ERROR("accept() failed");
+				return (-1);
+			}
+			break ;
+		}	
+		clients[conn_fd] = new ConnectSock(conn_fd, addr, addr_len);
+		LOG_INFO("New client accepted");
+	}
+	LOG_INFO("No more pending connection");
+	return (0);
 }
 
 void	Server::rmClient(int fd)
 {
+	std::map<int, ConnectSock *>::iterator it = clients.find(fd);
+	delete it->second;
 	clients.erase(fd);
 	LOG_INFO("Client deleted");
+}
+
+const char*	Server::AcceptFailedException::what() const throw()
+{
+	return ("Accept() failed");
 }
 
 }	// namespace webserv

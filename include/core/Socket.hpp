@@ -29,6 +29,10 @@ public:
 
 protected:
 	Socket(enum SocketType type);
+	Socket(enum SocketType type,
+			int filedes,
+			struct sockaddr_in address,
+			socklen_t address_len);
 
 	int						fd;
 	struct sockaddr_in		addr;

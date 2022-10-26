@@ -16,6 +16,8 @@ public:
 private:
 	ListenSock();
 
+	static const int	kListenBacklog = 128;
+
 
 };
 

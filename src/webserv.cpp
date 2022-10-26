@@ -9,10 +9,9 @@
 
 static void	handleSigint(int signum)
 {
-	//clean();
+	(void)signum;
 	std::cout << "\r\033[2K";
 	LOG_INFO("SIGINT received");
-	exit(signum);
 }
 
 int	main(int argc, char **argv)
