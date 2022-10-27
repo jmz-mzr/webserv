@@ -1,6 +1,7 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include <exception>
 #include <map>
 
 #include <sys/epoll.h>
@@ -18,12 +19,18 @@ public:
 	Server(const char* ip_addr, uint16_t port);
 	~Server();
 
-	int		eventLoop();
+	void	eventLoop();
 
-	class AcceptFailedException: public std::exception
+	class SignalException: public std::exception
 	{
 		public:
-			virtual char const*	what() const throw();
+			virtual const char*	what() const throw();
+	};
+
+	class FatalErrorException: public std::exception
+	{
+		public:
+			virtual const char*	what() const throw();
 	};
 
 
@@ -33,10 +40,11 @@ private:
 
 	Server&	operator=(const Server& rhs);
 
-	int		handle_event(Socket* socket, uint event);
+	void	handle_event(Socket* socket, uint event);
 	void	epollMod(int op, int events, Socket *socket);
-	int		addClient(void);
+	void	addClient(void);
 	void	rmClient(int fd);
+	void	recv_data(int fd, uint& event);
 
 	static const int			kMaxEvent = 65536;
 

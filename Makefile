@@ -128,7 +128,7 @@ endif
 
 fclean:			clean
 				@printf "\n$(YELLOW)Deleting build directory...$(DEFAULT)"
-				@$(RM) $(BUILDIR) webserv test_runner
+				@$(RM) $(BUILDIR) $(LOGFILE) webserv test_runner
 				@printf "$(DELPREV)$(VERT) %-*s$(DEFAULT)$(TRASH) $(VERT)\n" $(BODY_WIDTH) "Build directory"
 				@printf "$(VERT) %-*s$(DEFAULT)$(TRASH) $(VERT)\n" $(BODY_WIDTH) "ELF files"
 ifeq (fclean,$(MAKECMDGOALS))

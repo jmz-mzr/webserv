@@ -25,9 +25,16 @@ int	main(int argc, char **argv)
 	webserv::Server server("127.0.0.1", (uint16_t)atoi(argv[1]));
 	(void)argv;
 
-	int ret = server.eventLoop();
-
-	return ret;
+	try {
+		server.eventLoop();
+	} catch (const webserv::Server::FatalErrorException& e) {
+		LOG_ERROR(e.what());
+		LOG_DEBUG("errno=" << errno);
+		return EXIT_FAILURE;
+	} catch (const webserv::Server::SignalException& e) {
+		LOG_WARN(e.what());
+	}
+	return EXIT_SUCCESS;
 }
 
 #else	// Generate a main function for testing

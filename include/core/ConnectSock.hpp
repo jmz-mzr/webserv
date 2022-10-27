@@ -1,8 +1,6 @@
 #ifndef CONNECTSOCK_HPP
 #define CONNECTSOCK_HPP
 
-# include <exception>
-
 #include "core/Socket.hpp"
 
 namespace webserv {

@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <map>
 
+#include <fcntl.h>
 #include <sys/epoll.h>
 #include <unistd.h>
 
@@ -63,61 +64,64 @@ void	Server::epollMod(int op, int events, Socket *socket)
 		LOG_WARN("epoll_ctl() failed");
 }
 
-int		Server::handle_event(Socket* socket, uint event)
-{
-	if (socket->type == kListen) {
-		return addClient();
-	} else if (event & (EPOLLERR | EPOLLHUP)) {
-		rmClient(socket->getFd());
-	}
-	if (event & EPOLLIN) {
-		LOG_INFO("fd " << socket->getFd() << " is ready to read");
-		char	buffer[1024];
-		int		bytes_recv;
-		while ((bytes_recv = recv(socket->getFd(), buffer, 1024 - 1, 0))) {
-			buffer[bytes_recv] = '\0';
-			LOG_INFO("recv: " << buffer);
-		}
-		if (bytes_recv == -1) {
-			if (errno != EWOULDBLOCK || errno != EAGAIN) {
-				LOG_ERROR("recv() error");
-				return (-1);
-			}
-			return (0);
-		}
-		else if (bytes_recv == 0) {
-			rmClient(socket->getFd());
-			return (0);
-		}
-	}
-	// if (event & EPOLLOUT)
-	// 	LOG_INFO("fd " << socket->getFd() << " is ready to write");
-	return (0);
-}
-
-int		Server::eventLoop()
+void	Server::eventLoop()
 {
 	int     nevent;
-	bool	stop = false;
 
-	do {
+	while (true) {
 		if ((nevent = epoll_wait(epoll_fd, events, kMaxEvent, -1)) < 0) {
 			if (errno == EINTR)
-				return EXIT_SUCCESS;
+				throw Server::SignalException();
 			LOG_ERROR("epoll_wait() failed");
-			return EXIT_FAILURE;
+			throw Server::FatalErrorException();
 		}
 		for (int i = 0; i < nevent; i++) {
-			stop = handle_event(reinterpret_cast<Socket *>(events[i].data.ptr),
+			handle_event(reinterpret_cast<Socket *>(events[i].data.ptr),
 								events[i].events);
-			if (stop == true)
-				break ;
 		}
-	} while (stop == false);
-	return (EXIT_FAILURE);
+	}
 }
 
-int	Server::addClient(void)
+void	Server::recv_data(int fd, uint& event)
+{
+	char	buffer[1024];
+	int		bytes_recv;
+
+	while ((bytes_recv = recv(fd, buffer, 1024 - 1, 0)) > 0) {
+		buffer[bytes_recv] = '\0';
+		LOG_INFO("recv: " << buffer);
+	}
+	if (bytes_recv == -1) {
+		if (!((errno == EWOULDBLOCK) || (errno == EAGAIN))) {
+			LOG_ERROR("recv() error");
+			throw Server::FatalErrorException(); // fatal error exception
+		} else if (errno == EINTR)
+			throw Server::SignalException(); // signal exception
+	}
+	else if (bytes_recv == 0) {
+		rmClient(fd);
+		event &= ~EPOLLOUT;
+	}
+}
+
+void	Server::handle_event(Socket* socket, uint event)
+{
+	int fd = socket->getFd();
+
+	if (event & (EPOLLERR | EPOLLHUP)) {
+		// Relancer le socket si listener ? throw fatal error ?
+		rmClient(fd);
+	} else if (socket->type == kListen) {
+		addClient();
+	} else {
+		if (event & EPOLLIN) {
+			recv_data(fd, event);
+		}
+		// TODO if (event & EPOLLOUT)
+	}
+}
+
+void	Server::addClient(void)
 {
 	ConnectSock*		client;
 	struct sockaddr_in	addr;
@@ -132,17 +136,17 @@ int	Server::addClient(void)
 		if (conn_fd < 0) {
 			if (errno != EWOULDBLOCK) {
 				LOG_ERROR("accept() failed");
-				return (-1);
+				throw Server::FatalErrorException();
 			}
 			break ;
-		}	
+		}
+		fcntl(conn_fd, F_SETFL, fcntl(conn_fd, F_GETFL) | O_NONBLOCK);
 		client = new ConnectSock(conn_fd, addr, addr_len);
 		clients[conn_fd] = client;
 		epollMod(EPOLL_CTL_ADD, EPOLLIN, client);
 		LOG_INFO("New client accepted");
 	}
 	LOG_INFO("No more pending connection");
-	return (0);
 }
 
 void	Server::rmClient(int fd)
@@ -154,9 +158,14 @@ void	Server::rmClient(int fd)
 	LOG_INFO("Client deleted");
 }
 
-const char*	Server::AcceptFailedException::what() const throw()
+const char*	Server::SignalException::what() const throw()
 {
-	return ("Accept() failed");
+	return ("A signal has been received");
+}
+
+const char*	Server::FatalErrorException::what() const throw()
+{
+	return ("A fatal error occured");
 }
 
 }	// namespace webserv
