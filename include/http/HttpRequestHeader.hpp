@@ -1,3 +1,8 @@
+#ifndef HTTPREQUESTHEADER
+#define HTTPREQUESTHEADER
+
+#include <string>
+
 class HttpRequestHeader
 {
 
@@ -6,7 +11,11 @@ public:
     HttpRequestHeader(const HttpRequestHeader& src);
     ~HttpRequestHeader();
 
-    HttpRequestHeader&  operator=(const HttpRequestHeader& rhs);
+    HttpRequestHeader&
+    operator=(const HttpRequestHeader& rhs);
+
+private:
+    std::string buffer;
 
 };
 
@@ -20,3 +29,5 @@ HttpRequestHeader&	HttpRequestHeader::operator=(const HttpRequestHeader& rhs)
 {
     return *this;
 }
+
+#endif // HTTPREQUESTHEADER
