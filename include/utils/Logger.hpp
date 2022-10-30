@@ -1,69 +1,71 @@
 #ifndef LOGGER_HPP
-#define LOGGER_HPP
+# define LOGGER_HPP
 
-#include <sstream>
-#include <fstream>
-#include <string>
+# include <sstream>
+# include <fstream>
+# include <string>
 
-#define	LOG(level, msg)	{std::stringstream stream;							\
-stream << msg;																\
-webserv::Logger::getInstance().log(__FILE__, __LINE__, level, stream.str());}
+# define LOG(level, msg)	{													 \
+	std::ostringstream stream;													 \
+	stream << msg;																 \
+	webserv::Logger::getInstance().log(__FILE__, __LINE__, level, stream.str()); \
+}
 
-#define LOG_ERROR(msg)	LOG(webserv::kError, msg)
-#define	LOG_WARN(msg)	LOG(webserv::kWarn, msg)
-#define LOG_INFO(msg)	LOG(webserv::kInfo, msg)
-#define LOG_DEBUG(msg)	LOG(webserv::kDebug, msg)
+# define LOG_ERROR(msg)		LOG(webserv::kError, msg)
+# define LOG_WARN(msg)		LOG(webserv::kWarn, msg)
+# define LOG_INFO(msg)		LOG(webserv::kInfo, msg)
+# define LOG_DEBUG(msg)		LOG(webserv::kDebug, msg)
 
-namespace webserv {
-
-enum LogLevel {
-	kError = 0,
-	kWarn = 1,
-	kInfo = 2,
-	kDebug = 3
-};
-
-enum LogOutput {
-	kNone = 0x00,
-	kConsole = 0x01,
-	kFile = 0x10,
-	kBoth = 0x11
-};
-
-struct ColorCode {
-	std::string	str;
-	std::string	color;
-};
-
-class Logger
+namespace	webserv
 {
 
-public:
-	static Logger& getInstance()
-	{
-		static Logger	instance;
-		return instance;
-	}
+	enum	LogLevel {
+		kError = 0,
+		kWarn = 1,
+		kInfo = 2,
+		kDebug = 3
+	};
 
-	void log(std::string file, int line, int level, std::string msg);
+	enum	LogOutput {
+		kNone = 0x00,
+		kConsole = 0x01,
+		kFile = 0x10,
+		kBoth = 0x11
+	};
 
-	inline const std::ofstream&		getLogfile() const;
-	inline const enum LogOutput&	getChannel() const;
+	struct	ColorCode {
+		std::string	str;
+		std::string	color;
+	};
 
+	class	Logger {
+	public:
+		static Logger&	getInstance()
+		{
+			static Logger	instance;
+			return (instance);
+		}
 
-private:
-	Logger();
-	~Logger();
+		void	log(std::string file, int line,
+					int level, const std::string& msg);
 
-	// std::stringstream	format(std::string file, int line, int level);
+		const std::ofstream&	getLogfile() const { return (_logfile); }
+		const enum LogOutput&	getChannel() const { return (_channel); }
+	private:
+		Logger();
+		Logger(const Logger& src);
+		~Logger();
 
-	struct ColorCode	cc[4];
-	enum LogLevel		threshold;
-	enum LogOutput		channel;
-	std::ofstream		logfile;
+		Logger&	operator=(const Logger& rhs);
 
-};
+//		std::stringstream	format(std::string file, int line, int level);
+
+		struct ColorCode	_cc[4];
+		enum LogLevel		_threshold;
+		enum LogOutput		_channel;
+		std::ofstream		_logfile;
+	};
 
 }	// namespace webserv
 
-#endif /* LOGGER_HPP */
+#endif	// LOGGER_HPP
