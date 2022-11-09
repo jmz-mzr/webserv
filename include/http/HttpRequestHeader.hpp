@@ -3,11 +3,14 @@
 
 #include <string>
 
+#include "Request.hpp"
+
 class HttpRequestHeader
 {
 
 public:
     HttpRequestHeader();
+    HttpRequestHeader(const std::string &str);
     HttpRequestHeader(const HttpRequestHeader& src);
     ~HttpRequestHeader();
 
@@ -16,7 +19,13 @@ public:
 
 private:
     std::string buffer;
-
+    std::string method;
+    size_t      index;
+    Request     parsedRequest;
+    Request     factory();
+    void        parse();
+    void        parseMethod(std::string line);
+    std::string readLine();
 };
 
 HttpRequestHeader::HttpRequestHeader() { }
