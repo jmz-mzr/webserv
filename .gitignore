@@ -33,3 +33,6 @@
 
 # Temp files
 *.swp
+
+# MacOS related files
+.DS_Store
