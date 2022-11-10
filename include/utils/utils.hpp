@@ -1,11 +1,16 @@
 #ifndef UTILS_HPP
-#define UTILS_HPP
+# define UTILS_HPP
 
-#include <cstdlib>
+# include <stddef.h>
 
-namespace webserv {
+# include <netinet/in.h>
 
-void	*ft_memset(void *s, int c, size_t n);
+namespace	webserv
+{
+
+	void*		ft_memset(void* s, int c, size_t n);
+	const char*	ft_inet_ntoa(struct in_addr in);
+	void		ft_sleep(double seconds);
 
 }	// namespace webserv
 
