@@ -1,44 +1,63 @@
 #ifndef SOCKET_HPP
-#define SOCKET_HPP
+# define SOCKET_HPP
 
-#include <netinet/in.h>
-#include <sys/socket.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
 
-namespace webserv {
+# include <string>
+# include <exception>
 
-enum SocketType {
-	kAny,
-	kListen,
-	kConnection
-};
+# include "utils/utils.hpp"
 
-class Socket
+namespace	webserv
 {
 
-public:
-	Socket();
-	Socket(const Socket& src);
-	virtual ~Socket();
+	enum SocketType {
+		kListen,
+		kAccept,
+		kConnect
+	};
 
-	Socket&	operator=(const Socket& rhs);
+	class	Socket {
+	public:
+		Socket(const Socket& src);
+		virtual ~Socket() { }
 
-	const int&	getFd() const;
+		class FatalErrorException: public std::exception {
+		public:
+			FatalErrorException(const char* msg = "A fatal error occured"):
+																_msg(msg) { }
+			virtual const char*	what() const throw() { return (_msg); }
+		private:
+			const char*	_msg;
+		};
 
-	const enum SocketType	type;
+		const enum SocketType&	getType() const { return (_type); }
+		const int&				getFd() const { return (_fd); }
+		const std::string&		getIpAddr() const { return (_ipAddr); }
+		const uint16_t&			getPort() const { return (_port); }
 
+		void	closeFd();
+	protected:
+		Socket(enum SocketType t): _type(t), _fd(-1), _ipAddr(""),
+									_port(0), _addrLen(sizeof(_addr))
+											{ ft_memset(&_addr, 0, _addrLen); }
+		Socket(enum SocketType t, const std::string& ipAddr, uint16_t port):
+									_type(t), _ipAddr(ipAddr), _port(port),
+									_addrLen(sizeof(_addr))
+											{ ft_memset(&_addr, 0, _addrLen); }
 
-protected:
-	Socket(enum SocketType type);
-	Socket(enum SocketType type,
-			int filedes,
-			struct sockaddr_in address,
-			socklen_t address_len);
-
-	int						fd;
-	struct sockaddr_in		addr;
-	socklen_t				addr_len;
-
-};
+		const enum SocketType	_type;
+		int						_fd;
+		std::string				_ipAddr;
+		uint16_t				_port;
+		struct sockaddr_in		_addr;
+		socklen_t				_addrLen;
+	private:
+		Socket();
+		Socket&	operator=(const Socket& rhs);
+	};
 
 }	// namespace webserv
 

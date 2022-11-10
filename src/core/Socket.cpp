@@ -1,46 +1,38 @@
 #include "core/Socket.hpp"
+#include "utils/Logger.hpp"
 
 #include <unistd.h>
 
-#include "utils/utils.hpp"
-#include "utils/Logger.hpp"
-
-namespace webserv {
-
-Socket::Socket() : type(kAny), fd(-1), addr_len(sizeof(addr))
-{ ft_memset(&addr, 0, addr_len); }
-
-Socket::~Socket()
+namespace	webserv
 {
-	if (fd >= 0) {
-		if (close(fd) < 0) {
-			LOG_WARN("Bad close() on fd=" << fd);
-		} else {
-			LOG_INFO("close(" << fd << ")");
+
+	/**************************************************************************/
+	/*                       CONSTRUCTORS / DESTRUCTORS                       */
+	/**************************************************************************/
+
+	Socket::Socket(const Socket& src): _type(src._type), _fd(src._fd),
+									_ipAddr(src._ipAddr), _port(src._port),
+									_addr(src._addr), _addrLen(src._addrLen)
+	{
+		LOG_INFO("Socket copied");
+		LOG_DEBUG("fd=" << _fd << " ; "
+				<< "addr=" << _ipAddr << " ; " << "port=" << _port);
+	}
+
+	/**************************************************************************/
+	/*                            MEMBER FUNCTIONS                            */
+	/**************************************************************************/
+
+	void	Socket::closeFd()
+	{
+		if (_fd >= 0) {
+			if (close(_fd) < 0) {
+				LOG_WARN("Bad close() on fd=" << _fd);
+			} else {
+				LOG_INFO("close(" << _fd << ")");
+				_fd = -1;
+			}
 		}
 	}
-}
-
-Socket::Socket(enum SocketType t) : type(t), fd(-1), addr_len(sizeof(addr))
-{ ft_memset(&addr, 0, addr_len); }
-
-Socket::Socket(enum SocketType t,
-				int filedes,
-				struct sockaddr_in address,
-				socklen_t address_len)
-		: type(t), fd(filedes), addr(address), addr_len(address_len)
-{ }
-
-Socket::Socket(const Socket& src) : type(src.type), fd(src.fd), addr(src.addr)
-{ }
-
-Socket&	Socket::operator=(const Socket& rhs)
-{
-	fd = rhs.fd;
-	addr = rhs.addr;
-	return *this;
-}
-
-const int&	Socket::getFd() const { return fd; }
 
 }	// namespace webserv
