@@ -1,5 +1,5 @@
 #ifndef ANSI_COLORS_HPP
-#define ANSI_COLORS_HPP
+# define ANSI_COLORS_HPP
 
 //	Reset
 # define RESET	"\e[0m"
@@ -74,4 +74,4 @@
 # define BHCYN	"\e[1;96m"
 # define BHWHT	"\e[1;97m"
 
-#endif /* ANSI_COLORS_HPP */
+#endif	// ANSI_COLORS_HPP
