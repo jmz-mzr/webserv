@@ -5,27 +5,36 @@
 NAME		=	webserv
 
 #>	DIRECTORIES
-DIRS		=	core utils
-VPATH		=	$(addprefix src/,$(DIRS)) src
+DIRS		=	config core utils
+VPATH		=	src $(addprefix src/,$(DIRS))
 LIBDIR		=
 LOGFILE		=	$(NAME).log
-INCLDIR		=	$(addprefix include/,$(LIBDIR)) include
+INCLDIR		=	include $(addprefix include/,$(LIBDIR))
 BUILDIR		=	build
 DEPDIR		=	$(BUILDIR)/.deps
 
 #>	FILES
-SRC			=	webserv.cpp \
+SRC			=	main.cpp \
+				Config.cpp \
+				ServerConfig.cpp \
 				Socket.cpp \
-				ListenSock.cpp \
-				ConnectSock.cpp \
+				ListenSocket.cpp \
+				AcceptSocket.cpp \
+				ConnectSocket.cpp \
+				Webserv.cpp \
 				Server.cpp \
+				Client.cpp \
+				Request.cpp \
+				Response.cpp \
 				Logger.cpp \
-				memset.cpp
+				ft_memset.cpp \
+				ft_inet_ntoa.cpp \
+				ft_sleep.cpp
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
 
 #>	COMPILATION FLAGS
-CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98 -fsanitize=address -g3
+CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98 -fsanitize=address,undefined -g3
 CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
 LDFLAGS		=	$(addprefix -L, $(LIBDIR)) $(addprefix -l, $(LIB))
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
@@ -34,12 +43,12 @@ ifeq (,$(strip $(findstring test, $(MAKECMDGOALS))))		# if not testing
 	CXXFLAGS 	+=	-DDOCTEST_CONFIG_DISABLE
 	BIN			=	$(NAME)
 else
-	CXXFLAGS	+=	-fsanitize=address -fno-omit-frame-pointer -O1 -g3 -DCONF_LOG_OUT=kNone
+	CXXFLAGS	+=	-fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g3 -DCONF_LOG_OUT=kNone
 	BIN			=	test_runner
 endif
 
 #>	ENVIRONMENT
-CXX			=	/usr/bin/c++
+CXX			=	c++
 RM			=	/bin/rm -rf
 SHELL		:=	$(shell which zsh)
 UNAME		:=	$(shell uname -s)
