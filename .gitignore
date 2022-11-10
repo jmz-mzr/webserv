@@ -36,3 +36,6 @@
 
 # MacOS related files
 .DS_Store
+
+# Log files
+*.log
