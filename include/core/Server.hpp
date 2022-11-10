@@ -1,60 +1,41 @@
 #ifndef SERVER_HPP
-#define SERVER_HPP
+# define SERVER_HPP
 
-#include <exception>
-#include <map>
+# include <utility>
+# include <string>
+# include <vector>
 
-#include <sys/epoll.h>
+# include <stdint.h>
 
-#include "core/ConnectSock.hpp"
-#include "core/ListenSock.hpp"
-#include "core/Socket.hpp"
+# include "config/ServerConfig.hpp"
+# include "core/ListenSocket.hpp"
 
-namespace webserv {
-
-class Server
+namespace	webserv
 {
 
-public:
-	Server(const char* ip_addr, uint16_t port);
-	~Server();
+	class	Server {
+	public:
+		typedef std::pair<const std::string, uint16_t>	listen_pair;
 
-	void	eventLoop();
+		Server(const ServerConfig& serverConfig, const listen_pair& listenPair);
+		Server(const Server& src);
+		~Server() { }
 
-	class SignalException: public std::exception
-	{
-		public:
-			virtual const char*	what() const throw();
+		const ListenSocket&					getSocket() const;
+		const std::vector<ServerConfig>&	getConfigs() const;
+
+		void	addConfig(const ServerConfig& serverConfig);
+
+		void	closeSocket() { _socket.closeFd(); }
+	private:
+		Server();
+
+		Server&	operator=(const Server& rhs);
+
+		ListenSocket				_socket;
+		std::vector<ServerConfig>	_configs;
 	};
-
-	class FatalErrorException: public std::exception
-	{
-		public:
-			virtual const char*	what() const throw();
-	};
-
-
-private:
-	Server();
-	Server(const Server& src);
-
-	Server&	operator=(const Server& rhs);
-
-	void	handle_event(Socket* socket, uint event);
-	void	epollMod(int op, int events, Socket *socket);
-	void	addClient(void);
-	void	rmClient(int fd);
-	void	recv_data(int fd, uint& event);
-
-	static const int			kMaxEvent = 65536;
-
-	ListenSock						listener;
-	std::map<int, ConnectSock *>	clients;
-	int								epoll_fd;
-	struct epoll_event				events[Server::kMaxEvent];
-
-};
 
 }	// namespace webserv
 
-#endif /* SERVER_HPP */
+#endif	// SERVER_HPP
