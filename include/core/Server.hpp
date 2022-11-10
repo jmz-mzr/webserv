@@ -9,6 +9,7 @@
 #include "core/ConnectSock.hpp"
 #include "core/ListenSock.hpp"
 #include "core/Socket.hpp"
+#include "http/HttpRequestHeader.hpp"
 
 namespace webserv {
 
@@ -52,7 +53,7 @@ private:
 	std::map<int, ConnectSock *>	clients;
 	int								epoll_fd;
 	struct epoll_event				events[Server::kMaxEvent];
-
+	HttpRequestHeader				requestHeader;
 };
 
 }	// namespace webserv

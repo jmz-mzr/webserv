@@ -5,7 +5,7 @@
 NAME		=	webserv
 
 #>	DIRECTORIES
-DIRS		=	core utils
+DIRS		=	core utils http
 VPATH		=	$(addprefix src/,$(DIRS)) src
 LIBDIR		=
 LOGFILE		=	$(NAME).log
@@ -20,7 +20,9 @@ SRC			=	webserv.cpp \
 				ConnectSock.cpp \
 				Server.cpp \
 				Logger.cpp \
-				memset.cpp
+				memset.cpp \
+				HttpRequestHeader.cpp \
+				Request.cpp
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
 

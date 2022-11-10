@@ -11,13 +11,14 @@
 #include "core/ListenSock.hpp"
 #include "core/Socket.hpp"
 #include "utils/Logger.hpp"
+#include "http/HttpRequestHeader.hpp"
 
 namespace webserv {
 
-Server::Server() : listener(NULL, 0), clients() { }
+Server::Server() : listener(NULL, 0), clients(), requestHeader() { }
 
 Server::Server(const char* ip_addr, uint16_t port)
-		: listener(ip_addr, port), clients()
+		: listener(ip_addr, port), clients(), requestHeader()
 {
 	if ((epoll_fd = epoll_create1(0)) < 0)
 	{
@@ -31,7 +32,7 @@ Server::Server(const char* ip_addr, uint16_t port)
 }
 
 Server::Server(const Server& src)
-		: listener(src.listener), clients(src.clients)
+		: listener(src.listener), clients(src.clients), requestHeader()
 { }
 
 Server::~Server(void)
@@ -82,6 +83,7 @@ void	Server::eventLoop()
 	}
 }
 
+
 void	Server::recv_data(int fd, uint& event)
 {
 	char	buffer[1024];
@@ -90,6 +92,7 @@ void	Server::recv_data(int fd, uint& event)
 	while ((bytes_recv = recv(fd, buffer, 1024 - 1, 0)) > 0) {
 		buffer[bytes_recv] = '\0';
 		LOG_INFO("recv: " << buffer);
+		requestHeader.parse(buffer);
 	}
 	if (bytes_recv == -1) {
 		if (!((errno == EWOULDBLOCK) || (errno == EAGAIN))) {
