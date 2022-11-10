@@ -34,7 +34,7 @@ OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
 
 #>	COMPILATION FLAGS
-CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98 -fsanitize=address,undefined -g3
+CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
 CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
 LDFLAGS		=	$(addprefix -L, $(LIBDIR)) $(addprefix -l, $(LIB))
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
