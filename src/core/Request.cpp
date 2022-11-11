@@ -34,9 +34,19 @@ namespace	webserv
 		return (_requestMethod);
 	}
 
-	int	Request::_parseChunkedRequest(const char* buffer)
+	void	Request::_loadServerConfig(const server_configs& serverConfigs)
 	{
-		// TO DO: parse [check and set Headers & Flags, etc]
+		// TO DO: load the server config corresponding to the _hostName
+		// 		  in the request Header (if set), or the first config
+		// 		  from the vector otherwise (the default config)
+
+		(void)serverConfigs;
+	}
+
+	int	Request::_parseChunkedRequest(const char* buffer,
+										const server_configs& serverConfigs)
+	{
+		// TO DO: parse [check and set serverConfig, Headers & Flags, etc]
 		// 		  if (error) {
 		// 		    log error;
 		// 		    clearRequest();
@@ -54,14 +64,17 @@ namespace	webserv
 		// 		  return (0);
 
 		(void)buffer;
+		if (_serverConfig.empty())
+			_loadServerConfig(serverConfigs);
 		return (0);
 	}
 
-	int	Request::parseRequest(const char* buffer)
+	int	Request::parseRequest(const char* buffer,
+								const server_configs& serverConfigs)
 	{
 		// TO DO: if (_isChunkedRequest)
-		// 		    return (_parseChunkedRequest);
-		// 		  parse [check and set Headers & Flags, etc,
+		// 		    return (_parseChunkedRequest, serverConfigs);
+		// 		  parse [check and set serverConfig, Headers & Flags, etc,
 		// 		  		 or set _isChunkedRequest and return (_parseChunked)]
 		// 		  if (error) {
 		// 		    log error;
@@ -72,6 +85,8 @@ namespace	webserv
 		// 		  return (0);
 
 		(void)buffer;
+		if (_serverConfig.empty())
+			_loadServerConfig(serverConfigs);
 		return (0);
 	}
 
@@ -79,6 +94,7 @@ namespace	webserv
 	{
 		// TO DO: clear saved chunks;	// with try-catch if necessary
 
+		_serverConfig.clearConfig();
 		_requestMethod = kEmpty;
 		_isChunkedRequest = false;
 		_isTerminatedRequest = false;

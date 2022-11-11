@@ -8,21 +8,28 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Client::Client(const int id, const int serverFd): _id(id),
-													_socket(serverFd)
+	Client::Client(const int id, const int serverFd,
+					const server_configs& serverConfigs): _id(id),
+												_serverFd(serverFd),
+												_serverConfigs(serverConfigs),
+												_socket(serverFd)
 	{
 		LOG_INFO("New Client instance");
-		LOG_DEBUG("id=" << _id << " ; " << "fd=" << _socket.getFd() << " ; "
+		LOG_DEBUG("id=" << _id << " ; " << "serverFd=" << _serverFd << " ; "
+				<< "fd=" << _socket.getFd() << " ; "
 				<< "addr=" << _socket.getIpAddr() << " ; "
 				<< "port=" << _socket.getPort());
 	}
 
-	Client::Client(const Client& src): _id(src._id), _socket(src._socket),
+	Client::Client(const Client& src): _id(src._id), _serverFd(src._serverFd),
+										_serverConfigs(src._serverConfigs),
+										_socket(src._socket),
 										_request(src._request),
 										_response(src._response)
 	{
 		LOG_INFO("Client copied");
-		LOG_DEBUG("id=" << _id << " ; " << "fd=" << _socket.getFd() << " ; "
+		LOG_DEBUG("id=" << _id << " ; " << "serverFd=" << _serverFd << " ; "
+				<< "fd=" << _socket.getFd() << " ; "
 				<< "addr=" << _socket.getIpAddr() << " ; "
 				<< "port=" << _socket.getPort());
 	}
@@ -33,7 +40,7 @@ namespace	webserv
 
 	void	Client::parseRequest(const char* buffer)
 	{
-		int		responseCode = _request.parseRequest(buffer);
+		int		responseCode = _request.parseRequest(buffer, _serverConfigs);
 
 		if (responseCode >= 400 && responseCode <= 599)
 			_response.setResponseCode(responseCode);

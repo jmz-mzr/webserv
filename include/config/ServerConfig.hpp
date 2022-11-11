@@ -23,6 +23,8 @@ namespace	webserv
 		const std::vector<std::string>&	getNames() const
 													{ return (_names); }
 
+		bool	empty() { return (_listenPairs.empty()); }
+
 		void	clearListenPairs() { _listenPairs.clear(); }
 		bool	eraseName(const std::string& name);
 		void	clearConfig();
