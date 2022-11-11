@@ -1,2 +1,0 @@
-To compare with NGINX:
-	- Invalid IP and/or port

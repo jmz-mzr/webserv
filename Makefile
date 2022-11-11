@@ -6,10 +6,11 @@ NAME		=	webserv
 
 #>	DIRECTORIES
 DIRS		=	config core utils
-VPATH		=	src $(addprefix src/,$(DIRS))
+VPATH		=	$(addprefix src/,$(DIRS)) src tests
 LIBDIR		=
 LOGFILE		=	$(NAME).log
-INCLDIR		=	include $(addprefix include/,$(LIBDIR))
+TESTER		=	$(NAME).test
+INCLDIR		=	$(addprefix include/,$(LIBDIR)) include
 BUILDIR		=	build
 DEPDIR		=	$(BUILDIR)/.deps
 
@@ -30,8 +31,9 @@ SRC			=	main.cpp \
 				ft_memset.cpp \
 				ft_inet_ntoa.cpp \
 				ft_sleep.cpp
-OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
-DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
+TEST		=	$(filter-out webserv%,$(SRC:.cpp=.test.cpp))
+OBJ			=	$(SRCS:%.cpp=$(BUILDIR)/%.o)
+DEP			=	$(SRCS:%.cpp=$(DEPDIR)/%.d)
 
 #>	COMPILATION FLAGS
 CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
@@ -42,15 +44,17 @@ DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 ifeq (,$(strip $(findstring test, $(MAKECMDGOALS))))		# if not testing
 	CXXFLAGS 	+=	-DDOCTEST_CONFIG_DISABLE
 	BIN			=	$(NAME)
+	SRCS		=	$(SRC)
 else
 	CXXFLAGS	+=	-fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g3 -DCONF_LOG_OUT=kNone
-	BIN			=	test_runner
+	BIN			=	$(TESTER)
+	SRCS		=	$(SRC) $(TEST)
 endif
 
 #>	ENVIRONMENT
 CXX			=	c++
 RM			=	/bin/rm -rf
-SHELL		:=	$(shell which zsh)
+SHELL		=	/usr/bin/zsh
 UNAME		:=	$(shell uname -s)
 
 #>	FG COLORS
@@ -67,7 +71,7 @@ WHITE 		=	\033[1;107m
 #>	TERMCAPS
 UP			=	\033[1A
 DELETE		=	\033[2K
-DELPREV		=	$(DELETE)\r$(UP)
+DELPREV		=	$(UP)\r$(DELETE)
 
 #>	EMOJIS
 CHECK		=	\xE2\x9C\x94
@@ -110,36 +114,36 @@ FOOTER		=	$(shell printf '$(BOT-LEFT2)$(HORIZ_LINE)$(BOT-RIGHT2)')
 all:			header $(BIN)
 
 $(BUILDIR)/%.o:	%.cpp | $(DEPDIR)
-				@printf "\n$(YELLOW)Compiling $@ and generating/checking make dependency file...$(DEFAULT)"
+				@printf "$(YELLOW)Compiling $@ and generating/checking make dependency file...\n$(DEFAULT)"
 				@$(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 				@printf '$(DELPREV)$(VERT) %-*s$(GREEN)$(CHECK)$(DEFAULT) $(VERT)\n' $(BODY_WIDTH) "$(notdir $<) -> $(notdir $@)"
 
 $(BIN):			$(OBJ)
-				@printf "\n$(YELLOW)Linking source files and generating $@ binary...$(DEFAULT)"
+				@printf "$(YELLOW)Linking source files and generating $@ binary...\n$(DEFAULT)"
 				@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
 				@printf "$(DELPREV)$(VERT) $(GREEN)%-*s$(CHECK)$(DEFAULT) $(VERT)\n" $(BODY_WIDTH) "./$(BIN)"
 				@printf "$(FOOTER)\n"
 
 $(DEPDIR):
-				@printf "\n$(YELLOW)Creating $@ folder...$(DEFAULT) $(VERT)"
+				@printf "$(YELLOW)Creating $@ folder...\n$(DEFAULT) $(VERT)"
 				@mkdir -p $@
 				@printf "$(DELPREV)"
 $(DEP):
 -include $(wildcard $(DEP))
 
 clean:			header
-				@printf "\n$(YELLOW)Deleting object and dependency files...$(DEFAULT)"
-				@$(RM) $(OBJ)
+				@printf "$(YELLOW)Deleting build files and directory...\n$(DEFAULT)"
+				@$(RM) $(BUILDIR)
 				@printf "$(DELPREV)$(VERT) %-*s$(DEFAULT)$(TRASH) $(VERT)\n" $(BODY_WIDTH) "Build files"
+				@printf "$(VERT) %-*s$(DEFAULT)$(TRASH) $(VERT)\n" $(BODY_WIDTH) "Build directory"
 ifeq (clean,$(MAKECMDGOALS))
 	@printf "$(FOOTER)\n"
 endif
 
 fclean:			clean
-				@printf "\n$(YELLOW)Deleting build directory...$(DEFAULT)"
-				@$(RM) $(BUILDIR) $(LOGFILE) webserv test_runner
-				@printf "$(DELPREV)$(VERT) %-*s$(DEFAULT)$(TRASH) $(VERT)\n" $(BODY_WIDTH) "Build directory"
-				@printf "$(VERT) %-*s$(DEFAULT)$(TRASH) $(VERT)\n" $(BODY_WIDTH) "ELF files"
+				@printf "$(YELLOW)Deleting binaries and log file...\n$(DEFAULT)"
+				@$(RM) $(LOGFILE) $(NAME) $(NAME).test
+				@printf "$(DELPREV)$(VERT) %-*s$(DEFAULT)$(TRASH) $(VERT)\n" $(BODY_WIDTH) "ELF files"
 ifeq (fclean,$(MAKECMDGOALS))
 	@printf "$(FOOTER)\n"
 endif
@@ -153,4 +157,4 @@ re:				fclean $(BIN)
 
 test:			fclean all
 				@chmod +x $(BIN)
-				@./$(BIN) 4444
+				@./$(BIN)
