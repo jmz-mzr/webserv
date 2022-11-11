@@ -177,7 +177,7 @@ namespace	webserv
 		std::ostringstream	msg;	// tmp exam version
 
 		try {
-			_clients.push_back(Client(clientId, serverFd));	// tmp version
+			_clients.push_back(Client(clientId, serverFd, server.getConfigs())); // tmp version
 		} catch (const std::exception& e) {
 			LOG_ERROR("Could not add client to _clients: " << e.what());
 			return ;

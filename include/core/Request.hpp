@@ -1,6 +1,10 @@
 #ifndef REQUEST_HPP
 # define REQUEST_HPP
 
+# include <vector>
+
+# include "config/ServerConfig.hpp"
+
 namespace	webserv
 {
 
@@ -13,6 +17,8 @@ namespace	webserv
 
 	class	Request {
 	public:
+		typedef std::vector<ServerConfig>	server_configs;
+
 		Request();
 		Request(const Request& src);
 		~Request() { }	// clear _chunks if not automatic
@@ -23,15 +29,20 @@ namespace	webserv
 		bool	isTerminatedRequest() const { return (_isTerminatedRequest); }
 //		bool	isKeepAlive() const;
 
-		int		parseRequest(const char* buffer);
+		int		parseRequest(const char* buffer,
+								const server_configs& serverConfigs);
 
 		void	clearRequest();
 	private:
 		Request&	operator=(const Request& rhs);
 
-		int		_parseChunkedRequest(const char* buffer);
+		int		_parseChunkedRequest(const char* buffer,
+										const server_configs& serverConfigs);
+		void	_loadServerConfig(const server_configs& serverConfigs);
 
+		ServerConfig		_serverConfig;
 		enum RequestMethod	_requestMethod;
+//		std::string			_hostName;
 		bool				_isChunkedRequest;
 //		std::ofstream		_chunks;	// or with a swap space?
 		bool				_isTerminatedRequest;

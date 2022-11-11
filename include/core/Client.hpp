@@ -2,7 +2,9 @@
 # define CLIENT_HPP
 
 # include <string>
+# include <vector>
 
+# include "config/ServerConfig.hpp"
 # include "core/AcceptSocket.hpp"
 # include "core/Request.hpp"
 # include "core/Response.hpp"
@@ -12,7 +14,10 @@ namespace	webserv
 
 	class	Client {
 	public:
-		Client(const int id, const int serverFd);	// tmp exam version
+		typedef std::vector<ServerConfig>	server_configs;
+
+		Client(const int id, const int serverFd,
+				const server_configs& serverConfigs);	// tmp exam version
 		Client(const Client& src);
 		~Client() { }
 
@@ -41,10 +46,12 @@ namespace	webserv
 	private:
 		Client&	operator=(const Client& rhs);
 
-		int					_id;	// tmp exam version
-		AcceptSocket		_socket;
-		Request				_request;
-		Response			_response;
+		int						_id;	// tmp exam version
+		int						_serverFd;
+		const server_configs&	_serverConfigs;
+		AcceptSocket			_socket;
+		Request					_request;
+		Response				_response;
 	};
 
 }	// namespace webserv
