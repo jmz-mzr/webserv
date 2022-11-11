@@ -1,9 +1,12 @@
-#include <csignal>
-#include <iostream>
-#include <exception>
+#ifdef DOCTEST_CONFIG_DISABLE	// Compile without tests
 
-#include "core/Webserv.hpp"
-#include "utils/Logger.hpp"
+# include <csignal>
+# include <cstdlib>
+# include <exception>
+# include <iostream>
+
+# include "core/Webserv.hpp"
+# include "utils/Logger.hpp"
 
 static void	handleSigInt(int signum)
 {
@@ -29,3 +32,10 @@ catch (const std::exception& e) {
 	LOG_ERROR("Fatal error: " << e.what());
 	return (EXIT_FAILURE);
 }
+
+#else	// Generate a main function for testing
+
+# define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+# include "doctest/doctest.h"
+
+#endif
