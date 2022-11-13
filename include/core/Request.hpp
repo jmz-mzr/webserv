@@ -2,6 +2,7 @@
 # define REQUEST_HPP
 
 # include <vector>
+# include <string>
 
 # include "config/ServerConfig.hpp"
 
@@ -42,7 +43,8 @@ namespace	webserv
 
 		ServerConfig		_serverConfig;
 		enum RequestMethod	_requestMethod;
-//		std::string			_hostName;
+		std::string			_hostName;	// recorded in lowercase with ft_str_tolower
+										// if none or empty return 400 error
 		bool				_isChunkedRequest;
 //		std::ofstream		_chunks;	// or with a swap space?
 		bool				_isTerminatedRequest;

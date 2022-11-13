@@ -23,6 +23,27 @@ namespace	webserv
 	}
 
 	/**************************************************************************/
+	/*                       MEMBER OPERATOR OVERLOADS                        */
+	/**************************************************************************/
+
+	ServerConfig&	ServerConfig::operator=(const ServerConfig& rhs)
+	{
+		std::vector<listen_pair>::const_iterator	listenPair;
+
+		if (this != &rhs) {
+			_listenPairs.clear();
+			listenPair = rhs._listenPairs.begin();
+			while (listenPair != rhs._listenPairs.end()) {
+				_listenPairs.push_back(std::make_pair
+						(listenPair->first, listenPair->second));
+				++listenPair;
+			}
+			_names = rhs._names;
+		}
+		return (*this);
+	}
+
+	/**************************************************************************/
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 

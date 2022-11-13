@@ -1,5 +1,6 @@
 #include "core/Request.hpp"
 #include "utils/Logger.hpp"
+#include "utils/utils.hpp"
 
 namespace	webserv
 {
@@ -36,17 +37,28 @@ namespace	webserv
 
 	void	Request::_loadServerConfig(const server_configs& serverConfigs)
 	{
-		// TO DO: load the server config corresponding to the _hostName
-		// 		  in the request Header (if set), or the first config
-		// 		  from the vector otherwise (the default config)
+		server_configs::const_iterator				config;
+		std::vector<std::string>::const_iterator	name;
 
-		(void)serverConfigs;
+		config = serverConfigs.begin();
+		while (config != serverConfigs.end()) {
+			name = config->getNames().begin();
+			while (name != config->getNames().end()) {
+				if (ft_strcmp_icase(_hostName, *name) == 0) {
+					_serverConfig = *config;
+					return ;
+				}
+				++name;
+			}
+			++config;
+		}
+		_serverConfig = serverConfigs[0];
 	}
 
 	int	Request::_parseChunkedRequest(const char* buffer,
 										const server_configs& serverConfigs)
 	{
-		// TO DO: parse [check and set serverConfig, Headers & Flags, etc]
+		// TO DO: parse [check and set Headers & Flags, serverConfig, etc]
 		// 		  if (error) {
 		// 		    log error;
 		// 		    clearRequest();
@@ -74,7 +86,7 @@ namespace	webserv
 	{
 		// TO DO: if (_isChunkedRequest)
 		// 		    return (_parseChunkedRequest, serverConfigs);
-		// 		  parse [check and set serverConfig, Headers & Flags, etc,
+		// 		  parse [check and set Headers & Flags, serverConfig, etc,
 		// 		  		 or set _isChunkedRequest and return (_parseChunked)]
 		// 		  if (error) {
 		// 		    log error;
@@ -96,6 +108,7 @@ namespace	webserv
 
 		_serverConfig.clearConfig();
 		_requestMethod = kEmpty;
+		_hostName.clear();
 		_isChunkedRequest = false;
 		_isTerminatedRequest = false;
 	}
