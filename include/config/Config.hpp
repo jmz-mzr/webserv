@@ -7,6 +7,7 @@
 # include <exception>
 
 # include "config/ServerConfig.hpp"
+# include "utils/utils.hpp"
 
 namespace	webserv
 {
@@ -15,15 +16,6 @@ namespace	webserv
 	public:
 		Config();
 		~Config() { closeConfigFile(); }
-
-		class FatalErrorException: public std::exception {
-		public:
-			FatalErrorException(const char* msg = "A fatal error occured"):
-																_msg(msg) { }
-			virtual const char*	what() const throw() { return (_msg); }
-		private:
-			const char*	_msg;
-		};
 
 		void		openConfigFile(const std::string& configFileName);
 		void		parseConfig();

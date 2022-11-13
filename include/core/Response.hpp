@@ -1,9 +1,9 @@
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
 
-# include "core/Request.hpp"
-
 # include <string>
+
+# include "core/Request.hpp"
 
 namespace	webserv
 {

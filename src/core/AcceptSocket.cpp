@@ -26,8 +26,9 @@ namespace	webserv
 			LOG_DEBUG("accept() error: " << strerror(errno));
 			throw FatalErrorException("Fatal error on accept() call");
 		}
-		if (MACOS)
+#ifdef MACOS
 			fcntl(_fd, F_SETFL, O_NONBLOCK);
+#endif
 		_port = ntohs(_addr.sin_port);
 		_ipAddr = ft_inet_ntoa(_addr.sin_addr);
 		setsockopt(_fd, SOL_SOCKET, SO_SNDBUF, &sendBufferSize, sizeof(int));

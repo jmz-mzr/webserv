@@ -25,6 +25,11 @@ namespace	webserv
 	{
 		LOG_INFO("New Webserv instance");
 		LOG_DEBUG("With buffer of capacity " << RECV_BUFFER_SIZE);
+#ifdef MACOS
+		_ioFlags = 0;
+#else
+		_ioFlags = MSG_DONTWAIT;
+#endif
 	}
 
 	Webserv::~Webserv()
@@ -225,7 +230,7 @@ namespace	webserv
 		if ((object == SERVER
 					&& (pollFd->revents & ~POLLIN) != 0)
 				|| (object == CLIENT
-					&& ((pollFd->revents & ~POLLIN) & ~POLLOUT) != 0))
+					&& ((pollFd->revents & ~( POLLIN | POLLOUT )) != 0)))
 			LOG_DEBUG(object << " (fd=" << pollFd->fd << ") "
 					<< "received other poll flags:"
 					<< " POLLERR=" << ((pollFd->revents & POLLERR) != 0)
@@ -251,11 +256,10 @@ namespace	webserv
 
 	ssize_t	Webserv::_receiveClientRequest(Client& client)
 	{
-		int			recvFlags = (MACOS ? 0 : MSG_DONTWAIT);
 		int			clientFd = client.getSocket().getFd();
 		ssize_t		received;
 
-		received = recv(clientFd, _buffer, RECV_BUFFER_SIZE - 1, recvFlags);
+		received = recv(clientFd, _buffer, RECV_BUFFER_SIZE - 1, _ioFlags);
 		if (received > 0) {
 			_buffer[received] = '\0';
 			LOG_INFO("Received a client request (fd=" << clientFd << ")");
@@ -326,12 +330,11 @@ namespace	webserv
 	{
 		const char*	buff = client.getResponse().getResponseBuffer().data();
 		size_t		len = client.getResponse().getResponseBuffer().size();
-		int			sendFlags = (MACOS ? 0 : MSG_DONTWAIT);
 		ssize_t		sent;
 		size_t		totalSent = 0;
 
 		for (int retry = 3; retry > 0; --retry) {
-			sent = send(clientFd, buff + totalSent, len - totalSent, sendFlags);
+			sent = send(clientFd, buff + totalSent, len - totalSent, _ioFlags);
 			if (sent > 0)
 				totalSent += sent;
 			if (totalSent == len)

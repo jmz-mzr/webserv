@@ -1,12 +1,11 @@
 #ifndef SOCKET_HPP
 # define SOCKET_HPP
 
+# include <string>
+
 # include <sys/socket.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
-
-# include <string>
-# include <exception>
 
 # include "utils/utils.hpp"
 
@@ -23,15 +22,6 @@ namespace	webserv
 	public:
 		Socket(const Socket& src);
 		virtual ~Socket() { }
-
-		class FatalErrorException: public std::exception {
-		public:
-			FatalErrorException(const char* msg = "A fatal error occured"):
-																_msg(msg) { }
-			virtual const char*	what() const throw() { return (_msg); }
-		private:
-			const char*	_msg;
-		};
 
 		const enum SocketType&	getType() const { return (_type); }
 		const int&				getFd() const { return (_fd); }

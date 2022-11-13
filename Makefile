@@ -92,7 +92,7 @@ BOT-LEFT2	=	\xE2\x94\x97
 BOT-RIGHT2	=	\xE2\x94\x9B
 
 #>	DISPLAY
-WIDTH		=	48
+WIDTH		=	64
 NAME_SIZE	=	$(shell NAME='$(NAME)'; printf "$${\#NAME}")
 PAD_WIDTH	=	$(shell printf "$$(((($(WIDTH) - $(NAME_SIZE)) / 2) - 1))")
 PAD_PREC	=	$(shell printf "$$(($(PAD_WIDTH) / 1.5))")

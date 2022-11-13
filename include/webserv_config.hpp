@@ -19,11 +19,9 @@
 //# define SEND_BUFFER_SIZE	1048576	// 1MB
 
 # if (defined(__GLIBCXX__) || defined(__GLIBCPP__))
-#  define MACOS			0
-#  define LINUX			1
+#  define MACOS
 # else
-#  define MACOS			1
-#  define LINUX			0
+#  define LINUX
 # endif
 
 #endif	// WEBSERV_CONFIG_HPP

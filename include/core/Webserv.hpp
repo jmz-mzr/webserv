@@ -68,6 +68,7 @@ namespace	webserv
 		std::vector<Server>			_servers;
 		std::list<Client>			_clients;
 		std::vector<struct pollfd>	_pollFds;
+		int							_ioFlags;
 	};
 
 }	// namespace webserv

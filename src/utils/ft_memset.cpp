@@ -7,7 +7,7 @@ namespace	webserv
 	{
 		char*	str;
 
-		str = (char*)s;
+		str = reinterpret_cast<char *>(s);
 		while (n--)
 			*str++ = c;
 		return (s);
