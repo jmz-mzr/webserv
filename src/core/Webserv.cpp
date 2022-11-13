@@ -230,7 +230,7 @@ namespace	webserv
 		if ((object == SERVER
 					&& (pollFd->revents & ~POLLIN) != 0)
 				|| (object == CLIENT
-					&& ((pollFd->revents & ~( POLLIN | POLLOUT )) != 0)))
+					&& ((pollFd->revents & ~(POLLIN | POLLOUT)) != 0)))
 			LOG_DEBUG(object << " (fd=" << pollFd->fd << ") "
 					<< "received other poll flags:"
 					<< " POLLERR=" << ((pollFd->revents & POLLERR) != 0)
@@ -256,9 +256,21 @@ namespace	webserv
 
 	ssize_t	Webserv::_receiveClientRequest(Client& client)
 	{
+		// TO DO: What if a request comes while the last one is not terminated?
+		// 		  Or while the last response has not been (fully) sent yet?
+		// 		  Wait before the next recv? Ignore it?
+		// 		  Drop previous request? prepareErrorResponse(...)?
+		// 		  Implement request pipelining? Create a queue of responses?
+		// 		  Or handle this in "_handleClientRequest()"?
+
 		int			clientFd = client.getSocket().getFd();
 		ssize_t		received;
 
+		if (client.isProcessingRequest()) {
+			LOG_DEBUG("Finish processing the last request before receiving"
+					<< " this new client request (fd=" << clientFd << ")");
+			return (-1);	// see "TO DO" for other options
+		}
 		received = recv(clientFd, _buffer, RECV_BUFFER_SIZE - 1, _ioFlags);
 		if (received > 0) {
 			_buffer[received] = '\0';
@@ -295,7 +307,7 @@ namespace	webserv
 		int					extracted;
 		std::string			msg;
 		std::ostringstream	msgWithHeader;
-	
+
 		try {
 			client.buffer += _buffer;
 		} catch (const std::exception& e) {
@@ -310,15 +322,6 @@ namespace	webserv
 
 	void	Webserv::_handleClientRequest(Client& client)
 	{
-		// TO DO: What if a request comes while the last one is not terminated?
-		// 		  Or while the last response has not been (fully) sent yet?
-		// 		  Ignore it? Drop previous request? prepareErrorResponse(...)?
-		// 		  Implement request pipelining? Create a queue of responses?
-
-		if (client.isProcessingRequest()) {
-			client.clearRequest();	// see "TO DO" for other options
-			client.clearResponse();
-		}
 		client.parseRequest(_buffer);
 		if (client.hasError())
 			client.prepareErrorResponse();
@@ -355,9 +358,9 @@ namespace	webserv
 
 	bool	Webserv::_handleClientResponse(Client& client, pollFd_iter pollFd)
 	{
-		// TO DO: Perhaps implement keepalive to avoid disconnecting
-		// 		  the client after having sent the response
-		//		  (or just with TCP/SO_KEEPALIVE socket option)
+		// TO DO: At the project's end, implement keepalive with its parameters
+		// 		  "timeout" and "max", or either always keep the clients alive,
+		// 		  or disconnect them after having sent them the response
 
 		if ((pollFd->revents & POLLOUT) != 0 && client.hasResponseReady()) {
 			if (!_sendResponse(client, client.getSocket().getFd()))
@@ -368,8 +371,6 @@ namespace	webserv
 				client.clearResponse();
 		}
 //		if (!client.isProcessingRequest() && !client.isKeepAlive())
-		if (!client.isProcessingRequest())
-			return (false);	// tmp exam version
 //			return (true);
 		return (false);
 	}

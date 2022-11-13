@@ -27,7 +27,7 @@ namespace	webserv
 			throw FatalErrorException("Fatal error on accept() call");
 		}
 #ifdef MACOS
-			fcntl(_fd, F_SETFL, O_NONBLOCK);
+		fcntl(_fd, F_SETFL, O_NONBLOCK);
 #endif
 		_port = ntohs(_addr.sin_port);
 		_ipAddr = ft_inet_ntoa(_addr.sin_addr);
