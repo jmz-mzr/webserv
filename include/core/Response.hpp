@@ -17,6 +17,7 @@ namespace	webserv
 		const std::string&	getResponseBuffer() const;
 		int					getResponseCode() const { return (_responseCode); }
 
+		bool	isKeepAlive() const { return (_isKeepAlive); }
 		bool	isResponseReady() const { return (_isResponseReady); }
 		bool	isChunkedResponse() const { return (_isChunkedResponse); }
 
@@ -33,6 +34,7 @@ namespace	webserv
 		std::string		_responseBuffer;
 //		std::ifstream	_requestedFile;
 		int				_responseCode;
+		bool			_isKeepAlive;
 		bool			_isChunkedResponse;
 		bool			_isResponseReady;
 	};

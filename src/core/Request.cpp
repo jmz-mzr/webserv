@@ -10,6 +10,7 @@ namespace	webserv
 	/**************************************************************************/
 
 	Request::Request(): _requestMethod(kEmpty),
+						_isKeepAlive(true),
 						_isChunkedRequest(false),
 						_isTerminatedRequest(false)
 	{
@@ -17,6 +18,7 @@ namespace	webserv
 	}
 
 	Request::Request(const Request& src): _requestMethod(src._requestMethod),
+								_isKeepAlive(src._isKeepAlive),
 								_isChunkedRequest(src._isChunkedRequest),
 								_isTerminatedRequest(src._isTerminatedRequest)
 	{
@@ -109,6 +111,7 @@ namespace	webserv
 		_serverConfig.clearConfig();
 		_requestMethod = kEmpty;
 		_hostName.clear();
+		_isKeepAlive = true;
 		_isChunkedRequest = false;
 		_isTerminatedRequest = false;
 	}

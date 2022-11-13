@@ -9,6 +9,7 @@ namespace	webserv
 	/**************************************************************************/
 
 	Response::Response(): _responseCode(0),
+							_isKeepAlive(true),
 							_isChunkedResponse(false),
 							_isResponseReady(false)
 	{
@@ -18,6 +19,7 @@ namespace	webserv
 	Response::Response(const Response& src):
 									_responseBuffer(src._responseBuffer),
 									_responseCode(src._responseCode),
+									_isKeepAlive(src._isKeepAlive),
 									_isChunkedResponse(src._isChunkedResponse),
 									_isResponseReady(src._isResponseReady)
 	{
@@ -99,6 +101,7 @@ namespace	webserv
 
 		_responseBuffer.clear();
 		_responseCode = 0;
+		_isKeepAlive = true;
 		_isChunkedResponse = false;
 		_isResponseReady = false;
 	}

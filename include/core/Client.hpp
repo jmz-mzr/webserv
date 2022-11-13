@@ -31,6 +31,7 @@ namespace	webserv
 
 		bool	isProcessingRequest() const;
 		bool	hasError() const;
+		bool	isKeepAlive() const { return (_isKeepAlive); }	// compute parameters?
 		bool	hasRequestTerminated() const;
 		bool	hasResponseReady() const;
 
@@ -50,6 +51,7 @@ namespace	webserv
 		int						_serverFd;
 		const server_configs&	_serverConfigs;
 		AcceptSocket			_socket;
+		bool					_isKeepAlive;	// divide in a Class with parameters?
 		Request					_request;
 		Response				_response;
 	};

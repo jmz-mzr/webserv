@@ -12,7 +12,8 @@ namespace	webserv
 					const server_configs& serverConfigs): _id(id),
 												_serverFd(serverFd),
 												_serverConfigs(serverConfigs),
-												_socket(serverFd)
+												_socket(serverFd),
+												_isKeepAlive(true)
 	{
 		LOG_INFO("New Client instance");
 		LOG_DEBUG("id=" << _id << " ; " << "serverFd=" << _serverFd << " ; "
@@ -24,6 +25,7 @@ namespace	webserv
 	Client::Client(const Client& src): _id(src._id), _serverFd(src._serverFd),
 										_serverConfigs(src._serverConfigs),
 										_socket(src._socket),
+										_isKeepAlive(src._isKeepAlive),
 										_request(src._request),
 										_response(src._response)
 	{
@@ -75,6 +77,10 @@ namespace	webserv
 
 	void	Client::prepareResponse()
 	{
+		// TO DO: If implemented, compute keepalive parameters and update
+		// 		  the client, request and/or response accordingly
+		// 		  Also update it relative to the error codes (like 400)
+
 		_response.prepareResponse(_request);
 		if (!_response.isChunkedResponse())
 			_request.clearRequest();
@@ -82,8 +88,12 @@ namespace	webserv
 
 	void	Client::prepareErrorResponse(int errorCode)
 	{
-		_request.clearRequest();
+		// TO DO: If implemented, compute keepalive parameters and update
+		// 		  the client, request and/or response accordingly
+		// 		  Also update it relative to the error codes (like 400)
+
 		_response.prepareErrorResponse(errorCode);
+		_request.clearRequest();
 	}
 
 }	// namespace webserv

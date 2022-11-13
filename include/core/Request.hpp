@@ -28,7 +28,7 @@ namespace	webserv
 
 		bool	isChunkedRequest() const { return (_isChunkedRequest); }
 		bool	isTerminatedRequest() const { return (_isTerminatedRequest); }
-//		bool	isKeepAlive() const;
+		bool	isKeepAlive() const { return (_isKeepAlive); }
 
 		int		parseRequest(const char* buffer,
 								const server_configs& serverConfigs);
@@ -45,11 +45,10 @@ namespace	webserv
 		enum RequestMethod	_requestMethod;
 		std::string			_hostName;	// recorded in lowercase with ft_str_tolower
 										// if none or empty return 400 error
+		bool				_isKeepAlive;	// divide in a Class with parameters?
 		bool				_isChunkedRequest;
 //		std::ofstream		_chunks;	// or with a swap space?
 		bool				_isTerminatedRequest;
-//		bool				_keepAlive;	// divide in a Class with parameters
-//										// or use with SO_KEEPALIVE
 	};
 
 }	// namespace webserv

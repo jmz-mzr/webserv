@@ -358,9 +358,10 @@ namespace	webserv
 
 	bool	Webserv::_handleClientResponse(Client& client, pollFd_iter pollFd)
 	{
-		// TO DO: At the project's end, implement keepalive with its parameters
-		// 		  "timeout" and "max", or either always keep the clients alive,
-		// 		  or disconnect them after having sent them the response
+		// TO DO: 1) Some errorCodes (like 400) go with a "Connection: close",
+		// 		  meaning that the connection won't be kept alive
+		// 		  2) At the project's end, implement keepalive with its
+		// 		  parameters "timeout"/"max"
 
 		if ((pollFd->revents & POLLOUT) != 0 && client.hasResponseReady()) {
 			if (!_sendResponse(client, client.getSocket().getFd()))
@@ -370,8 +371,8 @@ namespace	webserv
 			else
 				client.clearResponse();
 		}
-//		if (!client.isProcessingRequest() && !client.isKeepAlive())
-//			return (true);
+		if (!client.isProcessingRequest() && !client.isKeepAlive())
+			return (true);
 		return (false);
 	}
 
