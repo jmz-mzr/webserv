@@ -1,0 +1,8 @@
+To compare with NGINX:
+	- Invalid IP and/or port
+
+Request parsing:
+	- Invalid Host Header
+	  (see RFC,
+	  https://github.com/eclipse/jetty.project/issues/7278,
+	  https://bz.apache.org/bugzilla/show_bug.cgi?id=62739)
