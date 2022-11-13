@@ -30,7 +30,9 @@ SRC			=	main.cpp \
 				Logger.cpp \
 				ft_memset.cpp \
 				ft_inet_ntoa.cpp \
-				ft_sleep.cpp
+				ft_sleep.cpp \
+				ft_strcmp_icase.cpp \
+				ft_str_tolower.cpp
 TEST		=	$(filter-out webserv%,$(SRC:.cpp=.test.cpp))
 OBJ			=	$(SRCS:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRCS:%.cpp=$(DEPDIR)/%.d)

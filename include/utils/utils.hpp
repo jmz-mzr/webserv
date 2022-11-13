@@ -1,6 +1,7 @@
 #ifndef UTILS_HPP
 # define UTILS_HPP
 
+# include <string>
 # include <exception>
 
 # include <stddef.h>
@@ -13,6 +14,9 @@ namespace	webserv
 	void*		ft_memset(void* s, int c, size_t n);
 	const char*	ft_inet_ntoa(struct in_addr in);
 	void		ft_sleep(double seconds);
+	bool		ft_strcmp_icase(const std::string& str1,
+								const std::string& str2);
+	std::string	ft_str_tolower(const std::string& str);
 
 	class FatalErrorException: public std::exception {
 	public:
