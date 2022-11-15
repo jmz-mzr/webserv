@@ -9,12 +9,7 @@
 namespace	webserv
 {
 
-	enum RequestMethod {
-		kEmpty,
-		kGet,
-		kPost,
-		kDelete
-	};
+	class	ServerConfig;
 
 	class	Request {
 	public:
@@ -24,7 +19,7 @@ namespace	webserv
 		Request(const Request& src);
 		~Request() { }	// clear _chunks if not automatic
 
-		const enum RequestMethod&	getRequestMethod() const;
+		const int&		getRequestMethod() const { return (_requestMethod); }
 
 		bool	isChunkedRequest() const { return (_isChunkedRequest); }
 		bool	isTerminatedRequest() const { return (_isTerminatedRequest); }
@@ -41,11 +36,27 @@ namespace	webserv
 										const server_configs& serverConfigs);
 		void	_loadServerConfig(const server_configs& serverConfigs);
 
-		ServerConfig		_serverConfig;
-		enum RequestMethod	_requestMethod;
-		std::string			_hostName;	// recorded in lowercase with ft_str_tolower
-										// if none or empty return 400 error
+		// TO DO: 1) Must be a pointer (I'll take care of it on Friday)
+		// 2) The search for the ServerConfig and the Location
+		// must be case-insensitive (with ft_strcmp_icase)
+		//ServerConfig		_serverConfig;
+
+		int					_requestMethod;
+
+		// TO DO: If the requested uri has no "/" prefix, or if it goes up in
+		// directories (with '..') such that it would go above "/"
+		// (like '/../abc'), it should return a 400 error (but '/abc/../cde',
+		// '/././.', '/...' are all fine)
+		std::string			_requestLine;
+
+		std::string			_uri;
+
+		// TO DO: 1) Record in lowercase with ft_str_tolower
+		// 2) If none, or empty, return 400 error
+		std::string			_host;
+
 		bool				_isKeepAlive;	// divide in a Class with parameters?
+		long long			_bodySize;
 		bool				_isChunkedRequest;
 //		std::ofstream		_chunks;	// or with a swap space?
 		bool				_isTerminatedRequest;
