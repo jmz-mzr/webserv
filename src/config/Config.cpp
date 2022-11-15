@@ -23,7 +23,7 @@ namespace	webserv
 	void	Config::openConfigFile(const std::string& configFileName)
 	{
 		_configFileName = configFileName;
-		_configFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+		_configFile.exceptions(std::ifstream::failbit);
 		try {
 			_configFile.open(configFileName.c_str());
 		} catch (std::ifstream::failure &e) {

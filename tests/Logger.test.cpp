@@ -23,4 +23,5 @@ TEST_SUITE("Logger class") {
 			}
 		}
 	}
+
 }

@@ -157,6 +157,6 @@ header:
 
 re:				fclean $(BIN)
 
-test:			fclean all
+test:			all
 				@chmod +x $(BIN)
 				@./$(BIN)
