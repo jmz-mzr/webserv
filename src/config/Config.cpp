@@ -11,7 +11,7 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Config::Config()
+	Config::Config(): _maxBodySize(0)
 	{
 		LOG_INFO("New Config instance");
 	}
@@ -47,10 +47,9 @@ namespace	webserv
 
 	void	Config::parseConfig()
 	{
-		ServerConfig	serverConfig;
-
 		while (1) {
-			serverConfig.clearConfig();
+			ServerConfig	serverConfig(*this);
+
 			// TO DO: actual parsing of every Server block
 			serverConfig.addListenPair(std::make_pair("127.0.0.1", 8081));
 			serverConfig.addName("webserv");

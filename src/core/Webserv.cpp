@@ -59,8 +59,8 @@ namespace	webserv
 
 		serverConfig = server.getConfigs().begin();
 		while (serverConfig != server.getConfigs().end()) {
-			name = serverConfig->getNames().begin();
-			while (name != serverConfig->getNames().end()) {
+			name = serverConfig->getServerNames().begin();
+			while (name != serverConfig->getServerNames().end()) {
 				if (newConfig.eraseName(*name))
 					LOG_WARN("Conflicting server name \"" << *name << "\" on "
 							<< server.getSocket().getIpAddr() << ":"

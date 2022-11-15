@@ -3,6 +3,7 @@
 
 # include <string>
 # include <exception>
+# include <algorithm>
 
 # include <stddef.h>
 
@@ -17,6 +18,14 @@ namespace	webserv
 	bool		ft_strcmp_icase(const std::string& str1,
 								const std::string& str2);
 	std::string	ft_str_tolower(const std::string& str);
+
+	struct location_compare {
+		bool	operator()(const std::string& s1, const std::string& s2) const
+		{
+			return (std::lexicographical_compare(s2.begin(), s2.end(),
+						s1.begin(), s1.end()));
+		}
+	};
 
 	class FatalErrorException: public std::exception {
 	public:
