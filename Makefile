@@ -18,6 +18,7 @@ DEPDIR		=	$(BUILDIR)/.deps
 SRC			=	main.cpp \
 				Config.cpp \
 				ServerConfig.cpp \
+				Location.cpp \
 				Socket.cpp \
 				ListenSocket.cpp \
 				AcceptSocket.cpp \
@@ -39,6 +40,7 @@ DEP			=	$(SRCS:%.cpp=$(DEPDIR)/%.d)
 
 #>	COMPILATION FLAGS
 CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
+CXXFLAGS	+=	-DWEBSERV_ROOT=\"$(shell pwd)\"
 CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
 LDFLAGS		=	$(addprefix -L, $(LIBDIR)) $(addprefix -l, $(LIB))
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
