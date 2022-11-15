@@ -1,4 +1,5 @@
 #include "core/Request.hpp"
+#include "webserv_config.hpp"
 #include "utils/Logger.hpp"
 #include "utils/utils.hpp"
 
@@ -9,8 +10,9 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Request::Request(): _requestMethod(kEmpty),
+	Request::Request(): _requestMethod(EMPTY),
 						_isKeepAlive(true),
+						_bodySize(-1),
 						_isChunkedRequest(false),
 						_isTerminatedRequest(false)
 	{
@@ -19,6 +21,7 @@ namespace	webserv
 
 	Request::Request(const Request& src): _requestMethod(src._requestMethod),
 								_isKeepAlive(src._isKeepAlive),
+								_bodySize(src._bodySize),
 								_isChunkedRequest(src._isChunkedRequest),
 								_isTerminatedRequest(src._isTerminatedRequest)
 	{
@@ -32,20 +35,18 @@ namespace	webserv
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 
-	const enum RequestMethod&	Request::getRequestMethod() const
-	{
-		return (_requestMethod);
-	}
-
 	void	Request::_loadServerConfig(const server_configs& serverConfigs)
 	{
-		server_configs::const_iterator				config;
+		// TO DO: _serverConfig must be a pointer (I'll take care of it on Friday)
+		// As nice side effect, no need for copy assignment operators anymore!
+
+/*		server_configs::const_iterator				config;
 		std::vector<std::string>::const_iterator	name;
 
 		config = serverConfigs.begin();
 		while (config != serverConfigs.end()) {
-			name = config->getNames().begin();
-			while (name != config->getNames().end()) {
+			name = config->getServerNames().begin();
+			while (name != config->getServerNames().end()) {
 				if (ft_strcmp_icase(_hostName, *name) == 0) {
 					_serverConfig = *config;
 					return ;
@@ -54,7 +55,8 @@ namespace	webserv
 			}
 			++config;
 		}
-		_serverConfig = serverConfigs[0];
+		_serverConfig = serverConfigs[0];*/
+		(void)serverConfigs;
 	}
 
 	int	Request::_parseChunkedRequest(const char* buffer,
@@ -78,7 +80,7 @@ namespace	webserv
 		// 		  return (0);
 
 		(void)buffer;
-		if (_serverConfig.empty())
+		//if (_serverConfig.empty())	// must be a ptr (I do it on Friday)
 			_loadServerConfig(serverConfigs);
 		return (0);
 	}
@@ -99,7 +101,7 @@ namespace	webserv
 		// 		  return (0);
 
 		(void)buffer;
-		if (_serverConfig.empty())
+		//if (_serverConfig.empty())	// must be a ptr (I do it on Friday)
 			_loadServerConfig(serverConfigs);
 		return (0);
 	}
@@ -108,9 +110,9 @@ namespace	webserv
 	{
 		// TO DO: clear saved chunks;	// with try-catch if necessary
 
-		_serverConfig.clearConfig();
-		_requestMethod = kEmpty;
-		_hostName.clear();
+		//_serverConfig.clearConfig();	// must be a ptr (I do it on Friday)
+		_requestMethod = EMPTY;
+		_host.clear();
 		_isKeepAlive = true;
 		_isChunkedRequest = false;
 		_isTerminatedRequest = false;
