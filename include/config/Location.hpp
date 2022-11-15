@@ -16,7 +16,7 @@ namespace	webserv
 	class	Location {
 	public:
 		typedef std::map<const int, std::string>		error_pages_map;
-		typedef std::set<const int>						limit_except_set;
+		typedef std::set<int>							limit_except_set;
 		typedef std::pair<const int, std::string>		return_pair;
 
 		Location(const ServerConfig& src);
