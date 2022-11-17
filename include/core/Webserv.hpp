@@ -25,7 +25,7 @@ namespace	webserv
 		Webserv();
 		~Webserv();
 
-		void	loadConfig(const char* configFile);
+		void	init(int argc, char** argv);
 		void	run();
 
 		volatile static std::sig_atomic_t	receivedSigInt;
@@ -62,6 +62,8 @@ namespace	webserv
 		void		_handleClientRequest(Client& client);
 		bool		_handleClientResponse(Client& client, pollFd_iter pollFd);
 		bool		_sendResponse(Client& client, int clientFd);
+		void		_usageHelper();
+		void		_parseConfig(std::string configFilePath);
 
 		char						_buffer[RECV_BUFFER_SIZE];
 		Config						_config;

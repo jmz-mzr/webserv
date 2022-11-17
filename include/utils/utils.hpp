@@ -27,9 +27,18 @@ namespace	webserv
 		}
 	};
 
-	class FatalErrorException: public std::exception {
+	class	FatalErrorException: public std::exception {
 	public:
 		FatalErrorException(const char* msg = "A fatal error occured"):
+															_msg(msg) { }
+		virtual const char*	what() const throw() { return (_msg); }
+	private:
+		const char*	_msg;
+	};
+
+	class	LogicErrorException: public std::exception {
+	public:
+		LogicErrorException(const char* msg = "A logic error occured"):
 															_msg(msg) { }
 		virtual const char*	what() const throw() { return (_msg); }
 	private:

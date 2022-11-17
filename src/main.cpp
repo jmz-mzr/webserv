@@ -20,16 +20,19 @@ int	main(int argc, char** argv) try
 {
 	webserv::Webserv	webserv;
 
-	(void)argc;
-	webserv.loadConfig(argv[1]);
+	webserv.init(argc, argv);
 	// From then on the server should never die: we must try-catch
 	// everything in "run()" so it never comes back here
 	std::signal(SIGINT, handleSigInt);
 	webserv.run();
 	return (EXIT_SUCCESS);
 }
-catch (const std::exception& e) {
-	LOG_ERROR("Fatal error: " << e.what());
+catch (const webserv::FatalErrorException& e) {
+	std::cerr << "Fatal error: " << e.what() << std::endl;
+	return (EXIT_FAILURE);
+}
+catch (const webserv::LogicErrorException& e) {
+	std::cerr << "Error: " << e.what() << std::endl;
 	return (EXIT_FAILURE);
 }
 

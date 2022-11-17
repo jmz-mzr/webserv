@@ -16,6 +16,7 @@ DEPDIR		=	$(BUILDIR)/.deps
 
 #>	FILES
 SRC			=	main.cpp \
+				ParseConfig.cpp \
 				Config.cpp \
 				ServerConfig.cpp \
 				Location.cpp \

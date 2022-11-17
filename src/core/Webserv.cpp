@@ -1,13 +1,16 @@
 #include "core/Webserv.hpp"
-#include "utils/Logger.hpp"
-#include "utils/utils.hpp"
 
 #include <cstring>
 #include <cerrno>
+#include <iostream>
 
 #include <unistd.h>
 #include <stddef.h>
 #include <sys/socket.h>
+
+#include "config/ParseConfig.hpp"
+#include "utils/Logger.hpp"
+#include "utils/utils.hpp"
 
 #define SERVER		"server"
 #define CLIENT		"client"
@@ -135,14 +138,28 @@ namespace	webserv
 		}
 	}
 
-	void	Webserv::loadConfig(const char* configFile)
+	void	Webserv::_usageHelper(void)
 	{
-		const char*	configFileName = configFile ? configFile
-												: DEFAULT_CONF_FILE;
+		std::cerr << "Usage: ./webserv [FILE]" << std::endl;
+	}
 
-		_config.openConfigFile(configFileName);
-		_config.parseConfig();
-		_config.closeConfigFile();
+	void	Webserv::_parseConfig(std::string configFilePath)
+	{
+		ParseConfig	parser(configFilePath);
+	}
+
+	void	Webserv::init(int argc, char** argv)
+	{
+		if (argc > 2 || argc < 1) {
+			LOG_DEBUG("argc=" << argc);
+			_usageHelper();
+			throw LogicErrorException("bad number of arguments");
+		} else if (argc == 2) {
+			_parseConfig(argv[1]);
+		} else {
+			_parseConfig(DEFAULT_CONF_FILE);
+		}
+		// parser.execute();
 		_loadServers();
 	}
 

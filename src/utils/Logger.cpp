@@ -26,7 +26,7 @@ namespace	webserv
 		if (_channel & kFile)
 		{
 			_logfile.open(CONF_LOG_FILE);
-			if ((_logfile.rdstate() & std::ofstream::failbit) != 0) {
+			if (!(_logfile.good())) {
 				LOG_WARN("Cannot open \"" << CONF_LOG_FILE << "\", ignored");
 				_channel &= ~kFile;
 			}
@@ -37,11 +37,11 @@ namespace	webserv
 	{
 		if (_logfile.is_open()) {
 			_logfile.close();
-			if ((_logfile.rdstate() & std::ofstream::failbit) != 0) {
+			if (!(_logfile.good())) {
 				LOG_WARN("Bad close() on \"" << _logfile << "\"");
-				return ;
+			} else {
+				LOG_INFO("close(" << CONF_LOG_FILE << ")");
 			}
-			LOG_INFO("close(" << CONF_LOG_FILE << ")");
 		}
 	}
 

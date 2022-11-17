@@ -21,8 +21,8 @@ namespace	webserv
 	class	ServerConfig {
 	public:
 		typedef std::pair<const std::string, uint16_t>		listen_pair;
-		typedef std::map<const int, std::string>			error_pages_map;
-		typedef std::map<const std::string, Location,
+		typedef std::map<int, std::string>					error_pages_map;
+		typedef std::map<std::string, Location,
 							location_compare>				locations_map;
 
 		ServerConfig(const Config& src);
