@@ -15,6 +15,8 @@ namespace	webserv
 	void*		ft_memset(void* s, int c, size_t n);
 	const char*	ft_inet_ntoa(struct in_addr in);
 	void		ft_sleep(double seconds);
+	bool		ft_charcmp_icase(const unsigned char c1,
+									const unsigned char c2);
 	bool		ft_strcmp_icase(const std::string& str1,
 								const std::string& str2);
 	std::string	ft_str_tolower(const std::string& str);
