@@ -1,5 +1,8 @@
 To compare with NGINX:
 	- Invalid IP and/or port
+	- No server defined in the config file
+	- Directives defined after a location (should still be
+	  inherited by the location)
 
 Request parsing:
 	- Invalid Host Header
