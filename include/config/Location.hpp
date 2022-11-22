@@ -18,6 +18,8 @@ namespace	webserv
 		typedef std::map<const int, std::string>		error_pages_map;
 		typedef std::set<int>							limit_except_set;
 		typedef std::pair<const int, std::string>		return_pair;
+		typedef std::map<const std::string, Location,
+							location_compare>			locations_map;
 
 		Location(const ServerConfig& src);
 		Location(const Location& src);
@@ -39,6 +41,8 @@ namespace	webserv
 												{ return (_tryFile); }
 		const std::string&			getFastCgiPass() const
 												{ return (_fastCgiPass); }
+		const locations_map&		getLocations() const
+												{ return (_locations); }
 	private:
 		Location();
 
@@ -108,6 +112,13 @@ namespace	webserv
 		// appears, it must throw an exception (like '"fastcgi_pass" directive
 		// is duplicate in /usr/local/etc/nginx/nginx.conf:109')
 		std::string				_fastCgiPass;
+
+		// TO DO: 1) Extension locations follow the form "\*\.(alnum|$|.|_|-)+"
+		// (star, dot, and then any NON-EMPTY (total size > 2) combination of
+		// alphanum/dollar/dot/underscore/dash)
+		// 2) For the sake of simplicity, only allow nested locations if they
+		// are extension locations in normal locations
+		locations_map			_locations;
 	};
 
 }	// namespace webserv
