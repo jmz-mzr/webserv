@@ -5,6 +5,7 @@
 # include <string>
 
 # include "config/ServerConfig.hpp"
+# include "config/Location.hpp"
 
 namespace	webserv
 {
@@ -30,16 +31,24 @@ namespace	webserv
 
 		void	clearRequest();
 	private:
+		//typedef std::map<const std::string, Location,
+		//					location_compare>				locations_map;
+		typedef ServerConfig::locations_map				locations_map;
+
 		Request&	operator=(const Request& rhs);
 
 		int		_parseChunkedRequest(const char* buffer,
 										const server_configs& serverConfigs);
-		void	_loadServerConfig(const server_configs& serverConfigs);
+		int		_loadServerConfig(const server_configs& serverConfigs);
+		int		_loadLocation(const ServerConfig& serverConfig);
+		bool	_loadExtensionLocation(const ServerConfig& serverConfig);
+		bool	_loadExtensionLocation(const Location& location);
 
 		// TO DO: 1) Must be a pointer (I'll take care of it on Friday)
 		// 2) The search for the ServerConfig and the Location
 		// must be case-insensitive (with ft_strcmp_icase)
-		//ServerConfig		_serverConfig;
+		const ServerConfig*	_serverConfig;
+		const Location*		_location;
 
 		int					_requestMethod;
 
