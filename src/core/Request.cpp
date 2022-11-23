@@ -85,12 +85,12 @@ namespace	webserv
 		return (false);
 	}
 
-	int	Request::_loadLocation(const ServerConfig& serverConfig)
+	bool	Request::_loadLocation(const ServerConfig& serverConfig)
 	{
 		locations_map::const_iterator		location;
 
 		if (_loadExtensionLocation(serverConfig))
-			return (0);
+			return (true);
 		location = serverConfig.getLocations().lower_bound(_uri);
 		while (location != serverConfig.getLocations().end()) {
 			if (location->first == "" || std::search(_uri.begin(), _uri.end(),
@@ -102,7 +102,7 @@ namespace	webserv
 				} else {
 					LOG_DEBUG("Using location: \"" << location->first << "\"");
 				}
-				return (0);
+				return (true);
 			}
 			if (location->first[0] != '*')
 				LOG_DEBUG("Test location: \"" << location->first << "\"");
@@ -110,10 +110,10 @@ namespace	webserv
 		}
 		LOG_ERROR("No suitable location found for uri: \"" << _uri << "\"");
 		clearRequest();
-		return (500);
+		return (false);
 	}
 
-	int	Request::_loadServerConfig(const server_configs& serverConfigs)
+	bool	Request::_loadServerConfig(const server_configs& serverConfigs)
 	{
 		server_configs::const_iterator				config;
 		std::vector<std::string>::const_iterator	name;
@@ -124,22 +124,27 @@ namespace	webserv
 			while (name != config->getServerNames().end()) {
 				if (ft_strcmp_icase(_host, *name) == 0) {
 					_serverConfig = &(*config);
-					LOG_DEBUG("Using server: \"" << *name << "\"");
-					return (0);
+					LOG_DEBUG("Using server: \"" << *name << "\" (on \""
+							<< _serverConfig->getListenPairs()[0].first << ":"
+							<< _serverConfig->getListenPairs()[0].second
+							<< "\")");
+					return (true);
 				}
 				++name;
 			}
 			++config;
 		}
 		_serverConfig = &(serverConfigs[0]);
-		LOG_DEBUG("Using default server");
+		LOG_DEBUG("Using default server (on \""
+				<< _serverConfig->getListenPairs()[0].first << ":"
+				<< _serverConfig->getListenPairs()[0].second << "\")");
 		return (_loadLocation(*_serverConfig));
 	}
 
 	int	Request::_parseChunkedRequest(const char* buffer,
 										const server_configs& serverConfigs)
 	{
-		// TO DO: parse [check and set Headers & Flags, serverConfig, etc]
+		// TO DO: parse [check and set Headers & Flags, maxBodySize, etc]
 		// 		  if (error) {
 		// 		    log error;
 		// 		    clearRequest();
@@ -161,7 +166,8 @@ namespace	webserv
 
 		(void)buffer;
 		if (!_serverConfig || !_location)
-			return (_loadServerConfig(serverConfigs));
+			if (!_loadServerConfig(serverConfigs))
+				return (500);
 		return (0);
 	}
 
@@ -170,7 +176,7 @@ namespace	webserv
 	{
 		// TO DO: if (_isChunkedRequest)
 		// 		    return (_parseChunkedRequest, serverConfigs);
-		// 		  parse [check and set Headers & Flags, serverConfig, etc,
+		// 		  parse [check and set Headers & Flags, maxBodySize, etc,
 		// 		  		 or set _isChunkedRequest and return (_parseChunked)]
 		// 		  if (error) {
 		// 		    log error;
@@ -184,7 +190,9 @@ namespace	webserv
 
 		(void)buffer;
 		if (!_serverConfig || !_location)
-			return (_loadServerConfig(serverConfigs));
+			if (!_loadServerConfig(serverConfigs))
+				return (500);
+		// check content length header after request header sent
 		return (0);
 	}
 
