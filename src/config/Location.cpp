@@ -11,7 +11,9 @@ namespace	webserv
 
 	Location::Location(const ServerConfig& src):
 											_errorPages(src.getErrorPages()),
-											_maxBodySize(src.getMaxBodySize())
+											_maxBodySize(src.getMaxBodySize()),
+											_autoIndex(false),
+											_index("index.html")
 	{
 		LOG_INFO("New Location instance");
 	}
@@ -22,7 +24,7 @@ namespace	webserv
 												_return(src._return),
 												_root(src._root),
 												_autoIndex(src._autoIndex),
-												_tryFile(src._tryFile),
+												_index(src._index),
 												_fastCgiPass(src._fastCgiPass),
 												_locations(src._locations)
 	{
