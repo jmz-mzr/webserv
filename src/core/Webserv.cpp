@@ -138,9 +138,9 @@ namespace	webserv
 		}
 	}
 
-	void	Webserv::_usageHelper(void)
+	void	Webserv::_usageHelper()
 	{
-		std::cerr << "Usage: ./webserv [FILE]" << std::endl;
+		std::cerr << "Usage: ./webserv [CONFIG FILE]" << std::endl;
 	}
 
 	void	Webserv::_parseConfig(std::string configFilePath)
