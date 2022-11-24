@@ -20,6 +20,8 @@ namespace	webserv
 	bool		ft_strcmp_icase(const std::string& str1,
 								const std::string& str2);
 	std::string	ft_str_tolower(const std::string& str);
+	std::string trim_left(const std::string &s);
+	std::string trim_right(const std::string &s);
 	std::string	trim(const std::string& str);
 
 	struct location_compare {

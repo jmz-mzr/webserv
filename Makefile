@@ -15,28 +15,29 @@ BUILDIR		=	build
 DEPDIR		=	$(BUILDIR)/.deps
 
 #>	FILES
-SRC			=	main.cpp \
-				ParseConfig.cpp \
-				ServerConfig.cpp \
+CONFIG		=	Config.cpp \
 				Location.cpp \
-				Socket.cpp \
-				ListenSocket.cpp \
-				AcceptSocket.cpp \
-				ConnectSocket.cpp \
-				Webserv.cpp \
-				Server.cpp \
+				ParseConfig.cpp \
+				ServerConfig.cpp
+CORE		=	AcceptSocket.cpp \
 				Client.cpp \
+				ConnectSocket.cpp \
+				ListenSocket.cpp \
 				Request.cpp \
 				Response.cpp \
-				Logger.cpp \
-				ft_memset.cpp \
+				Server.cpp \
+				Socket.cpp \
+				Webserv.cpp
+UTILS		=	ft_charcmp_icase.cpp \
 				ft_inet_ntoa.cpp \
+				ft_memset.cpp \
 				ft_sleep.cpp \
-				ft_charcmp_icase.cpp \
-				ft_strcmp_icase.cpp \
 				ft_str_tolower.cpp \
-				ft_trim.cpp
-TEST		=	$(filter-out webserv%,$(SRC:.cpp=.test.cpp))
+				ft_strcmp_icase.cpp \
+				Logger.cpp \
+				trim.cpp
+SRC			=	main.cpp $(CORE) $(CONFIG) $(UTILS)
+TEST		=	$(SRC:.cpp=.test.cpp)
 OBJ			=	$(SRCS:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRCS:%.cpp=$(DEPDIR)/%.d)
 
