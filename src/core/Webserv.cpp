@@ -274,20 +274,27 @@ namespace	webserv
 		}
 	}
 
-	ssize_t	Webserv::_receiveClientRequest(Client& client)
+	ssize_t	Webserv::_receiveClientRequest(Client& client, pollFd_iter pollFd)
 	{
-		// TO DO: What if a request comes while the last one is not terminated?
+		// TO DO: 1) What if a request comes while the last one is not terminated?
 		// 		  Or while the last response has not been (fully) sent yet?
 		// 		  Wait before the next recv? Ignore it?
 		// 		  Drop previous request? prepareErrorResponse(...)?
 		// 		  Implement request pipelining? Create a queue of responses?
 		// 		  Or handle this in "_handleClientRequest()"?
+		// 		  2) How to keep the client able to interact with the server
+		// 		  while the server sends a large file to the client?
 
 		int			clientFd = client.getSocket().getFd();
 		ssize_t		received;
 
+		_buffer[0] = '\0';
+		if (client.hasUnprocessedBuffer())
+		   return (1);
+		if (!(pollFd->revents & POLLIN))
+		   return (-1);
 		if (client.isProcessingRequest()) {
-			LOG_DEBUG("Finish processing the last request before receiving"
+			LOG_DEBUG("Finish responding to the last request before receiving"
 					<< " this new client request (fd=" << clientFd << ")");
 			return (-1);	// see "TO DO" for other options
 		}
@@ -391,32 +398,27 @@ namespace	webserv
 			else
 				client.clearResponse();
 		}
-		if (!client.isProcessingRequest() && !client.isKeepAlive())
+		if (!client.isKeepAlive())
 			return (true);
 		return (false);
 	}
 
 	void	Webserv::_handleClients()
 	{
-		std::list<Client>::iterator				client = _clients.begin();
-		size_t									i = _servers.size();
-		std::vector<struct pollfd>::iterator	pollFd;
-		ssize_t									received;
+		client_iter		client = _clients.begin();
+		size_t			i = _servers.size();
+		pollFd_iter		pollFd;
+		ssize_t			received;
 
 		while (client != _clients.end()) {
 			pollFd = _findPollFd(client->getSocket().getFd(), i, CLIENT);
 			if (pollFd != _pollFds.end()) {
 				_showOtherRevents(pollFd, CLIENT);
-				if ((pollFd->revents & POLLIN) != 0) {
-					received = _receiveClientRequest(*client);
-					if (received == 0) {
-						client = _removeClient(client, pollFd);
-						continue ;
-					} else if (received > 0)
-						_bufferAndSendMsg(*client);	// tmp exam version
-//						_handleClientRequest(*client);
-				}
-				if (_handleClientResponse(*client, pollFd)) {
+				received = _receiveClientRequest(*client, pollFd);
+				if (received > 0)
+					_bufferAndSendMsg(*client);	// tmp exam version
+//					_handleClientRequest(*client);
+				if (received == 0 || _handleClientResponse(*client, pollFd)) {
 					client = _removeClient(client, pollFd);
 					continue ;
 				}

@@ -1,6 +1,8 @@
 #include "core/Client.hpp"
 #include "utils/Logger.hpp"
 
+#include <exception>
+
 namespace	webserv
 {
 
@@ -40,20 +42,23 @@ namespace	webserv
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 
-	void	Client::parseRequest(const char* buffer)
+	void	Client::parseRequest(const char* recvBuffer)
 	{
-		int		responseCode = _request.parseRequest(buffer, _serverConfigs);
+		int		responseCode;
 
+		try {
+			responseCode = _request.parseRequest(_unprocessedBuffer, recvBuffer,
+													_serverConfigs);
+		} catch (const std::exception& e) {
+			LOG_ERROR("Unable to handle the client request: " << e.what());
+			LOG_DEBUG("serverFd=" << _serverFd << " ; "
+					<< "fd=" << _socket.getFd() << " ; "
+					<< "addr=" << _socket.getIpAddr() << " ; "
+					<< "port=" << _socket.getPort());
+			responseCode = 500;
+		}
 		if (responseCode >= 400 && responseCode <= 599)
 			_response.setResponseCode(responseCode);
-	}
-
-	bool	Client::isProcessingRequest() const
-	{
-		if (_request.isChunkedRequest()
-				|| hasRequestTerminated() || hasResponseReady())
-			return (true);
-		return (false);
 	}
 
 	bool	Client::hasError() const
@@ -61,6 +66,18 @@ namespace	webserv
 		int		responseCode = _response.getResponseCode();
 
 		if (responseCode >= 400 && responseCode <= 599)
+			return (true);
+		return (false);
+	}
+
+	bool	Client::hasUnprocessedBuffer() const
+	{
+		return (!_unprocessedBuffer.empty());
+	}
+
+	bool	Client::isProcessingRequest() const
+	{
+		if (hasRequestTerminated() || hasResponseReady())
 			return (true);
 		return (false);
 	}

@@ -55,7 +55,7 @@ namespace	webserv
 		void		_broadcastMsg(const std::string& msg,
 									const int senderId) const;	// tmp exam version
 		void		_handleClients();
-		ssize_t		_receiveClientRequest(Client& client);
+		ssize_t		_receiveClientRequest(Client& client, pollFd_iter pollFd);
 		void		_bufferAndSendMsg(Client& client);	// tmp exam version
 		int			_extractMsg(std::string& buffer, std::string& msg);	// tmp exam version
 		void		_handleClientRequest(Client& client);

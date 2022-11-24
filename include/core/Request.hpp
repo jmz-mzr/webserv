@@ -26,7 +26,7 @@ namespace	webserv
 		bool	isTerminatedRequest() const { return (_isTerminatedRequest); }
 		bool	isKeepAlive() const { return (_isKeepAlive); }
 
-		int		parseRequest(const char* buffer,
+		int		parseRequest(std::string& unprocessedBuffer, const char* buffer,
 								const server_configs& serverConfigs);
 
 		void	clearRequest();
@@ -35,7 +35,8 @@ namespace	webserv
 
 		Request&	operator=(const Request& rhs);
 
-		int		_parseChunkedRequest(const char* buffer,
+		int		_parseChunkedRequest(std::string& unprocessedBuffer,
+										const char* buffer,
 										const server_configs& serverConfigs);
 		bool	_loadServerConfig(const server_configs& serverConfigs);
 		bool	_loadLocation(const ServerConfig& serverConfig);
@@ -59,6 +60,7 @@ namespace	webserv
 		std::string			_host;
 
 		bool				_isKeepAlive;	// divide in a Class with parameters?
+		bool				_hasReceivedHeaders;
 		long long			_bodySize;
 		bool				_isChunkedRequest;
 //		std::ofstream		_chunks;	// or with a swap space?

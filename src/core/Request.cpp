@@ -16,6 +16,7 @@ namespace	webserv
 						_location(0),
 						_requestMethod(EMPTY),
 						_isKeepAlive(true),
+						_hasReceivedHeaders(false),
 						_bodySize(-1),
 						_isChunkedRequest(false),
 						_isTerminatedRequest(false)
@@ -27,6 +28,7 @@ namespace	webserv
 								_location(src._location),
 								_requestMethod(src._requestMethod),
 								_isKeepAlive(src._isKeepAlive),
+								_hasReceivedHeaders(src._hasReceivedHeaders),
 								_bodySize(src._bodySize),
 								_isChunkedRequest(src._isChunkedRequest),
 								_isTerminatedRequest(src._isTerminatedRequest)
@@ -141,58 +143,75 @@ namespace	webserv
 		return (_loadLocation(*_serverConfig));
 	}
 
-	int	Request::_parseChunkedRequest(const char* buffer,
+	int	Request::_parseChunkedRequest(std::string& unprocessedBuffer,
+										const char* recvBuffer,
 										const server_configs& serverConfigs)
 	{
-		// TO DO: parse [check and set Headers & Flags, maxBodySize, etc]
+		// TO DO: parse: [=> use unprocessedBuff first, then recvBuff]
+		// 		  		 if (!_hasReceivedHeaders)
+		// 		  		   check and set Headers;
+		//				 save what is not read in unprocessedBuff;
+		// 		  		 set _isChunkedRequest/_isTerminatedRequest if needed;
 		// 		  if (error) {
 		// 		    log error;
-		// 		    clearRequest();
+		// 		    clearRequest(); // only if closing connection error?
 		// 		    return (errorCode 4xx or 5xx);
 		// 		  }
-		// 		  try {
+		// 		  try {	// or try-catch in client?
 		// 		    save chunk;
 		// 		  } catch (const std::exception& e) {
 		// 		    log error;
-		// 		    clearRequest();
+		// 		    clearRequest(); // only if closing connection error?
 		// 		    return (errorCode 4xx or 5xx);
 		// 		  }
 		// 		  if (last chunk) {
-		// 		    if (!_serverConfig)
-		// 		      _loadServerConfig(serverConfigs);
 		// 		    set _isTerminatedRequest;
-		// 		  }
+		//		  if (!_hasReceivedHeaders && not loaded config) {
+		//		    _loadServerConfig(serverConfigs);
+		//		    return (_checkHeaders);
+		//		  }
 		// 		  return (0);
 
-		(void)buffer;
-		if (!_serverConfig || !_location)
+		(void)recvBuffer;
+		(void)unprocessedBuffer;
+		if (_hasReceivedHeaders && (!_serverConfig || !_location)) {
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
+			// After header sent, check content length header, etc
+//			return (_checkHeaders());
+		}
 		return (0);
 	}
 
-	int	Request::parseRequest(const char* buffer,
+	int	Request::parseRequest(std::string& unprocessedBuffer,
+								const char* recvBuffer,
 								const server_configs& serverConfigs)
 	{
 		// TO DO: if (_isChunkedRequest)
-		// 		    return (_parseChunkedRequest, serverConfigs);
-		// 		  parse [check and set Headers & Flags, maxBodySize, etc,
-		// 		  		 or set _isChunkedRequest and return (_parseChunked)]
+		// 		    return (_parseChunkedRequest(...));
+		// 		  parse: [=> use unprocessedBuff first, then recvBuff]
+		// 		  		 check and set Headers;
+		//				 save what is not read in unprocessedBuff;
+		// 		  		 set _isChunked/_hasReceived/_isTerminated if needed;
 		// 		  if (error) {
 		// 		    log error;
-		// 		    clearRequest();
+		// 		    clearRequest(); // only if closing connection error?
 		// 		    return (errorCode 4xx or 5xx);
 		// 		  }
-		//		  if (!_serverConfig)
+		//		  if (!_hasReceivedHeaders && not loaded config) {
 		//		    _loadServerConfig(serverConfigs);
-		// 		  set _isTerminatedRequest;
+		//		    return (_checkHeaders);
+		//		  }
 		// 		  return (0);
 
-		(void)buffer;
-		if (!_serverConfig || !_location)
+		(void)recvBuffer;
+		(void)unprocessedBuffer;
+		if (_hasReceivedHeaders && (!_serverConfig || !_location)) {
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
-		// check content length header after request header sent
+			// After header sent, check content length header, etc
+//			return (_checkHeaders());
+		}
 		return (0);
 	}
 
@@ -205,6 +224,8 @@ namespace	webserv
 		_requestMethod = EMPTY;
 		_host.clear();
 		_isKeepAlive = true;
+		_hasReceivedHeaders = false;
+		_bodySize = -1;
 		_isChunkedRequest = false;
 		_isTerminatedRequest = false;
 	}

@@ -24,13 +24,14 @@ namespace	webserv
 		const int&				getId() const { return (_id); }	// tmp exam version
 		const AcceptSocket&		getSocket() const { return (_socket); }
 
-		void	parseRequest(const char* buffer);
+		void	parseRequest(const char* recvBuffer);
 
 		const Request&		getRequest() const { return (_request); }
 		const Response&		getResponse() const { return (_response); }
 
-		bool	isProcessingRequest() const;
 		bool	hasError() const;
+		bool	hasUnprocessedBuffer() const;
+		bool	isProcessingRequest() const;
 		bool	isKeepAlive() const { return (_isKeepAlive); }	// compute parameters?
 		bool	hasRequestTerminated() const;
 		bool	hasResponseReady() const;
@@ -52,6 +53,7 @@ namespace	webserv
 		const server_configs&	_serverConfigs;
 		AcceptSocket			_socket;
 		bool					_isKeepAlive;	// divide in a Class with parameters?
+		std::string				_unprocessedBuffer;
 		Request					_request;
 		Response				_response;
 	};
