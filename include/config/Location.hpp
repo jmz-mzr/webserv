@@ -18,7 +18,7 @@ namespace	webserv
 		typedef std::map<int, std::string>				error_pages_map;
 		typedef std::set<int>							limit_except_set;
 		typedef std::pair<const int, std::string>		return_pair;
-		typedef std::map<const std::string, Location,
+		typedef std::map<std::string, Location,
 							location_compare>			locations_map;
 
 		Location(const ServerConfig& src);
