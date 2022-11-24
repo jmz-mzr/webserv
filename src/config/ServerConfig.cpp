@@ -10,7 +10,7 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	ServerConfig::ServerConfig(const Config& src):
+	ServerConfig::ServerConfig(const ParseConfig& src):
 											_errorPages(src.getErrorPages()),
 											_maxBodySize(src.getMaxBodySize())
 	{

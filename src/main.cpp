@@ -39,6 +39,7 @@ catch (const webserv::LogicErrorException& e) {
 #else	// Generate a main function for testing
 
 # define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+# define DOCTEST_CONFIG_SUPER_FAST_ASSERTS //! undef if using debugger
 # include "doctest/doctest.h"
 
 #endif

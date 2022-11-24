@@ -146,6 +146,9 @@ namespace	webserv
 	void	Webserv::_parseConfig(std::string configFilePath)
 	{
 		ParseConfig	parser(configFilePath);
+
+		parser();
+		LOG_DEBUG("Token list=[ " << parser.getTokens() << BHWHT << " ]");
 	}
 
 	void	Webserv::init(int argc, char** argv)
@@ -159,7 +162,6 @@ namespace	webserv
 		} else {
 			_parseConfig(DEFAULT_CONF_FILE);
 		}
-		// parser.execute();
 		_loadServers();
 	}
 

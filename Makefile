@@ -17,7 +17,6 @@ DEPDIR		=	$(BUILDIR)/.deps
 #>	FILES
 SRC			=	main.cpp \
 				ParseConfig.cpp \
-				Config.cpp \
 				ServerConfig.cpp \
 				Location.cpp \
 				Socket.cpp \
@@ -34,7 +33,8 @@ SRC			=	main.cpp \
 				ft_inet_ntoa.cpp \
 				ft_sleep.cpp \
 				ft_strcmp_icase.cpp \
-				ft_str_tolower.cpp
+				ft_str_tolower.cpp \
+				ft_trim.cpp
 TEST		=	$(filter-out webserv%,$(SRC:.cpp=.test.cpp))
 OBJ			=	$(SRCS:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRCS:%.cpp=$(DEPDIR)/%.d)

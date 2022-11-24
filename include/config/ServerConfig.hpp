@@ -9,13 +9,13 @@
 # include <stdint.h>
 
 # include "utils/utils.hpp"
-# include "config/Config.hpp"
+# include "config/ParseConfig.hpp"
 # include "config/Location.hpp"
 
 namespace	webserv
 {
 
-	class	Config;
+	class	ParseConfig;
 	class	Location;
 
 	class	ServerConfig {
@@ -25,7 +25,7 @@ namespace	webserv
 		typedef std::map<std::string, Location,
 							location_compare>				locations_map;
 
-		ServerConfig(const Config& src);
+		ServerConfig(const ParseConfig& src);
 		ServerConfig(const ServerConfig& src);
 		~ServerConfig() { }
 
