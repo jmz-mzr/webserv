@@ -1,14 +1,10 @@
-#include <cctype>
 #include <string>
 #include <algorithm>
 
+#include "utils/utils.hpp"
+
 namespace	webserv
 {
-
-	static bool ft_charcmp_icase(const unsigned char c1, const unsigned char c2)
-	{
-		return (std::tolower(c1) == std::tolower(c2));
-	}
 
 	bool	ft_strcmp_icase(const std::string& str1, const std::string& str2)
 	{

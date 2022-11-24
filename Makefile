@@ -32,6 +32,7 @@ SRC			=	main.cpp \
 				ft_memset.cpp \
 				ft_inet_ntoa.cpp \
 				ft_sleep.cpp \
+				ft_charcmp_icase.cpp \
 				ft_strcmp_icase.cpp \
 				ft_str_tolower.cpp \
 				ft_trim.cpp

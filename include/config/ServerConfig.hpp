@@ -44,7 +44,6 @@ namespace	webserv
 
 		void	clearListenPairs() { _listenPairs.clear(); }
 		bool	eraseName(const std::string& name);
-		void	clearConfig();
 
 		void	addListenPair(const listen_pair& listenPair);
 		void	addName(const std::string& name);
@@ -113,7 +112,11 @@ namespace	webserv
 		// "location" directive in /usr/local/etc/nginx/nginx.conf:95')
 		// 4) It has at least an empty default location, with parameters
 		// inherited from the ServerConfig
-		// 5) For the sake of simplicity, don't allow nested locations
+		// 5) Extension locations must follow the form "\*\.(alnum|$|.|_|-)+"
+		// (star, dot, and then any NON-EMPTY (total size > 2) combination of
+		// alphanum/dollar/dot/underscore/dash)
+		// 6) For the sake of simplicity, only allow nested locations if they
+		// are extension locations in normal locations
 		locations_map				_locations;
 	};
 

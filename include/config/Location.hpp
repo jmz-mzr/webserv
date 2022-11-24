@@ -18,6 +18,8 @@ namespace	webserv
 		typedef std::map<int, std::string>				error_pages_map;
 		typedef std::set<int>							limit_except_set;
 		typedef std::pair<const int, std::string>		return_pair;
+		typedef std::map<const std::string, Location,
+							location_compare>			locations_map;
 
 		Location(const ServerConfig& src);
 		Location(const Location& src);
@@ -35,10 +37,12 @@ namespace	webserv
 												{ return (_root); }
 		bool						isAutoIndex() const
 												{ return (_autoIndex); }
-		const std::string&			getTryFile() const
-												{ return (_tryFile); }
+		const std::string&			getIndex() const
+												{ return (_index); }
 		const std::string&			getFastCgiPass() const
 												{ return (_fastCgiPass); }
+		const locations_map&		getLocations() const
+												{ return (_locations); }
 	private:
 		Location();
 
@@ -89,6 +93,11 @@ namespace	webserv
 		// 3) Test all edges cases in comparison with NGINX
 		return_pair				_return;
 
+		// TO DO: 1) Can only be defined once, and if another definition line
+		// appears, it must throw an exception (like '"root" directive is
+		// duplicate in /usr/local/etc/nginx/nginx.conf:117')
+		// 2) If it was not defined it must not stay empty, and like NGINX
+		// it must be set to the default _root: "html"
 		std::string				_root;
 
 		// TO DO: Can only be defined once, and if another
@@ -97,17 +106,25 @@ namespace	webserv
 		// /usr/local/etc/nginx/nginx.conf:37')
 		bool					_autoIndex;
 
-		// TO DO: 1) Only one default file to answer if the request is
-		// a directory (so different from NGINX's try_files)
-		// 2) Can only be defined once, and if another definition line appears,
-		// it must throw an exception (like '"try_file" directive is duplicate
-		// in /usr/local/etc/nginx/nginx.conf:116')
-		std::string				_tryFile;
+		// TO DO: 1) For the sake of simplicity, accept only one default file
+		// to answer if the request is a directory (unlike NGINX's index)
+		// 2) Like NGINX's, it always has a default _index: "index.html",
+		// already set when creating a Location class
+		// 3) Can be defined multiple times, and for the sake of simplicity,
+		// if another definition line appears, it replaces the previous one
+		std::string				_index;
 
 		// TO DO: Can only be defined once, and if another definition line
 		// appears, it must throw an exception (like '"fastcgi_pass" directive
 		// is duplicate in /usr/local/etc/nginx/nginx.conf:109')
 		std::string				_fastCgiPass;
+
+		// TO DO: 1) Extension locations follow the form "\*\.(alnum|$|.|_|-)+"
+		// (star, dot, and then any NON-EMPTY (total size > 2) combination of
+		// alphanum/dollar/dot/underscore/dash)
+		// 2) For the sake of simplicity, only allow nested locations if they
+		// are extension locations in normal locations
+		locations_map			_locations;
 	};
 
 }	// namespace webserv

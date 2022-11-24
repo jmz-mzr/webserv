@@ -5,6 +5,7 @@
 # include <string>
 
 # include "config/ServerConfig.hpp"
+# include "config/Location.hpp"
 
 namespace	webserv
 {
@@ -30,17 +31,19 @@ namespace	webserv
 
 		void	clearRequest();
 	private:
+		typedef ServerConfig::locations_map			locations_map;
+
 		Request&	operator=(const Request& rhs);
 
 		int		_parseChunkedRequest(const char* buffer,
 										const server_configs& serverConfigs);
-		void	_loadServerConfig(const server_configs& serverConfigs);
+		bool	_loadServerConfig(const server_configs& serverConfigs);
+		bool	_loadLocation(const ServerConfig& serverConfig);
+		bool	_loadExtensionLocation(const ServerConfig& serverConfig);
+		bool	_loadExtensionLocation(const Location& location);
 
-		// TO DO: 1) Must be a pointer (I'll take care of it on Friday)
-		// 2) The search for the ServerConfig and the Location
-		// must be case-insensitive (with ft_strcmp_icase)
-		//ServerConfig		_serverConfig;
-
+		const ServerConfig*	_serverConfig;
+		const Location*		_location;
 		int					_requestMethod;
 
 		// TO DO: If the requested uri has no "/" prefix, or if it goes up in

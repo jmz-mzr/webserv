@@ -11,7 +11,9 @@ namespace	webserv
 
 	Location::Location(const ServerConfig& src):
 											_errorPages(src.getErrorPages()),
-											_maxBodySize(src.getMaxBodySize())
+											_maxBodySize(src.getMaxBodySize()),
+											_autoIndex(false),
+											_index("index.html")
 	{
 		LOG_INFO("New Location instance");
 	}
@@ -22,33 +24,12 @@ namespace	webserv
 												_return(src._return),
 												_root(src._root),
 												_autoIndex(src._autoIndex),
-												_tryFile(src._tryFile),
-												_fastCgiPass(src._fastCgiPass)
+												_index(src._index),
+												_fastCgiPass(src._fastCgiPass),
+												_locations(src._locations)
 	{
 		LOG_INFO("Location copied");
 	}
-
-	/**************************************************************************/
-	/*                       MEMBER OPERATOR OVERLOADS                        */
-	/**************************************************************************/
-
-/*	Location&	Location::operator=(const Location& rhs)
-	{
-		// TO DO: Make the _errorPages with "const std::string", _limitExcept
-		// with "const int", and _return with "const string"?
-
-		if (this != &rhs) {
-			_errorPages = rhs._errorPages;
-			_maxBodySize = rhs._maxBodySize;
-			_limitExcept = rhs._limitExcept;
-			_return = rhs._return;
-			_root = rhs._root;
-			_autoIndex = rhs._autoIndex;
-			_tryFile = rhs._tryFile;
-			_fastCgiPass = rhs._fastCgiPass;
-		}
-		return (*this);
-	}*/
 
 	/**************************************************************************/
 	/*                            MEMBER FUNCTIONS                            */
