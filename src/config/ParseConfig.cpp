@@ -6,7 +6,8 @@
 #include "utils/utils.hpp"
 #include "webserv_config.hpp"
 
-namespace webserv {
+namespace	webserv
+{
 
 /******************************************************************************/
 /*                         CONSTRUCTORS / DESTRUCTORS                         */
@@ -18,6 +19,7 @@ ParseConfig::ParseConfig()
 		, _nestedBlocks(0)
 		, _currentLine(0)
 		, _lineBuffer()
+		, _maxBodySize(0)
 {
 	_configFile.open(_configFilePath.c_str());
 	if (!_configFile.good()) {
@@ -36,6 +38,7 @@ ParseConfig::ParseConfig(const std::string& configFilePath)
 		, _nestedBlocks(0)
 		, _currentLine(0)
 		, _lineBuffer()
+		, _maxBodySize(0)
 {
 	_configFile.open(_configFilePath.c_str());
 	if (!_configFile.good()) {
@@ -196,7 +199,7 @@ void    ParseConfig::operator()()
 // std::vector<ServerConfig>		_serverConfigs;
 
 /******************************************************************************/
-/*                          NON-MEMBER FUNCTIONS                              */
+/*                            NON-MEMBER FUNCTIONS                            */
 /******************************************************************************/
 
 std::ostream&	operator<<(std::ostream& os,
