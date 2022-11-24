@@ -19,10 +19,11 @@ namespace	webserv
 
 	Logger::Logger(): _threshold(CONF_LOG_LVL), _channel(CONF_LOG_OUT)
 	{
-		_cc[0].str = "ERROR", _cc[0].color = BHRED;
-		_cc[1].str = "WARN", _cc[1].color = BHYEL;
-		_cc[2].str = "INFO", _cc[2].color = BHWHT;
-		_cc[3].str = "DEBUG", _cc[3].color = BBLU;
+		_cc[0].str = "EMERG", _cc[0].color = HMAG;
+		_cc[1].str = "ERROR", _cc[1].color = HRED;
+		_cc[2].str = "WARN", _cc[2].color = HYEL;
+		_cc[3].str = "INFO", _cc[3].color = HWHT;
+		_cc[4].str = "DEBUG", _cc[4].color = HCYN;
 		if (_channel & kFile)
 		{
 			_logfile.open(CONF_LOG_FILE);
@@ -38,7 +39,7 @@ namespace	webserv
 		if (_logfile.is_open()) {
 			_logfile.close();
 			if (!(_logfile.good())) {
-				LOG_WARN("Bad close() on \"" << _logfile << "\"");
+				LOG_WARN("close(" << _logfile << ") failed");
 			} else {
 				LOG_INFO("close(" << CONF_LOG_FILE << ")");
 			}
@@ -56,8 +57,9 @@ namespace	webserv
 		std::string			output;
 
 		if (_channel != kNone && level <= _threshold) {
-			stream << "[" << _cc[level].color << _cc[level].str << RESET
-				<< "]\t" + file << ":" << line << ": " << BHWHT << msg << RESET;
+			stream << "webserv: [" << _cc[level].color << _cc[level].str << RESET
+				<< "] " << BWHT << file << ":" << line << RESET
+				<< ": " << msg;
 			output = stream.str();
 			if (_channel & kConsole)
 				_logfile << output << std::endl;

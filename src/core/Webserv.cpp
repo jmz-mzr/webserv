@@ -148,15 +148,16 @@ namespace	webserv
 		ParseConfig	parser(configFilePath);
 
 		parser();
-		LOG_DEBUG("Token list=[ " << parser.getTokens() << BHWHT << " ]");
+		LOG_DEBUG("_tokens=[ " << parser.getTokens() << BHWHT << " ]");
 	}
 
 	void	Webserv::init(int argc, char** argv)
 	{
 		if (argc > 2 || argc < 1) {
-			LOG_DEBUG("argc=" << argc);
 			_usageHelper();
-			throw LogicErrorException("bad number of arguments");
+			LOG_EMERG("bad number of arguments");
+			LOG_DEBUG("argc=" << argc);
+			throw LogicErrorException();
 		} else if (argc == 2) {
 			_parseConfig(argv[1]);
 		} else {

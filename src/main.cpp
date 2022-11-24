@@ -32,7 +32,6 @@ catch (const webserv::FatalErrorException& e) {
 	return (EXIT_FAILURE);
 }
 catch (const webserv::LogicErrorException& e) {
-	std::cerr << "Error: " << e.what() << std::endl;
 	return (EXIT_FAILURE);
 }
 

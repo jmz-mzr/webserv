@@ -73,7 +73,8 @@ class ParseConfig
 		token_map_t						_tokenTypes;
 		std::string						_delimiters;
 
-		uint64_t						_currentLine;
+		uint32_t						_nestedBlocks;
+		uint32_t						_currentLine;
 		std::string						_lineBuffer;
 		token_list_t					_tokens;
 
@@ -85,6 +86,8 @@ class ParseConfig
 		std::vector<ServerConfig>		_serverConfigs;
 
 		void	_initTokenMap();
+		void	_addToken(const Token& token);
+		void	_syntaxError(const Token& token, const char* expected);
 		void	_extractWords(const std::string& buffer);
 		void	_readLine();
 		void	_lexer();

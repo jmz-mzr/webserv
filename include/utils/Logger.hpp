@@ -11,6 +11,7 @@
 	webserv::Logger::getInstance().log(__FILE__, __LINE__, level, stream.str()); \
 }
 
+# define LOG_EMERG(msg)		LOG(webserv::kEmerg, msg)
 # define LOG_ERROR(msg)		LOG(webserv::kError, msg)
 # define LOG_WARN(msg)		LOG(webserv::kWarn, msg)
 # define LOG_INFO(msg)		LOG(webserv::kInfo, msg)
@@ -20,10 +21,11 @@ namespace	webserv
 {
 
 	enum	LogLevel {
-		kError = 0,
-		kWarn = 1,
-		kInfo = 2,
-		kDebug = 3
+		kEmerg,
+		kError,
+		kWarn,
+		kInfo,
+		kDebug
 	};
 
 	enum	LogOutput {
@@ -60,7 +62,7 @@ namespace	webserv
 
 //		std::stringstream	format(std::string file, int line, int level);
 
-		struct ColorCode	_cc[4];
+		struct ColorCode	_cc[5];
 		enum LogLevel		_threshold;
 		enum LogOutput		_channel;
 		std::ofstream		_logfile;

@@ -15,13 +15,15 @@ namespace webserv {
 ParseConfig::ParseConfig()
 		: _configFilePath(DEFAULT_CONF_FILE)
 		, _delimiters("{};#")
+		, _nestedBlocks(0)
 		, _currentLine(0)
 		, _lineBuffer()
 {
 	_configFile.open(_configFilePath.c_str());
 	if (!_configFile.good()) {
 		LOG_WARN("Cannot open \"" << _configFilePath << "\"");
-		throw LogicErrorException("Could not load configuration");
+		LOG_ERROR("Loading configuration failed")
+		throw LogicErrorException();
 	}
 	_initTokenMap();
 	LOG_INFO("New ParseConfig instance with default configuration");
@@ -31,6 +33,7 @@ ParseConfig::ParseConfig()
 ParseConfig::ParseConfig(const std::string& configFilePath)
 		: _configFilePath(configFilePath)
 		, _delimiters("{};#")
+		, _nestedBlocks(0)
 		, _currentLine(0)
 		, _lineBuffer()
 {
@@ -41,7 +44,8 @@ ParseConfig::ParseConfig(const std::string& configFilePath)
 		_configFile.open(_configFilePath.c_str());
 		if (!_configFile.good()) {
 			LOG_WARN("Cannot open \"" << _configFilePath << "\"");
-			throw LogicErrorException("Could not load configuration");
+			LOG_ERROR("Loading configuration failed")
+			throw LogicErrorException();
 		}
 		LOG_INFO("New ParseConfig instance with default configuration");
 	} else {
@@ -73,6 +77,51 @@ void	ParseConfig::_initTokenMap()
 	_tokenTypes['{'] = kBlockStart;
 	_tokenTypes['}'] = kBlockEnd;
 	_tokenTypes[';'] = kDirectiveEnd;
+	_tokenTypes['#'] = kComment;
+}
+
+void	ParseConfig::_syntaxError(const Token& token, const char* expected)
+{
+	std::stringstream	ss;
+
+	ss << "unexpected ";
+	if (token.type == kEOF) {
+		ss << "end of file, expecting " << expected;
+	} else {
+		ss << "\"" << token.value << "\"";
+	}
+	Logger::getInstance().log(_configFilePath, _currentLine, kEmerg, ss.str());
+	throw LogicErrorException();
+}
+
+void	ParseConfig::_addToken(const Token& token)
+{
+	switch (token.type) {
+		case kEOF:
+			if (!_tokens.empty() && _tokens.back().type == kWord) {
+				_syntaxError(token, "\";\" or \"}\"");
+			} else if (_nestedBlocks > 0) {
+				_syntaxError(token, "\"}\"");
+			}
+			break ;
+		case kBlockStart:
+			if (_tokens.empty() || (_tokens.back().type != kWord))
+				_syntaxError(token, "");
+			_nestedBlocks++;
+			break ;
+		case kBlockEnd:
+			if (!_nestedBlocks)
+				_syntaxError(token, "");
+			_nestedBlocks--;
+			break ;
+		case kDirectiveEnd:
+			if (_tokens.back().type != kWord)
+				_syntaxError(token, "");
+			break ;
+		default:
+			break ;
+	}
+	_tokens.push_back(token);
 }
 
 void	ParseConfig::_extractWords(const std::string& buffer)
@@ -83,7 +132,7 @@ void	ParseConfig::_extractWords(const std::string& buffer)
 	while (!ss.eof()) {
 		ss >> word;
 		if (!word.empty())
-			_tokens.push_back(Token(kWord, word));
+			_addToken(Token(kWord, word));
 	}
 }
 
@@ -93,26 +142,24 @@ void	ParseConfig::_lexer()
 	size_t						pos = 0;
 	token_map_t::const_iterator	it;
 
-	if (_configFile.eof()) {
-		_tokens.push_back(Token(kEOF, "EOF"));
-		return ;
-	}
 	do {
 		pos = _lineBuffer.find_first_of(_delimiters, start);
 		if (pos == std::string::npos) {
 			pos = _lineBuffer.find_first_not_of(_delimiters, start);
 			if (pos != std::string::npos)
 				_extractWords(trim(_lineBuffer));
-			return ;
+			break ;
 		} else if (pos != start) {
 			_extractWords(trim(_lineBuffer.substr(start, pos - start)));
 		}
 		it = _tokenTypes.find(_lineBuffer[pos]);
 		if (it->first == '#')
-			return ;
-		_tokens.push_back(Token(it->second, std::string(1, it->first)));
+			break ;
+		_addToken(Token(it->second, std::string(1, it->first)));
 		start = ++pos;
 	} while (pos != std::string::npos);
+	if (_configFile.eof())
+		_addToken(Token(kEOF, "EOF"));
 }
 
 void ParseConfig::_parser()
@@ -155,32 +202,32 @@ void    ParseConfig::operator()()
 std::ostream&	operator<<(std::ostream& os,
 							const ParseConfig::token_list_t& rhs)
 {
-	typedef std::vector<struct ParseConfig::Token>::const_iterator constIter_t;
+	typedef std::vector<struct ParseConfig::Token>::const_iterator cIter_t;
 
-	for (constIter_t currToken = rhs.begin();
-			currToken != rhs.end();
-			currToken++) {
+	for (cIter_t currToken = rhs.begin(); currToken != rhs.end(); currToken++) {
 		switch (currToken->type) {
 			case kEOF:
-				os << RED;
+				os << HRED;
 				break ;
 			case kWord:
-				os << BLU;
+				os << HBLU;
 				break ;
 			case kBlockStart:
 			case kBlockEnd:
-				os << GRN;
+				os << HGRN;
 				break ;
 			case kDirectiveEnd:
-				os << YEL;
+				os << HYEL;
 				break ;
 			default :
 				break;
 		}
-		os << currToken->value << RESET;
+		os << currToken->value;
 		if (currToken->type != kEOF)
-			os << " -> ";
+			os << HWHT << " -> ";
+		os << RESET;
 	}
+	os << std::endl;
 	return os;
 }
 

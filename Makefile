@@ -48,14 +48,17 @@ CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
 LDFLAGS		=	$(addprefix -L, $(LIBDIR)) $(addprefix -l, $(LIB))
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
-ifeq (,$(strip $(findstring test, $(MAKECMDGOALS))))		# if not testing
-	CXXFLAGS 	+=	-DDOCTEST_CONFIG_DISABLE
-	BIN			=	$(NAME)
-	SRCS		=	$(SRC)
-else
+ifeq (test,$(strip $(MAKECMDGOALS)))						# if testing
 	CXXFLAGS	+=	-fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g3 -DCONF_LOG_OUT=kNone
 	BIN			=	$(TESTER)
 	SRCS		=	$(SRC) $(TEST)
+else
+ifeq (debug,$(strip $(MAKECMDGOALS)))					# if debugging
+	CXXFLAGS	+=	-fsanitize=address,undefined -g3
+endif
+	CXXFLAGS 	+=	-DDOCTEST_CONFIG_DISABLE
+	BIN			=	$(NAME)
+	SRCS		=	$(SRC)
 endif
 
 #>	ENVIRONMENT
@@ -116,7 +119,7 @@ FOOTER		=	$(shell printf '$(BOT-LEFT2)$(HORIZ_LINE)$(BOT-RIGHT2)')
 ##> Rules <##
 #############
 
-.PHONY:			all clean fclean header re test
+.PHONY:			all clean debug fclean header re test
 
 all:			header $(BIN)
 
@@ -146,6 +149,8 @@ clean:			header
 ifeq (clean,$(MAKECMDGOALS))
 	@printf "$(FOOTER)\n"
 endif
+
+debug:			re
 
 fclean:			clean
 				@printf "$(YELLOW)Deleting binaries and log file...\n$(DEFAULT)"
