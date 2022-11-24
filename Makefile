@@ -15,8 +15,7 @@ BUILDIR		=	build
 DEPDIR		=	$(BUILDIR)/.deps
 
 #>	FILES
-CONFIG		=	Config.cpp \
-				Location.cpp \
+CONFIG		=	Location.cpp \
 				ParseConfig.cpp \
 				ServerConfig.cpp
 CORE		=	AcceptSocket.cpp \
