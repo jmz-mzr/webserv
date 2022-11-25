@@ -1,7 +1,9 @@
 #include "config/ServerConfig.hpp"
-#include "utils/Logger.hpp"
 
 #include <algorithm>
+
+#include "config/ConfigParser.hpp"
+#include "utils/Logger.hpp"
 
 namespace	webserv
 {
@@ -10,7 +12,7 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	ServerConfig::ServerConfig(const ParseConfig& src):
+	ServerConfig::ServerConfig(const config::ConfigParser& src):
 											_errorPages(src.getErrorPages()),
 											_maxBodySize(src.getMaxBodySize())
 	{

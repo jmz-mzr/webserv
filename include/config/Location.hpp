@@ -7,6 +7,7 @@
 # include <utility>
 
 # include "config/ServerConfig.hpp"
+# include "utils/utils.hpp"
 
 namespace	webserv
 {

@@ -15,8 +15,10 @@ BUILDIR		=	build
 DEPDIR		=	$(BUILDIR)/.deps
 
 #>	FILES
-CONFIG		=	Location.cpp \
-				ParseConfig.cpp \
+CONFIG		=	ConfigParser.cpp \
+				Lexer.cpp \
+				Location.cpp \
+				Parser.cpp \
 				ServerConfig.cpp
 CORE		=	AcceptSocket.cpp \
 				Client.cpp \
@@ -52,7 +54,7 @@ ifeq (test,$(strip $(MAKECMDGOALS)))						# if testing
 	BIN			=	$(TESTER)
 	SRCS		=	$(SRC) $(TEST)
 else
-ifeq (debug,$(strip $(MAKECMDGOALS)))					# if debugging
+ifeq (debug,$(strip $(MAKECMDGOALS)))						# if debugging
 	CXXFLAGS	+=	-fsanitize=address,undefined -g3
 endif
 	CXXFLAGS 	+=	-DDOCTEST_CONFIG_DISABLE

@@ -21,11 +21,11 @@ namespace	webserv
 {
 
 	enum	LogLevel {
-		kEmerg,
-		kError,
-		kWarn,
-		kInfo,
-		kDebug
+		kEmerg,		// The system is in an unusable state and requires immediate attention
+		kError, 	// Something was unsuccessful
+		kWarn,		// Something unexpected happened, however is not a cause for concern
+		kInfo,		// Informational messages that aren't necessary to read but may be good to know
+		kDebug		// Useful debugging information to help determine where the problem lies
 	};
 
 	enum	LogOutput {

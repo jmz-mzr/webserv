@@ -2,7 +2,7 @@
 # define WEBSERV_CONFIG_HPP
 
 # ifndef CONF_LOG_LVL
-#  define CONF_LOG_LVL		kError
+#  define CONF_LOG_LVL		kDebug
 # endif
 
 # ifndef CONF_LOG_OUT

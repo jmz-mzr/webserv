@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <sys/socket.h>
 
-#include "config/ParseConfig.hpp"
+#include "config/ConfigParser.hpp"
 #include "utils/Logger.hpp"
 #include "utils/utils.hpp"
 
@@ -145,10 +145,12 @@ namespace	webserv
 
 	void	Webserv::_parseConfig(std::string configFilePath)
 	{
-		ParseConfig	parser(configFilePath);
+		config::ConfigParser	configParser(configFilePath);
 
-		parser();
-		LOG_DEBUG("_tokens=[ " << parser.getTokens() << BHWHT << " ]");
+		configParser();
+		LOG_DEBUG("Tokenised onfig file = [ "
+					<< configParser.getLexer().getTokens()
+					<< " ]");
 	}
 
 	void	Webserv::init(int argc, char** argv)

@@ -7,7 +7,7 @@
 		},
 		{
 			"cwd": "/home/gmorizur/code/webserv",
-			"binaryPath": "/home/gmorizur/code/webserv/test_runner",
+			"binaryPath": "/home/gmorizur/code/webserv/webserv.test",
 			"binaryArgs": []
 		}
 	],
@@ -64,5 +64,10 @@
 		"typeinfo": "cpp",
 		"ios": "cpp",
 		"list": "cpp"
-	}
+	},
+	"files.eol": "\n",
+	"C/C++ Include Guard.Macro Type": "GUID",
+	"editor.insertSpaces": false,
+	"C_Cpp.default.cppStandard": "c++98",
+	
 }
