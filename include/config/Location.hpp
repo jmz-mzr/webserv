@@ -51,8 +51,8 @@ namespace	webserv
 
 		// TO DO: 1) Can only be defined once on a level, so the 2nd, 3rd...
 		// definition lines will be ignored. For example these two lines ->
-        // error_page   400 400 404 404  /50x.html;
-        // error_page   400 402 403 404  /40x.html;
+		// error_page   400 400 404 404  /50x.html;
+		// error_page   400 402 403 404  /40x.html;
 		// -> they result in a map with only two entries:
 		// [400]="/50x.html", and [404]="/50x.html"
 		// 2) The error_page must have (at least) two parameters (the last one
