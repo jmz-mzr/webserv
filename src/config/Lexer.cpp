@@ -17,16 +17,15 @@ namespace config {
 /*                         CONSTRUCTORS / DESTRUCTORS                         */
 /******************************************************************************/
 
-Lexer::Lexer(const ConfigParser& src)
+Lexer::Lexer()
 		: _delimiters("{};#")
 		, _tokens()
 		, _nestedBlockCount(0)
-		, _configParser(src)
 {
-	_tokenTypes['{'] = kBlockStart;
-	_tokenTypes['}'] = kBlockEnd;
-	_tokenTypes[';'] = kDirectiveEnd;
-	_tokenTypes['#'] = kComment;
+	_tokenTypes['{'] = Token::kBlockStart;
+	_tokenTypes['}'] = Token::kBlockEnd;
+	_tokenTypes[';'] = Token::kDirectiveEnd;
+	_tokenTypes['#'] = Token::kComment;
 }
 
 Lexer::~Lexer() { }
@@ -40,38 +39,36 @@ void	Lexer::_syntaxError(const Token& token, const char* expected)
 	std::stringstream	ss;
 
 	ss << "unexpected ";
-	if (token.type == kEOF) {
+	if (token.type == Token::kEOF) {
 		ss << "end of file, expecting " << expected;
 	} else {
 		ss << "\"" << token.value << "\"";
 	}
-	Logger::getInstance().log(_configParser._filePath,
-								_configParser._currentLineNb, kEmerg, ss.str());
-	throw LogicErrorException();
+	throw SyntaxErrorException(ss.str());
 }
 
 void	Lexer::_addToken(const Token& token)
 {
 	switch (token.type) {
-		case kEOF:
-			if (!_tokens.empty() && _tokens.back().type == kWord) {
+		case Token::kEOF:
+			if (!_tokens.empty() && _tokens.back().type == Token::kWord) {
 				_syntaxError(token, "\";\" or \"}\"");
 			} else if (_nestedBlockCount > 0) {
 				_syntaxError(token, "\"}\"");
 			}
 			break ;
-		case kBlockStart:
-			if (_tokens.empty() || (_tokens.back().type != kWord))
+		case Token::kBlockStart:
+			if (_tokens.empty() || (_tokens.back().type != Token::kWord))
 				_syntaxError(token, "");
 			_nestedBlockCount++;
 			break ;
-		case kBlockEnd:
+		case Token::kBlockEnd:
 			if (!_nestedBlockCount)
 				_syntaxError(token, "");
 			_nestedBlockCount--;
 			break ;
-		case kDirectiveEnd:
-			if (_tokens.back().type != kWord)
+		case Token::kDirectiveEnd:
+			if (_tokens.back().type != Token::kWord)
 				_syntaxError(token, "");
 			break ;
 		default:
@@ -88,34 +85,33 @@ void	Lexer::_extractWords(const std::string& buffer)
 	while (!ss.eof()) {
 		ss >> word;
 		if (!word.empty())
-			_addToken(Token(kWord, word));
+			_addToken(Token(Token::kWord, word));
 	}
 }
 
-void	Lexer::operator()()
+void	Lexer::operator()(const std::string& lineBuffer)
 {
 	size_t						start = 0;
 	size_t						pos = 0;
 	token_dict::const_iterator	it;
 
 	do {
-		pos = _configParser._lineBuffer.find_first_of(_delimiters, start);
+		pos = lineBuffer.find_first_of(_delimiters, start);
 		if (pos == std::string::npos) {
-			pos = _configParser._lineBuffer.find_first_not_of(_delimiters, start);
+			pos = lineBuffer.find_first_not_of(_delimiters, start);
 			if (pos != std::string::npos)
-				_extractWords(trim(_configParser._lineBuffer));
+				_extractWords(trim(lineBuffer));
 			break ;
-		} else if (pos != start) {
-			_extractWords(trim(_configParser._lineBuffer.substr(start, pos - start)));
-		}
-		it = _tokenTypes.find(_configParser._lineBuffer[pos]);
-		if (it->first == '#')
+		} else if (pos != start)
+			_extractWords(trim(lineBuffer.substr(start, pos - start)));
+		it = _tokenTypes.find(lineBuffer[pos]);
+		if (it->second == Token::kComment)
 			break ;
 		_addToken(Token(it->second, std::string(1, it->first)));
 		start = ++pos;
 	} while (pos != std::string::npos);
-	if (_configParser._file.eof())
-		_addToken(Token(kEOF, "EOF"));
+	if (isEof)
+		_addToken(Token(Token::kEOF, "EOF"));
 }
 
 // ServerConfig	serverConfig(*this);
@@ -141,24 +137,24 @@ std::ostream&	operator<<(std::ostream& os, const Lexer::token_queue& rhs)
 					currentToken != rhs.end();
 					currentToken++) {
 		switch (currentToken->type) {
-			case Lexer::kEOF:
+			case Lexer::Token::kEOF:
 				os << HRED;
 				break ;
-			case Lexer::kWord:
+			case Lexer::Token::kWord:
 				os << HBLU;
 					break ;
-				case Lexer::kBlockStart:
-				case Lexer::kBlockEnd:
+				case Lexer::Token::kBlockStart:
+				case Lexer::Token::kBlockEnd:
 					os << HGRN;
 					break ;
-				case Lexer::kDirectiveEnd:
+				case Lexer::Token::kDirectiveEnd:
 					os << HYEL;
 					break ;
 				default :
 					break;
 			}
 		os << currentToken->value;
-		if (currentToken->type != Lexer::kEOF)
+		if (currentToken->type != Lexer::Token::kEOF)
 			os << HWHT << " -> ";
 		os << RESET;
 	}

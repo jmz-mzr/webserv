@@ -101,10 +101,9 @@ namespace	webserv
 
 	void	Webserv::_addServer(const ServerConfig& serverConfig)
 	{
-		std::vector<std::pair<const std::string, uint16_t> >::const_iterator
-												listenPair;
-		std::vector<Server>::iterator			server;
-		struct pollfd							newPollFd;
+		std::vector<listen_pair>::const_iterator	listenPair;
+		server_iter				server;
+		struct pollfd			newPollFd;
 
 		listenPair = serverConfig.getListenPairs().begin();
 		while (listenPair != serverConfig.getListenPairs().end()) {
@@ -148,7 +147,7 @@ namespace	webserv
 		config::ConfigParser	configParser(configFilePath);
 
 		configParser();
-		LOG_DEBUG("Tokenised onfig file = [ "
+		LOG_DEBUG("Tokenised config file = [ "
 					<< configParser.getLexer().getTokens()
 					<< " ]");
 	}

@@ -15,34 +15,40 @@ class	ConfigParser;
 
 	class	Lexer {
 	public:
-		enum	TokenType {
-			kEOF = 0,
-			kWord = 1,
-			kBlockStart = 2,
-			kBlockEnd = 3,
-			kDirectiveEnd = 4,
-			kComment = 5
-		};
 
 		struct	Token {
-			Token(enum TokenType t, std::string v) : type(t), value(v) {}
-			enum TokenType	type;
+			enum	Type {
+				kEOF = 0,
+				kWord = 1,
+				kBlockStart = 2,
+				kBlockEnd = 3,
+				kDirectiveEnd = 4,
+				kComment = 5
+			};
+
+			Token(enum Type t, std::string v) : type(t), value(v) {}
+
+			enum Type		type;
 			std::string		value;
 		};
 
 		typedef std::deque<struct Token>			token_queue;
-		typedef std::map<char, enum TokenType>		token_dict;
+		typedef std::map<char, enum Token::Type>	token_dict;
 
-		Lexer(const ConfigParser& src);
+		Lexer();
 		~Lexer();
+
+		void					operator()(const std::string& lineBuffer);
+		friend std::ostream&	operator<<(std::ostream&, const token_queue&);
 
 		const token_queue&		getTokens() const { return (_tokens); }
 
-		void					operator()();
-		friend std::ostream&	operator<<(std::ostream& os,
-											const token_queue& rhs);
+		bool	isEof;
+
 	private:
-		Lexer();
+		Lexer(const Lexer& src);
+
+		Lexer&					operator=(const Lexer& rhs);
 
 		void	_addToken(const Token& token);
 		void	_extractWords(const std::string& buffer);
@@ -53,13 +59,10 @@ class	ConfigParser;
 		token_queue		_tokens;
 		unsigned		_nestedBlockCount;
 
-		const ConfigParser&	_configParser;
-
-
 	};
 
 }	// namespace config
 
 }	// namespace webserv
 
-#endif	// LEXER_HPP
+#endif /* LEXER_HPP */

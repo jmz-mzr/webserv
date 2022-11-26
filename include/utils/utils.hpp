@@ -1,9 +1,9 @@
 #ifndef UTILS_HPP
 # define UTILS_HPP
 
-# include <string>
-# include <exception>
 # include <algorithm>
+# include <stdexcept>
+# include <string>
 
 # include <stddef.h>
 
@@ -32,22 +32,18 @@ namespace	webserv
 		}
 	};
 
-	class	FatalErrorException: public std::exception {
+	class	FatalErrorException: public std::runtime_error {
 	public:
-		FatalErrorException(const char* msg = "A fatal error occured"):
-															_msg(msg) { }
-		virtual const char*	what() const throw() { return (_msg); }
-	private:
-		const char*	_msg;
+		FatalErrorException(const std::string& msg = "A fatal error occured")
+				: std::runtime_error(msg) 
+		{ }
 	};
 
-	class	LogicErrorException: public std::exception {
+	class	LogicErrorException: public std::logic_error {
 	public:
-		LogicErrorException(const char* msg = "A logic error occured"):
-															_msg(msg) { }
-		virtual const char*	what() const throw() { return (_msg); }
-	private:
-		const char*	_msg;
+		LogicErrorException(const std::string& msg = "A logic error occured")
+				: std::logic_error(msg)
+		{ }
 	};
 
 }	// namespace webserv

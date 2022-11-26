@@ -66,7 +66,7 @@
 		"list": "cpp"
 	},
 	"files.eol": "\n",
-	"C/C++ Include Guard.Macro Type": "GUID",
+	"C/C++ Include Guard.Macro Type": "Filename",
 	"editor.insertSpaces": false,
 	"C_Cpp.default.cppStandard": "c++98",
 	

@@ -2,11 +2,11 @@
 #define CONFIGPARSER_HPP
 
 #include <fstream>
-#include <stack>
+#include <stdexcept>
 #include <string>
-#include <deque>
 
 #include "config/Lexer.hpp"
+#include "config/Parser.hpp"
 #include "config/ServerConfig.hpp"
 #include "utils/ansi_colors.hpp"
 
@@ -26,14 +26,18 @@ namespace	config {
 
 		typedef std::map<int, std::string>				error_pages_map;
 
-		friend class Lexer;
-
 		ConfigParser();
 		ConfigParser(const std::string& filePath);
 		~ConfigParser();
 
 		void	operator()();
 
+		const std::ifstream&				getFile() const
+												{ return (_file); }
+		const std::string&					getFilePath() const
+												{ return (_filePath); }
+		const uint32_t&						getCurrentLineNb() const
+												{ return (_currentLineNb); }
 		const Lexer&						getLexer() const
 												{ return (_lexer); }
 		const error_pages_map&				getErrorPages() const
@@ -47,12 +51,15 @@ namespace	config {
 		ConfigParser(const ConfigParser& src);
 		ConfigParser&	operator=(const ConfigParser& rhs);
 
+		bool	_readline();
+
 		std::ifstream		_file;
 		std::string			_filePath;
 		std::string			_lineBuffer;
 		uint32_t			_currentLineNb;
 
 		Lexer				_lexer;
+		Parser				_parser;
 
 		// Token*						_currToken;
 		// std::stack<struct Block&>	_currentBlock;
@@ -90,8 +97,14 @@ namespace	config {
 		std::vector<ServerConfig>		_serverConfigs;
 	};
 
+	class	SyntaxErrorException: public std::logic_error {
+	public:
+		SyntaxErrorException(const std::string& msg = "A syntax error occured")
+				: logic_error(msg) { }
+	};
+
 }	// namespace config
 
 }	// namespace webserv
 
-#endif	// CONFIGPARSER_HPP
+#endif /* CONFIGPARSER_HPP */

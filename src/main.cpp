@@ -34,6 +34,9 @@ catch (const webserv::FatalErrorException& e) {
 catch (const webserv::LogicErrorException& e) {
 	return (EXIT_FAILURE);
 }
+catch (...) {
+	return (EXIT_FAILURE);
+}
 
 #else	// Generate a main function for testing
 

@@ -17,7 +17,7 @@ namespace config {
 ConfigParser::ConfigParser()
 		: _filePath(DEFAULT_CONF_FILE)
 		, _currentLineNb(0)
-		, _lexer(*this)
+		, _lexer()
 		, _maxBodySize(0)
 {
 	_file.open(_filePath.c_str());
@@ -33,7 +33,7 @@ ConfigParser::ConfigParser()
 ConfigParser::ConfigParser(const std::string& path)
 		: _filePath(path)
 		, _currentLineNb(0)
-		, _lexer(*this)
+		, _lexer()
 		, _maxBodySize(0)
 {
 	_file.open(_filePath.c_str());
@@ -70,16 +70,30 @@ ConfigParser::~ConfigParser()
 /*                              MEMBER FUNCTIONS                              */
 /******************************************************************************/
 
-void	ConfigParser::operator()()
+bool	ConfigParser::_readline()
+{
+	std::getline(_file, _lineBuffer);
+	if (_file.fail())
+		throw FatalErrorException("Error while reading configuration file");
+	_currentLineNb++;
+	return ((_lexer.isEof = _file.eof()) || !_lineBuffer.empty());
+}
+
+void	ConfigParser::operator()() try
 {
 	do {
-		std::getline(_file, _lineBuffer);
-		_currentLineNb++;
-		if (!_lineBuffer.empty() || _file.eof()) {
-			_lexer();
+		if (_readline()) {
+			_lexer(_lineBuffer);
 			// _parser();
 		}
-	} while (!_file.eof());
+	} while (_file.good());
+}
+catch (const SyntaxErrorException& e) {
+	Logger::getInstance().log(_filePath, _currentLineNb, kEmerg, e.what());
+	throw ;
+}
+catch (...) {
+	throw ;
 }
 
 // ServerConfig	serverConfig(*this);
