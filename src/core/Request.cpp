@@ -12,21 +12,27 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Request::Request(): _serverConfig(0),
-						_location(0),
-						_requestMethod(EMPTY),
-						_isKeepAlive(true),
-						_hasReceivedHeaders(false),
-						_bodySize(-1),
-						_isChunkedRequest(false),
-						_isTerminatedRequest(false)
+	Request::Request(const AcceptSocket& clientSocket):
+												_clientSocket(clientSocket),
+												_serverConfig(0),
+												_location(0),
+												_requestMethod(EMPTY),
+												_isKeepAlive(true),
+												_hasReceivedHeaders(false),
+												_bodySize(-1),
+												_isChunkedRequest(false),
+												_isTerminatedRequest(false)
 	{
 		LOG_INFO("New Request instance");
 	}
 
-	Request::Request(const Request& src): _serverConfig(src._serverConfig),
+	Request::Request(const Request& src): _clientSocket(src._clientSocket),
+								_serverConfig(src._serverConfig),
 								_location(src._location),
 								_requestMethod(src._requestMethod),
+								_requestLine(src._requestLine),
+								_uri(src._uri),
+								_host(src._host),
 								_isKeepAlive(src._isKeepAlive),
 								_hasReceivedHeaders(src._hasReceivedHeaders),
 								_bodySize(src._bodySize),
@@ -42,6 +48,50 @@ namespace	webserv
 	/**************************************************************************/
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
+
+	int	Request::_checkHost()
+	{
+		if (_host.empty()) {
+			LOG_INFO("Client sent HTTP/1.1 request without \"Host\" header"
+					<< " while reading client request headers, client: "
+					<< _clientSocket.getIpAddr() << ":"
+					<< _clientSocket.getPort() << ", server: "
+					<< _serverConfig->getListenPairs()[0].first << ":"
+					<< _serverConfig->getListenPairs()[0].second << " (\""
+					<< _serverConfig->getServerNames()[0] << "\"), request: \""
+					<< _requestLine << "\"");
+			return (400);
+		}
+		return (0);
+	}
+
+	int Request::_checkMaxBodySize()
+	{
+		LOG_DEBUG("Content-Length: " << _bodySize << ", max: "
+				<< _location->getMaxBodySize());
+		if (_bodySize > 0 && _bodySize > _location->getMaxBodySize()) {
+			LOG_ERROR("Client intended to send too large body: " << _bodySize
+					<< " bytes, client: " << _clientSocket.getIpAddr() << ":"
+					<< _clientSocket.getPort() << ", server: "
+					<< _serverConfig->getListenPairs()[0].first << ":"
+					<< _serverConfig->getListenPairs()[0].second << " (\""
+					<< _serverConfig->getServerNames()[0] << "\"), request: \""
+					<< _requestLine << "\", host: \"" << _host << "\"");
+			return (413);
+		}
+		return (0);
+	}
+
+	int	Request::_checkHeaders()
+	{
+		int		responseCode;
+
+		if ((responseCode = _checkHost()) != 0)
+			return (responseCode);
+		if ((responseCode = _checkMaxBodySize()) != 0)
+			return (responseCode);
+		return (responseCode);
+	}
 
 	bool	Request::_loadExtensionLocation(const ServerConfig& serverConfig)
 	{
@@ -149,7 +199,8 @@ namespace	webserv
 	{
 		// TO DO: parse: [=> use unprocessedBuff first, then recvBuff]
 		// 		  		 if (!_hasReceivedHeaders)
-		// 		  		   check and set Headers;
+		// 		  		   check and set Headers, returning 400 error if an
+		// 		  		   existing header has an incorrect value;
 		//				 save what is not read in unprocessedBuff;
 		// 		  		 set _isChunkedRequest/_isTerminatedRequest if needed;
 		// 		  if (error) {
@@ -190,7 +241,8 @@ namespace	webserv
 		// TO DO: if (_isChunkedRequest)
 		// 		    return (_parseChunkedRequest(...));
 		// 		  parse: [=> use unprocessedBuff first, then recvBuff]
-		// 		  		 check and set Headers;
+		// 		  		 check and set Headers, returning 400 error if an
+		// 		  		 existing header has an incorrect value;
 		//				 save what is not read in unprocessedBuff;
 		// 		  		 set _isChunked/_hasReceived/_isTerminated if needed;
 		// 		  if (error) {

@@ -15,7 +15,8 @@ namespace	webserv
 												_serverFd(serverFd),
 												_serverConfigs(serverConfigs),
 												_socket(serverFd),
-												_isKeepAlive(true)
+												_isKeepAlive(true),
+												_request(_socket)
 	{
 		LOG_INFO("New Client instance");
 		LOG_DEBUG("id=" << _id << " ; " << "serverFd=" << _serverFd << " ; "
