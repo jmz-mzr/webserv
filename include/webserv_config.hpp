@@ -18,11 +18,6 @@
 # define SEND_BUFFER_SIZE	524288	// 500KB
 //# define SEND_BUFFER_SIZE	1048576	// 1MB
 
-# define EMPTY	0
-# define GET	1
-# define POST	2
-# define DELETE	3
-
 # ifndef WEBSERV_ROOT
 #  define WEBSERV_ROOT		"/usr/local/var/www"
 # endif

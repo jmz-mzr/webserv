@@ -16,7 +16,7 @@ namespace	webserv
 												_clientSocket(clientSocket),
 												_serverConfig(0),
 												_location(0),
-												_requestMethod(EMPTY),
+												_requestMethod(Method::kEmpty),
 												_isKeepAlive(true),
 												_hasReceivedHeaders(false),
 												_bodySize(-1),
@@ -82,6 +82,22 @@ namespace	webserv
 		return (0);
 	}
 
+	int	Request::_checkMethod()
+	{
+		if (!_location->getLimitExcept().empty()
+				&& !_location->getLimitExcept().count(_requestMethod)) {
+			LOG_ERROR("Access forbidden by rule, client: "
+					<< _clientSocket.getIpAddr() << ":"
+					<< _clientSocket.getPort() << ", server: "
+					<< _serverConfig->getListenPairs()[0].first << ":"
+					<< _serverConfig->getListenPairs()[0].second << " (\""
+					<< _serverConfig->getServerNames()[0] << "\"), request: \""
+					<< _requestLine << "\", host: \"" << _host << "\"");
+			return (403);
+		}
+		return (0);
+	}
+
 	int	Request::_checkHeaders()
 	{
 		int		responseCode;
@@ -89,6 +105,8 @@ namespace	webserv
 		if ((responseCode = _checkHost()) != 0)
 			return (responseCode);
 		if ((responseCode = _checkMaxBodySize()) != 0)
+			return (responseCode);
+		if ((responseCode = _checkMethod()) != 0)
 			return (responseCode);
 		return (responseCode);
 	}
@@ -229,7 +247,8 @@ namespace	webserv
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
 			// After header sent, check content length header, etc
-//			return (_checkHeaders());
+			// Or/And check them when _isTerminatedRequest?
+			return (_checkHeaders());
 		}
 		return (0);
 	}
@@ -262,7 +281,8 @@ namespace	webserv
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
 			// After header sent, check content length header, etc
-//			return (_checkHeaders());
+			// Or/And check them when _isTerminatedRequest?
+			return (_checkHeaders());
 		}
 		return (0);
 	}
@@ -273,7 +293,7 @@ namespace	webserv
 
 		_serverConfig = 0;
 		_location = 0;
-		_requestMethod = EMPTY;
+		_requestMethod = Method::kEmpty;
 		_host.clear();
 		_isKeepAlive = true;
 		_hasReceivedHeaders = false;

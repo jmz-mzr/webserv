@@ -285,6 +285,7 @@ namespace	webserv
 		// 		  Or handle this in "_handleClientRequest()"?
 		// 		  2) How to keep the client able to interact with the server
 		// 		  while the server sends a large file to the client?
+		// 		  Send it through a new socket connected to the client?
 
 		int			clientFd = client.getSocket().getFd();
 		ssize_t		received;

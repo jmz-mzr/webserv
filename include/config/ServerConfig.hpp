@@ -15,7 +15,6 @@
 namespace	webserv
 {
 
-	class	ConfigParser;
 	class	Location;
 
 	class	ServerConfig {

@@ -14,10 +14,19 @@ namespace	webserv
 
 	class	ServerConfig;
 
+	struct	Method {
+		enum	Type {
+			kEmpty,
+			kGet,
+			kPost,
+			kDelete
+		};
+	};
+
 	class	Location {
 	public:
 		typedef std::map<int, std::string>				error_pages_map;
-		typedef std::set<int>							limit_except_set;
+		typedef std::set<Method::Type>					limit_except_set;
 		typedef std::pair<const int, std::string>		return_pair;
 		typedef std::map<std::string, Location,
 							location_compare>			locations_map;
@@ -83,15 +92,29 @@ namespace	webserv
 		long long				_maxBodySize;
 
 		// TO DO: Same as with NGINX -> if the set is not empty, and the
-		// method is not in the set, we deny the access
+		// method is not in the set, we deny the access and return a 403
+		// error, keeping the connection alive
 		limit_except_set		_limitExcept;
 
-		// TO DO: 1) If no return code is given, but only a full URL, the
-		// default code is 302
-		// 2) Can only be defined once on a level, so the 2nd, 3rd...
+		// TO DO: 1) Can only be defined once on a level, so the 2nd, 3rd...
 		// definition lines will be ignored, but this doesn't prevent the rest
 		// of the location configuration to be parsed and checked for errors
-		// 3) Test all edges cases in comparison with NGINX
+		// 2) If no code is given, but only a full URL, the default code is 302
+		// In this case (URL only), it must be a valid one (at least "http://"
+		// or "https://", but test other edge cases) and it cannot be a URI local
+		// to this server, otherwise, in either case, it must throw an exception
+		// (like 'invalid return code "http:/" in /usr/etc/nginx/nginx.conf:128'),
+		// 3) If giving a code, it must be: 0 <= 'code' <= 999, otherwise it
+		// must throw an exception (like 'invalid return code "-1"/"1000"
+		// in /usr/local/etc/nginx/nginx.conf:50')
+		// 4) When giving a correct redirection code (301, 302, 303, 307, and 308),
+		// if something else than the code is given, it is put in the "Location"
+		// response header, and if it starts with a '/', it is taken as a local
+		// URI relative to this server, which must be prefixed with:
+		// "http://'_host'(host header in lowercase)[':_serverPort'](if not 80)"
+		// (for example "http://localhost/abc", or "http://localhost:8080/abc")
+		// 5) For other explicit codes, if something else than the code is given,
+		// it becomes the response body text
 		return_pair				_return;
 
 		// TO DO: 1) Can only be defined once, and if another definition line
