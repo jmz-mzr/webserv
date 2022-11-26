@@ -1,4 +1,4 @@
-[{*.{c,h,cpp,hpp},Makefile}]
+[{*.{c,h,cpp,hpp,conf},Makefile}]
 charset = utf-8
 indent_style = tab
 indent_size = 4
