@@ -162,6 +162,8 @@ namespace	webserv
 		// 5) Internal redirection must not check the _errorPages to avoid an
 		// infinite loop -> add variable indicating redirection? Or copy the location
 		// and delete the _errorPages there?
+		// 6) For the sake of simplicity, we don't reproduce the NGINX possibility
+		// of changing the response code with another ('code [=[response]] URI')
 		error_pages_map			_errorPages;
 
 		// TO DO: 1) Extension locations follow the form "\*\.(alnum|$|.|_|-)+"
