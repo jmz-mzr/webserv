@@ -53,7 +53,8 @@ namespace	webserv
 		const Location*		_location;
 		Method::Type		_requestMethod;
 
-		// TO DO: If the request line is incorrect, immediately return 400
+		// TO DO: 1) If the request line is incorrect, immediately return 400
+		// 2) If the request line is > 8192, immediately return 414
 		std::string			_requestLine;
 
 		// TO DO: If the requested uri has no "/" prefix, or if it goes up in

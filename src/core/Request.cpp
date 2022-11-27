@@ -218,7 +218,8 @@ namespace	webserv
 		// TO DO: parse: [=> use unprocessedBuff first, then recvBuff]
 		// 		  		 if (!_hasReceivedHeaders)
 		// 		  		   check and set Headers, returning 400 error if an
-		// 		  		   existing header has an incorrect value;
+		// 		  		   existing header has an incorrect value, or if a
+		// 		  		   request header field is too long (> 8192);
 		//				 save what is not read in unprocessedBuff;
 		// 		  		 set _isChunkedRequest/_isTerminatedRequest if needed;
 		// 		  if (error) {
