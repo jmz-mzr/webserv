@@ -397,6 +397,8 @@ namespace	webserv
 				return (true);
 			if (client.getResponse().isChunkedResponse())
 				client.prepareResponse();
+			else if (!client.getResponse().isKeepAlive())
+				return (true);
 			else
 				client.clearResponse();
 		}

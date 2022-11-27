@@ -32,11 +32,14 @@ namespace	webserv
 		Response&	operator=(const Response& rhs);
 
 		void	_prepareChunkedResponse(const Request& request);
+		void	_loadHeaders();
 
 		std::string		_responseBuffer;
 		// TO DO: The search for the requested file must be case-insensitive
 //		std::ifstream	_requestedFile;
 		int				_responseCode;
+		std::string		_contentType;
+		long long		_contentLength;
 		bool			_isKeepAlive;
 		bool			_isChunkedResponse;
 		bool			_isResponseReady;

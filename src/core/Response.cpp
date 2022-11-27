@@ -13,6 +13,8 @@ namespace	webserv
 	/**************************************************************************/
 
 	Response::Response(): _responseCode(0),
+							_contentType("text/html"),
+							_contentLength(0),
 							_isKeepAlive(true),
 							_isChunkedResponse(false),
 							_isResponseReady(false)
@@ -23,6 +25,8 @@ namespace	webserv
 	Response::Response(const Response& src):
 									_responseBuffer(src._responseBuffer),
 									_responseCode(src._responseCode),
+									_contentType(src._contentType),
+									_contentLength(src._contentLength),
 									_isKeepAlive(src._isKeepAlive),
 									_isChunkedResponse(src._isChunkedResponse),
 									_isResponseReady(src._isResponseReady)
@@ -47,9 +51,14 @@ namespace	webserv
 		_responseCode = responseCode;
 	}
 
+	void	Response::_loadHeaders()
+	{
+		//_responseBuffer << "HTTP/1.1 " << ... ;
+	}
+
 	void	Response::_prepareChunkedResponse(const Request& request)
 	{
-		// TO DO: try {
+		// TO DO: try {	// or try-catch in client?
 		// 		    load chunk [set Headers & Flags, response code, etc]
 		// 		  } catch (const std::exception& e) {
 		// 		    log error;
@@ -70,7 +79,7 @@ namespace	webserv
 	{
 		// TO DO: if (_isChunkedResponse)
 		// 		    return (_prepareChunkedResponse);
-		// 		  try {
+		// 		  try {	// or try-catch in client?
 		// 		    load response [set Headers & Flags, response code, etc,
 		// 		  		 or set _isChunkedResponse and return (_prepareChunked)
 		// 		  		 if (response size > (SEND_BUFFER_SIZE || SO_SNDBUF))?]
@@ -90,14 +99,23 @@ namespace	webserv
 	void	Response::prepareErrorResponse(int errorCode)
 	{
 		// TO DO: if (errorCode == 0
-		// 		    && _responseCode < 400 && _responseCode > 599)
+		// 		    && _responseCode < 300 && _responseCode > 599)
 		// 		      errorCode = 500;
 		//		  clearResponse();
 		// 		  load error response corresponding to the errorCode;
 		// 		  set _isResponseReady;
+		// 		  First code simple error, then with _errorPages
 
-		if (errorCode == 0 && _responseCode < 400 && _responseCode > 599)
+		if (errorCode == 0 && (_responseCode < 300 || _responseCode > 599))
 			_responseCode = 500;
+		else if (_responseCode == 0)
+			_responseCode = errorCode;
+		if (_responseCode == 400 || _responseCode == 413 || _responseCode == 414
+				|| _responseCode == 497 || _responseCode == 495
+				|| _responseCode == 496 || _responseCode == 500
+				|| _responseCode == 501)
+			_isKeepAlive = false;
+		_loadHeaders();
 	}
 
 	void	Response::clearResponse()
@@ -106,6 +124,8 @@ namespace	webserv
 
 		_responseBuffer.clear();
 		_responseCode = 0;
+		_contentType = "text/html";
+		_contentLength = 0;
 		_isKeepAlive = true;
 		_isChunkedResponse = false;
 		_isResponseReady = false;

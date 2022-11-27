@@ -58,7 +58,7 @@ namespace	webserv
 					<< "port=" << _socket.getPort());
 			responseCode = 500;
 		}
-		if (responseCode >= 400 && responseCode <= 599)
+		if (responseCode >= 300 && responseCode <= 599)
 			_response.setResponseCode(responseCode);
 	}
 
@@ -66,7 +66,7 @@ namespace	webserv
 	{
 		int		responseCode = _response.getResponseCode();
 
-		if (responseCode >= 400 && responseCode <= 599)
+		if (responseCode >= 300 && responseCode <= 599)
 			return (true);
 		return (false);
 	}
@@ -99,7 +99,7 @@ namespace	webserv
 		// 		  the client, request and/or response accordingly
 		// 		  Also update it relative to the error codes (like 400)
 
-		_response.prepareResponse(_request);
+		_response.prepareResponse(_request);	// try-catch
 		if (!_response.isChunkedResponse())
 			_request.clearRequest();
 	}
@@ -110,7 +110,7 @@ namespace	webserv
 		// 		  the client, request and/or response accordingly
 		// 		  Also update it relative to the error codes (like 400)
 
-		_response.prepareErrorResponse(errorCode);
+		_response.prepareErrorResponse(errorCode);	// add request, try-catch
 		_request.clearRequest();
 	}
 
