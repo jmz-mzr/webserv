@@ -10,22 +10,22 @@ namespace	webserv
 	/**************************************************************************/
 
 	Location::Location(const ServerConfig& src):
-											_errorPages(src.getErrorPages()),
 											_maxBodySize(src.getMaxBodySize()),
+											_index("index.html"),
 											_autoIndex(false),
-											_index("index.html")
+											_errorPages(src.getErrorPages())
 	{
 		LOG_INFO("New Location instance");
 	}
 
-	Location::Location(const Location& src): _errorPages(src._errorPages),
-												_maxBodySize(src._maxBodySize),
+	Location::Location(const Location& src): _maxBodySize(src._maxBodySize),
 												_limitExcept(src._limitExcept),
 												_return(src._return),
-												_root(src._root),
-												_autoIndex(src._autoIndex),
-												_index(src._index),
 												_fastCgiPass(src._fastCgiPass),
+												_index(src._index),
+												_autoIndex(src._autoIndex),
+												_root(src._root),
+												_errorPages(src._errorPages),
 												_locations(src._locations)
 	{
 		LOG_INFO("Location copied");

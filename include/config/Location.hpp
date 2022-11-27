@@ -35,22 +35,22 @@ namespace	webserv
 		Location(const Location& src);
 		~Location() { }
 
-		const error_pages_map&		getErrorPages() const
-												{ return (_errorPages); }
 		const long long&			getMaxBodySize() const
 												{ return (_maxBodySize); }
 		const limit_except_set&		getLimitExcept() const
 												{ return (_limitExcept); }
 		const return_pair&			getReturnPair() const
 												{ return (_return); }
-		const std::string&			getRoot() const
-												{ return (_root); }
-		bool						isAutoIndex() const
-												{ return (_autoIndex); }
-		const std::string&			getIndex() const
-												{ return (_index); }
 		const std::string&			getFastCgiPass() const
 												{ return (_fastCgiPass); }
+		const std::string&			getIndex() const
+												{ return (_index); }
+		bool						isAutoIndex() const
+												{ return (_autoIndex); }
+		const std::string&			getRoot() const
+												{ return (_root); }
+		const error_pages_map&		getErrorPages() const
+												{ return (_errorPages); }
 		const locations_map&		getLocations() const
 												{ return (_locations); }
 	private:
@@ -58,19 +58,8 @@ namespace	webserv
 
 		Location&	operator=(const Location& rhs);
 
-		// TO DO: 1) Can only be defined once on a level, so the 2nd, 3rd...
-		// definition lines will be ignored. For example these two lines ->
-		// error_page   400 400 404 404  /50x.html;
-		// error_page   400 402 403 404  /40x.html;
-		// -> they result in a map with only two entries:
-		// [400]="/50x.html", and [404]="/50x.html"
-		// 2) The error_page must have (at least) two parameters (the last one
-		// being the redirection), otherwise it must throw an exception (like
-		// 'invalid number of arguments in "error_page" directive in
-		// /usr/local/etc/nginx/nginx.conf:39')
-		// 3) If the definition was inherited from the ServerConfig, the first
-		// definition line replaces it (clear() the map, then record line)
-		error_pages_map			_errorPages;
+		// TO DO: In order, first check the _maxBodySize, then _limitExcept,
+		// then _return, _fastCgiPass, _index, _autoIndex when building Response
 
 		// TO DO: 1) Can only be defined once on a level, and if another
 		// definition line appears, it must throw an exception
@@ -115,7 +104,39 @@ namespace	webserv
 		// (for example "http://localhost/abc", or "http://localhost:8080/abc")
 		// 5) For other explicit codes, if something else than the code is given,
 		// it becomes the response body text
+		// 6) For the 444 code, if nothing else is given, it closes the connection
+		// without sending a request, otherwise if some text is given, it is
+		// treated as other codes (the text goes in the response body)
 		return_pair				_return;
+
+		// TO DO: 1) Can only be defined once, and if another definition line
+		// appears, it must throw an exception (like '"fastcgi_pass" directive
+		// is duplicate in /usr/local/etc/nginx/nginx.conf:109')
+		// 2) It must be either a valid IP address, or a valid hostname (no special
+		// characters, and can be translated, case-insensitively to an IP address
+		// with the hosts file), and a port, otherwise it throw an exception (like
+		// 'no port in upstream "localhost" in /usr/local/etc/nginx/nginx.conf:114',
+		// 'invalid host in upstream "http:/localhost:80" in /.../nginx.conf:133',
+		// 'invalid port in upstream "loCalhOst:80000" in /usr/.../nginx.conf:133',
+		// 'host not found in upstream "127.0.0.1000" in /usr/.../nginx.conf:133',
+		// 'host not found in upstream "localhosttt" in /usr/.../nginx.conf:133')
+		std::string				_fastCgiPass;
+
+		// TO DO: 1) For the sake of simplicity, accept only one default file
+		// to answer if the request is a directory (unlike NGINX's index)
+		// 2) Like NGINX's, it always has a default _index: "index.html",
+		// already set when creating a Location class
+		// 3) Can be defined multiple times, and for the sake of simplicity,
+		// if another definition line appears, it replaces the previous one
+		// 4) For the response, it must be checked before _autoIndex
+		std::string				_index;
+
+		// TO DO: 1) Can only be defined once, and if another
+		// definition line appears, it must throw an exception
+		// (like '"autoindex" directive is duplicate in
+		// /usr/local/etc/nginx/nginx.conf:37')
+		// 2) The index must be checked first, before _autoIndex
+		bool					_autoIndex;
 
 		// TO DO: 1) Can only be defined once, and if another definition line
 		// appears, it must throw an exception (like '"root" directive is
@@ -124,24 +145,24 @@ namespace	webserv
 		// it must be set to the default _root: "html"
 		std::string				_root;
 
-		// TO DO: Can only be defined once, and if another
-		// definition line appears, it must throw an exception
-		// (like '"autoindex" directive is duplicate in
-		// /usr/local/etc/nginx/nginx.conf:37')
-		bool					_autoIndex;
-
-		// TO DO: 1) For the sake of simplicity, accept only one default file
-		// to answer if the request is a directory (unlike NGINX's index)
-		// 2) Like NGINX's, it always has a default _index: "index.html",
-		// already set when creating a Location class
-		// 3) Can be defined multiple times, and for the sake of simplicity,
-		// if another definition line appears, it replaces the previous one
-		std::string				_index;
-
-		// TO DO: Can only be defined once, and if another definition line
-		// appears, it must throw an exception (like '"fastcgi_pass" directive
-		// is duplicate in /usr/local/etc/nginx/nginx.conf:109')
-		std::string				_fastCgiPass;
+		// TO DO: 1) Can only be defined once on a level, so the 2nd, 3rd...
+		// definition lines will be ignored. For example these two lines ->
+		// error_page   400 400 404 404  /50x.html;
+		// error_page   400 402 403 404  /40x.html;
+		// -> they result in a map with only two entries:
+		// [400]="/50x.html", and [404]="/50x.html"
+		// 2) The error_page must have (at least) two parameters (the last one
+		// being the redirection), otherwise it must throw an exception (like
+		// 'invalid number of arguments in "error_page" directive in
+		// /usr/local/etc/nginx/nginx.conf:39')
+		// 3) If the definition was inherited from the ServerConfig, the first
+		// definition line replaces it (clear() the map, then record line)
+		// 4) It must be a valid code as: 300 <= 'code' <= 599, otherwise exception
+		// (like 'value "200" must be between 300 and 599 in /usr/.../nginx.conf:134')
+		// 5) Internal redirection must not check the _errorPages to avoid an
+		// infinite loop -> add variable indicating redirection? Or copy the location
+		// and delete the _errorPages there?
+		error_pages_map			_errorPages;
 
 		// TO DO: 1) Extension locations follow the form "\*\.(alnum|$|.|_|-)+"
 		// (star, dot, and then any NON-EMPTY (total size > 2) combination of
