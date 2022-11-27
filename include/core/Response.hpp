@@ -26,6 +26,8 @@ namespace	webserv
 		void	prepareErrorResponse(int errorCode = 0);
 
 		void	clearResponse();
+
+		static const std::string&	getSpecialResponseBody(int responseCode);
 	private:
 		Response&	operator=(const Response& rhs);
 
