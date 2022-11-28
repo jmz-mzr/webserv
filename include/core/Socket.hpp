@@ -3,9 +3,11 @@
 
 # include <string>
 
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
+# include <sys/types.h>		// getaddrinfo & co
+# include <sys/socket.h>	// inet_addr, getaddrinfo & co
+# include <netdb.h>			// getaddrinfo & co
+# include <netinet/in.h>	// inet_addr
+# include <arpa/inet.h>		// inet_addr
 
 # include "utils/utils.hpp"
 
