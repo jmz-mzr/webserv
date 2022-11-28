@@ -27,17 +27,21 @@ namespace	webserv
 
 		void	clearResponse();
 
-		static const std::string&	getSpecialResponseBody(int responseCode);
 	private:
 		Response&	operator=(const Response& rhs);
 
 		void	_prepareChunkedResponse(const Request& request);
 		void	_loadHeaders();
 
+		static const std::string&	_getResponseStatus(int responseCode);
+		static const std::string&	_getDate();
+		static const std::string&	_getSpecialResponseBody(int responseCode);
+
 		std::string		_responseBuffer;
 		// TO DO: The search for the requested file must be case-insensitive
 //		std::ifstream	_requestedFile;
 		int				_responseCode;
+		// TO DO: Becomes "text/html" when _autoIndex, _specialResponseBody
 		std::string		_contentType;
 		long long		_contentLength;
 		bool			_isKeepAlive;

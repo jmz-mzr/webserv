@@ -1,6 +1,8 @@
 #include "core/Response.hpp"
 #include "utils/Logger.hpp"
 
+#include <sstream>
+#include <ctime>
 #include <utility>
 
 #define CRLF	"\r\n"
@@ -13,7 +15,7 @@ namespace	webserv
 	/**************************************************************************/
 
 	Response::Response(): _responseCode(0),
-							_contentType("text/html"),
+							_contentType("application/octet-stream"),
 							_contentLength(0),
 							_isKeepAlive(true),
 							_isChunkedResponse(false),
@@ -53,7 +55,24 @@ namespace	webserv
 
 	void	Response::_loadHeaders()
 	{
-		//_responseBuffer << "HTTP/1.1 " << ... ;
+		const std::string&	specialBody = Response::
+										_getSpecialResponseBody(_responseCode);
+		const char*			connection = isKeepAlive() ? "keep-alive" : "close";
+		std::ostringstream	headers;
+
+		if (!specialBody.empty()) {
+			_contentType = "text/html";
+			_contentLength = specialBody.length();
+		}
+		headers << "HTTP/1.1 " << _responseCode
+			<< Response::_getResponseStatus(_responseCode) << CRLF
+			<< "Server: webserv" << CRLF
+			<< "Date: " << Response::_getDate() << CRLF
+			<< "Content-Type: " << _contentType << CRLF
+			<< "Content-Length: " << _contentLength << CRLF
+			<< "Connection: " << connection << CRLF
+			<< CRLF;
+		_responseBuffer = headers.str();
 	}
 
 	void	Response::_prepareChunkedResponse(const Request& request)
@@ -124,14 +143,80 @@ namespace	webserv
 
 		_responseBuffer.clear();
 		_responseCode = 0;
-		_contentType = "text/html";
+		_contentType = "application/octet-stream";
 		_contentLength = 0;
 		_isKeepAlive = true;
 		_isChunkedResponse = false;
 		_isResponseReady = false;
 	}
 
-	const std::string& getSpecialResponseBody(int responseCode)
+	/**************************************************************************/
+	/*                         STATIC MEMBER FUNCTIONS                        */
+	/**************************************************************************/
+
+	const std::string&	Response::_getDate()
+	{
+		static char			buffer[32];
+		static std::string	date(32, '\0');
+		time_t				rawTime = std::time(0);
+		struct tm*			gmtTime = std::gmtime(&rawTime);
+
+		std::strftime(buffer, 32, "%a, %d %b %Y %H:%M:%S GMT", gmtTime);
+		date = buffer;
+		return (date);
+	}
+
+	const std::string&	Response::_getResponseStatus(int responseCode)
+	{
+		static std::string					emptyStatus(" ");
+		static std::pair<int, std::string>	responseStatus[] = {
+			std::make_pair(200, " OK"),
+			std::make_pair(201, " Created"),
+			std::make_pair(202, " Accepted"),
+			std::make_pair(204, " No Content"),
+			std::make_pair(206, " Partial Content"),
+			std::make_pair(301, " Moved Permanently"),
+			std::make_pair(302, " Moved Temporarily"),
+			std::make_pair(303, " See Other"),
+			std::make_pair(304, " Not Modified"),
+			std::make_pair(307, " Temporary Redirect"),
+			std::make_pair(308, " Permanent Redirect"),
+			std::make_pair(400, " Bad Request"),
+			std::make_pair(401, " Unauthorized"),
+			std::make_pair(402, " Payment Required"),
+			std::make_pair(403, " Forbidden"),
+			std::make_pair(404, " Not Found"),
+			std::make_pair(405, " Not Allowed"),
+			std::make_pair(406, " Not Acceptable"),
+			std::make_pair(408, " Request Time-out"),
+			std::make_pair(409, " Conflict"),
+			std::make_pair(410, " Gone"),
+			std::make_pair(411, " Length Required"),
+			std::make_pair(412, " Precondition Failed"),
+			std::make_pair(413, " Request Entity Too Large"),
+			std::make_pair(414, " Request-URI Too Large"),
+			std::make_pair(415, " Unsupported Media Type"),
+			std::make_pair(416, " Requested Range Not Satisfiable"),
+			std::make_pair(421, " Misdirected Request"),
+			std::make_pair(429, " Too Many Requests"),
+			std::make_pair(500, " Internal Server Error"),
+			std::make_pair(501, " Not Implemented"),
+			std::make_pair(502, " Bad Gateway"),
+			std::make_pair(503, " Service Temporarily Unavailable"),
+			std::make_pair(504, " Gateway Time-out"),
+			std::make_pair(505, " HTTP Version Not Supported"),
+			std::make_pair(507, " Insufficient Storage")
+		};
+		static int		size = sizeof(responseStatus) / sizeof(*responseStatus);
+
+		for (int i = 0; i < size; ++i) {
+			if (responseStatus[i].first == responseCode)
+				return (responseStatus[i].second);
+		}
+		return (emptyStatus);
+	}
+
+	const std::string&	Response::_getSpecialResponseBody(int responseCode)
 	{
 		static std::string					emptyString("");
 		static std::pair<int, std::string>	responsePairs[] = {
