@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "config/ConfigParser.hpp"
 #include "utils/Logger.hpp"
 
 namespace	webserv
@@ -11,17 +12,20 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	ServerConfig::ServerConfig() : Config()
+	ServerConfig::ServerConfig(const config::ConfigParser& src):
+											_errorPages(src.getErrorPages()),
+											_maxBodySize(src.getMaxBodySize())
 	{
 		LOG_INFO("New ServerConfig instance");
 		_locations.insert(std::make_pair("", Location(*this)));
 	}
 
-	ServerConfig::ServerConfig(const ServerConfig& src)
-			: Config(src)
-			, _listenPairs(src._listenPairs)
-			, _serverNames(src._serverNames)
-			, _locations(src._locations)
+	ServerConfig::ServerConfig(const ServerConfig& src):
+												_listenPairs(src._listenPairs),
+												_serverNames(src._serverNames),
+												_errorPages(src._errorPages),
+												_maxBodySize(src._maxBodySize),
+												_locations(src._locations)
 	{
 		LOG_INFO("ServerConfig copied");
 	}

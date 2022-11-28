@@ -9,13 +9,6 @@
 
 # include <netinet/in.h>
 
-// Concatenates strings
-# define JOIN_IMPL_(foo, bar) foo##bar
-# define JOIN(foo, bar) JOIN_IMPL_(foo, bar)
-
-// Creates a string literal, enclosing the argument between quotes
-# define STRINGIZE(name) #name
-
 namespace	webserv
 {
 

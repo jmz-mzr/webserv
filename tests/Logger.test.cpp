@@ -16,7 +16,7 @@ TEST_SUITE("Logger class") {
 	}
 
 	TEST_CASE("Output channel") {
-		if (CONF_LOG_OUT & LogOutput::kFile) {
+		if (CONF_LOG_OUT & kFile) {
 			SUBCASE("file") {
 				const std::ofstream& fstream = L.getLogfile();
 				CHECK(fstream.is_open());

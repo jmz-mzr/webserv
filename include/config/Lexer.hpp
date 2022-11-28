@@ -10,27 +10,29 @@
 namespace	webserv {
 
 namespace	config {
-	
-	typedef std::deque<struct Token>	token_queue;
 
-	struct	Token {
-		enum	Type {
-			kWord = 0x00,
-			kComment = 0x01,
-			kBlockStart = 0x10,
-			kBlockEnd = 0x11,
-			kDirectiveEnd = 0x12,
-			kEOF = 0x13,
-		};
-
-		Token(enum Type t, std::string v) : type(t), value(v) {}
-
-		enum Type		type;
-		std::string		value;
-	};
+class	ConfigParser;
 
 	class	Lexer {
 	public:
+
+		struct	Token {
+			enum	Type {
+				kEOF = 0,
+				kWord = 1,
+				kBlockStart = 2,
+				kBlockEnd = 3,
+				kDirectiveEnd = 4,
+				kComment = 5
+			};
+
+			Token(enum Type t, std::string v) : type(t), value(v) {}
+
+			enum Type		type;
+			std::string		value;
+		};
+
+		typedef std::deque<struct Token>			token_queue;
 		typedef std::map<char, enum Token::Type>	token_dict;
 
 		Lexer();
@@ -39,17 +41,14 @@ namespace	config {
 		void					operator()(const std::string& lineBuffer);
 		friend std::ostream&	operator<<(std::ostream&, const token_queue&);
 
-		token_queue&			getTokens() { return (_tokens); }
+		const token_queue&		getTokens() const { return (_tokens); }
 
 		bool	isEof;
-		bool	isParseReady;
-		
-		static const uint8_t	kctrlTokenMask = 16U;
 
 	private:
 		Lexer(const Lexer& src);
 
-		Lexer&	operator=(const Lexer& rhs);
+		Lexer&					operator=(const Lexer& rhs);
 
 		void	_addToken(const Token& token);
 		void	_extractWords(const std::string& buffer);

@@ -84,7 +84,8 @@ namespace	webserv
 
 	int	Request::_checkMethod()
 	{
-		if (!(_location->getLimitExcept() & _requestMethod)) {
+		if (!_location->getLimitExcept().empty()
+				&& !_location->getLimitExcept().count(_requestMethod)) {
 			LOG_ERROR("Access forbidden by rule, client: "
 					<< _clientSocket.getIpAddr() << ":"
 					<< _clientSocket.getPort() << ", server: "

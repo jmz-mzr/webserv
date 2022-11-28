@@ -1,66 +1,18 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
-#include <list>
-#include <stack>
-#include <string>
-#include <vector>
-
-#include "config/Lexer.hpp"
-#include "config/Location.hpp"
-#include "config/Config.hpp"
-
 namespace	webserv {
 
 namespace	config {
+
+	class	ConfigParser;
+	class	Lexer;
 
 	class Parser {
 		public:
 			Parser();
 			~Parser();
-
-			struct Directive {
-				enum Type {
-					kServerBlock,
-					kLocationBlock,
-					kServerName,
-					kListen,
-					kErrorPage,
-					kLimitExcept,
-					kRoot,
-					kIndex,
-					kBodyBufSize,
-					kReturn,
-					kAutoindex,
-					kFastcgi
-				};
-				enum DupRule {
-					kIgnore,
-					kForbid,
-					kAccept
-				};
-				enum Context {
-					kServer,
-					kLocation,
-					kBoth
-				};
-				size_t			argc;
-				Context			context;
-				bool			noDup;
-			};
-
-			void	operator()(token_queue& tokens);
-
-			void	createServer();
-			void	createLocation();
-
-
-
 		private:
-			Token*								_currToken;
-			Location*							_currLocation;
-			ServerConfig*						_currServer;
-			std::map<std::string, Directive>	_syntaxRules;
 	};
 
 }	// namespace config

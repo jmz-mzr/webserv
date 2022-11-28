@@ -15,8 +15,7 @@ BUILDIR		=	build
 DEPDIR		=	$(BUILDIR)/.deps
 
 #>	FILES
-CONFIG		=	Config.cpp \
-				FileHandler.cpp \
+CONFIG		=	ConfigParser.cpp \
 				Lexer.cpp \
 				Location.cpp \
 				Parser.cpp \
@@ -45,13 +44,13 @@ DEP			=	$(SRCS:%.cpp=$(DEPDIR)/%.d)
 
 #>	COMPILATION FLAGS
 CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
-CXXFLAGS	+=	-DWEBSERV_ROOT="$(shell pwd)"
+CXXFLAGS	+=	-DWEBSERV_ROOT=\"$(shell pwd)\"
 CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
 LDFLAGS		=	$(addprefix -L, $(LIBDIR)) $(addprefix -l, $(LIB))
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
 ifeq (test,$(strip $(MAKECMDGOALS)))						# if testing
-	CXXFLAGS	+=	-fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g3 -DCONF_LOG_OUT="LogOutput::kNone"
+	CXXFLAGS	+=	-fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g3 -DCONF_LOG_OUT=kNone
 	BIN			=	$(TESTER)
 	SRCS		=	$(SRC) $(TEST)
 else

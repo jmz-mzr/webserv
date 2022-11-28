@@ -6,17 +6,12 @@ namespace	config {
 
 Parser::Parser()
 {
-	
 }
 
 Parser::~Parser()
 {
 }
 
-void	Parser::operator()(token_queue& tokens)
-{
-	(void)tokens;
-}
 
 }	// namespace config
 

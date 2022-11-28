@@ -24,12 +24,12 @@ namespace	webserv
 		_cc[2].str = "WARN", _cc[2].color = HYEL;
 		_cc[3].str = "INFO", _cc[3].color = HWHT;
 		_cc[4].str = "DEBUG", _cc[4].color = HCYN;
-		if (_channel & LogOutput::kFile)
+		if (_channel & kFile)
 		{
 			_logfile.open(CONF_LOG_FILE);
 			if (!(_logfile.good())) {
 				LOG_WARN("Cannot open \"" << CONF_LOG_FILE << "\", ignored");
-				_channel &= ~(LogOutput::kFile);
+				_channel &= ~kFile;
 			}
 		}
 	}
@@ -56,14 +56,14 @@ namespace	webserv
 		std::ostringstream	stream;
 		std::string			output;
 
-		if (_channel != LogOutput::kNone && level <= _threshold) {
+		if (_channel != kNone && level <= _threshold) {
 			stream << "webserv: [" << _cc[level].color << _cc[level].str << RESET
 				<< "] " << BWHT << file << ":" << line << RESET
 				<< ": " << msg;
 			output = stream.str();
-			if (_channel & LogOutput::kConsole)
+			if (_channel & kConsole)
 				_logfile << output << std::endl;
-			if (_channel & LogOutput::kFile)
+			if (_channel & kFile)
 				std::cerr << output << std::endl;
 		}
 	}

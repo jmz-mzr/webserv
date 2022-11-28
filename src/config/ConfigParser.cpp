@@ -1,24 +1,24 @@
-#include "config/FileHandler.hpp"
-
 #include <string>
 #include <iostream>
 
+#include "config/ConfigParser.hpp"
 #include "utils/Logger.hpp"
 #include "utils/utils.hpp"
 #include "webserv_config.hpp"
 
 namespace webserv {
 
-namespace	config {
+namespace config {
 
 /******************************************************************************/
 /*                         CONSTRUCTORS / DESTRUCTORS                         */
 /******************************************************************************/
 
-FileHandler::FileHandler()
+ConfigParser::ConfigParser()
 		: _filePath(DEFAULT_CONF_FILE)
 		, _currentLineNb(0)
 		, _lexer()
+		, _maxBodySize(0)
 {
 	_file.open(_filePath.c_str());
 	if (!_file.good()) {
@@ -26,14 +26,15 @@ FileHandler::FileHandler()
 		LOG_ERROR("Loading configuration failed")
 		throw LogicErrorException();
 	}
-	LOG_INFO("New FileHandler instance with default configuration");
+	LOG_INFO("New ConfigParser instance with default configuration");
 	LOG_DEBUG("_filePath=" << _filePath);
 }
 
-FileHandler::FileHandler(const std::string& path)
+ConfigParser::ConfigParser(const std::string& path)
 		: _filePath(path)
 		, _currentLineNb(0)
 		, _lexer()
+		, _maxBodySize(0)
 {
 	_file.open(_filePath.c_str());
 	if (!_file.good()) {
@@ -45,14 +46,14 @@ FileHandler::FileHandler(const std::string& path)
 			LOG_ERROR("Loading configuration failed")
 			throw LogicErrorException();
 		}
-		LOG_INFO("New FileHandler instance with default configuration");
+		LOG_INFO("New ConfigParser instance with default configuration");
 	} else {
-		LOG_INFO("New FileHandler instance with provided configuration");
+		LOG_INFO("New ConfigParser instance with provided configuration");
 	}
 	LOG_DEBUG("_filePath=" << _filePath);
 }
 
-FileHandler::~FileHandler()
+ConfigParser::~ConfigParser()
 {
 	_file.clear();
 	if (_file.is_open()) {
@@ -69,7 +70,7 @@ FileHandler::~FileHandler()
 /*                              MEMBER FUNCTIONS                              */
 /******************************************************************************/
 
-bool	FileHandler::_readline()
+bool	ConfigParser::_readline()
 {
 	std::getline(_file, _lineBuffer);
 	if (_file.fail())
@@ -78,38 +79,33 @@ bool	FileHandler::_readline()
 	return ((_lexer.isEof = _file.eof()) || !_lineBuffer.empty());
 }
 
-void	FileHandler::parse()
+void	ConfigParser::operator()() try
 {
-	token_queue		tokens;
-
-	try {
-		do {
-			if (_readline() == true) {
-				_lexer.isParseReady = false;
-				_lexer(_lineBuffer);
-				if (_lexer.isParseReady == true)
-					_parser(_lexer.getTokens());
-			}
-		} while (_file.good());
-	} catch (const SyntaxErrorException& e) {
-		Logger::getInstance().log(_filePath, _currentLineNb, LogLevel::kEmerg,
-																	e.what());
-		throw ;
-	} catch (...) {
-		throw ;
-	}
+	do {
+		if (_readline()) {
+			_lexer(_lineBuffer);
+			// _parser();
+		}
+	} while (_file.good());
+}
+catch (const SyntaxErrorException& e) {
+	Logger::getInstance().log(_filePath, _currentLineNb, kEmerg, e.what());
+	throw ;
+}
+catch (...) {
+	throw ;
 }
 
-// ServerFileHandler	serverFileHandler(*this);
+// ServerConfig	serverConfig(*this);
 
 // TODO: actual parsing of every Server block
-// serverFileHandler.addListenPair(std::make_pair("127.0.0.1", 8081));
-// serverFileHandler.addName("webserv");
-// _serverFileHandlers.push_back(serverFileHandler);
+// serverConfig.addListenPair(std::make_pair("127.0.0.1", 8081));
+// serverConfig.addName("webserv");
+// _serverConfigs.push_back(serverConfig);
 
 // error_pages_map					_errorPages;
 // long long						_maxBodySize;
-// std::vector<ServerFileHandler>		_serverFileHandlers;
+// std::vector<ServerConfig>		_serverConfigs;
 
 /******************************************************************************/
 /*                            NON-MEMBER FUNCTIONS                            */
