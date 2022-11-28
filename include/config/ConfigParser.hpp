@@ -75,6 +75,10 @@ namespace	config {
 		// being the redirection), otherwise it must throw an exception (like
 		// 'invalid number of arguments in "error_page" directive in
 		// /usr/local/etc/nginx/nginx.conf:39')
+		// 3) It must be a valid code as: 300 <= 'code' <= 599, otherwise exception
+		// (like 'value "200" must be between 300 and 599 in /usr/.../nginx.conf:134')
+		// 4) For the sake of simplicity, we don't reproduce the NGINX possibility
+		// of changing the response code with another ('code [=[response]] URI')
 		error_pages_map					_errorPages;
 
 		// TO DO: 1) Can only be defined once on a level, and if another
