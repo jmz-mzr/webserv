@@ -1,5 +1,6 @@
 #include "core/ConnectSocket.hpp"
 
+#include <cstring>
 #include <cerrno>
 
 #include "utils/Logger.hpp"

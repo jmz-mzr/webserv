@@ -1,5 +1,6 @@
 #include "core/AcceptSocket.hpp"
 
+#include <cstring>
 #include <cerrno>
 
 #include <fcntl.h>
