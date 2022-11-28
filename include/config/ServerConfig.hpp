@@ -8,7 +8,7 @@
 
 # include <stdint.h>
 
-# include "config/ConfigParser.hpp"
+# include "config/Config.hpp"
 # include "config/Location.hpp"
 # include "utils/utils.hpp"
 
@@ -17,14 +17,14 @@ namespace	webserv
 
 	class	Location;
 
-	class	ServerConfig {
+	class	ServerConfig : public Config {
 	public:
 		typedef std::pair<const std::string, uint16_t>		listen_pair;
 		typedef std::map<int, std::string>					error_pages_map;
-		typedef std::map<std::string, Location,
-							location_compare>				locations_map;
+		typedef std::map<std::string, Location, location_compare>
+															locations_map;
 
-		ServerConfig(const config::ConfigParser& src);
+		ServerConfig();
 		ServerConfig(const ServerConfig& src);
 		~ServerConfig() { }
 
@@ -32,10 +32,6 @@ namespace	webserv
 													{ return (_listenPairs); }
 		const std::vector<std::string>&	getServerNames() const
 													{ return (_serverNames); }
-		const error_pages_map&			getErrorPages() const
-													{ return (_errorPages); }
-		const long long&				getMaxBodySize() const
-													{ return (_maxBodySize); }
 		const locations_map&			getLocations() const
 													{ return (_locations); }
 
@@ -46,9 +42,8 @@ namespace	webserv
 
 		void	addListenPair(const listen_pair& listenPair);
 		void	addName(const std::string& name);
-	private:
-		ServerConfig();
 
+	private:
 		ServerConfig&	operator=(const ServerConfig& rhs);
 
 		// TO DO: 1) We must resolve the eventual localhost address

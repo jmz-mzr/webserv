@@ -31,7 +31,6 @@
 *.exe
 *.out
 *.app
-webser*
 
 # Temp files
 *.swp
@@ -41,3 +40,7 @@ webser*
 
 # Log files
 *.log
+
+# Binaries
+webser*
+*test

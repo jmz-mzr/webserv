@@ -2,11 +2,11 @@
 # define WEBSERV_HPP
 
 # include "webserv_config.hpp"
-# include "config/ConfigParser.hpp"
-# include "config/ServerConfig.hpp"
+# include "config/FileHandler.hpp"
 # include "core/Server.hpp"
 # include "core/Client.hpp"
 
+# include <algorithm>
 # include <utility>
 # include <string>
 # include <vector>
@@ -63,10 +63,9 @@ namespace	webserv
 		bool		_handleClientResponse(Client& client, pollFd_iter pollFd);
 		bool		_sendResponse(Client& client, int clientFd);
 		void		_usageHelper();
-		void		_parseConfig(std::string configFilePath);
 
 		char						_buffer[RECV_BUFFER_SIZE];
-		config::ConfigParser		_config;	//! Cette classe n'a pas besoin d'une duree de vie aussi longue
+		std::list<ServerConfig>		_configs;
 		std::vector<Server>			_servers;
 		std::list<Client>			_clients;
 		std::vector<struct pollfd>	_pollFds;

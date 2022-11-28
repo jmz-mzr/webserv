@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 
-#include "config/ConfigParser.hpp"
+#include "config/FileHandler.hpp"
 #include "utils/ansi_colors.hpp"
 #include "utils/Logger.hpp"
 #include "utils/utils.hpp"
@@ -49,6 +49,8 @@ void	Lexer::_syntaxError(const Token& token, const char* expected)
 
 void	Lexer::_addToken(const Token& token)
 {
+	if (token.type & kctrlTokenMask)
+		isParseReady = true;
 	switch (token.type) {
 		case Token::kEOF:
 			if (!_tokens.empty() && _tokens.back().type == Token::kWord) {
@@ -129,32 +131,32 @@ void	Lexer::operator()(const std::string& lineBuffer)
 /*                            NON-MEMBER FUNCTIONS                            */
 /******************************************************************************/
 
-std::ostream&	operator<<(std::ostream& os, const Lexer::token_queue& rhs)
+std::ostream&	operator<<(std::ostream& os, const token_queue& rhs)
 {
-	typedef std::deque<struct Lexer::Token>::const_iterator const_iter;
+	typedef std::deque<struct Token>::const_iterator const_iter;
 
 	for (const_iter currentToken = rhs.begin();
 					currentToken != rhs.end();
 					currentToken++) {
 		switch (currentToken->type) {
-			case Lexer::Token::kEOF:
+			case Token::kEOF:
 				os << HRED;
 				break ;
-			case Lexer::Token::kWord:
+			case Token::kWord:
 				os << HBLU;
 					break ;
-				case Lexer::Token::kBlockStart:
-				case Lexer::Token::kBlockEnd:
+				case Token::kBlockStart:
+				case Token::kBlockEnd:
 					os << HGRN;
 					break ;
-				case Lexer::Token::kDirectiveEnd:
+				case Token::kDirectiveEnd:
 					os << HYEL;
 					break ;
 				default :
 					break;
 			}
 		os << currentToken->value;
-		if (currentToken->type != Lexer::Token::kEOF)
+		if (currentToken->type != Token::kEOF)
 			os << HWHT << " -> ";
 		os << RESET;
 	}

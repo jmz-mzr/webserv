@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <sys/socket.h>
 
-#include "config/ConfigParser.hpp"
+#include "config/FileHandler.hpp"
 #include "utils/Logger.hpp"
 #include "utils/utils.hpp"
 
@@ -128,10 +128,10 @@ namespace	webserv
 
 	void	Webserv::_loadServers()
 	{
-		std::vector<ServerConfig>::const_iterator	serverConfig;
+		std::list<ServerConfig>::const_iterator	serverConfig;
 
-		serverConfig = _config.getServerConfigs().begin();
-		while (serverConfig != _config.getServerConfigs().end()) {
+		serverConfig = _configs.begin();
+		while (serverConfig != _configs.end()) {
 			_addServer(*serverConfig);
 			++serverConfig;
 		}
@@ -142,29 +142,19 @@ namespace	webserv
 		std::cerr << "Usage: ./webserv [CONFIG FILE]" << std::endl;
 	}
 
-	void	Webserv::_parseConfig(std::string configFilePath)
-	{
-		config::ConfigParser	configParser(configFilePath);
-
-		configParser();
-		LOG_DEBUG("Tokenised config file = [ "
-					<< configParser.getLexer().getTokens()
-					<< " ]");
-	}
-
 	void	Webserv::init(int argc, char** argv)
 	{
 		if (argc > 2 || argc < 1) {
 			_usageHelper();
-			LOG_EMERG("bad number of arguments");
 			LOG_DEBUG("argc=" << argc);
-			throw LogicErrorException();
-		} else if (argc == 2) {
-			_parseConfig(argv[1]);
+			throw LogicErrorException("Bad number of arguments");
 		} else {
-			_parseConfig(DEFAULT_CONF_FILE);
+			config::FileHandler	configFile( (argc == 2)
+											? argv[1]
+											: DEFAULT_CONF_FILE );
+			configFile.parse();
+			_loadServers();
 		}
-		_loadServers();
 	}
 
 	void	Webserv::_broadcastMsg(const std::string& msg,

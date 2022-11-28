@@ -1,13 +1,13 @@
 {
 	"makefile.launchConfigurations": [
 		{
-			"cwd": "/home/gmorizur/code/webserv",
-			"binaryPath": "/home/gmorizur/code/webserv/webserv",
+			"cwd": "${workspaceFolder}/webserv",
+			"binaryPath": "${workspaceFolder}/webserv/webserv",
 			"binaryArgs": []
 		},
 		{
-			"cwd": "/home/gmorizur/code/webserv",
-			"binaryPath": "/home/gmorizur/code/webserv/webserv.test",
+			"cwd": "${workspaceFolder}/webserv",
+			"binaryPath": "${workspaceFolder}/webserv/webserv.test",
 			"binaryArgs": []
 		}
 	],
@@ -63,11 +63,16 @@
 		"streambuf": "cpp",
 		"typeinfo": "cpp",
 		"ios": "cpp",
-		"list": "cpp"
+		"list": "cpp",
+		"chrono": "cpp",
+		"condition_variable": "cpp",
+		"ratio": "cpp"
 	},
 	"files.eol": "\n",
 	"C/C++ Include Guard.Macro Type": "Filename",
+	"C/C++ Include Guard.Auto Include Guard Insertion For New File": true,
+	"C/C++ Include Guard.Auto Update Include Guard": true,
 	"editor.insertSpaces": false,
+	"editor.tabSize": 4,
 	"C_Cpp.default.cppStandard": "c++98",
-	
 }

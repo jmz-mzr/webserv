@@ -11,28 +11,32 @@
 	webserv::Logger::getInstance().log(__FILE__, __LINE__, level, stream.str()); \
 }
 
-# define LOG_EMERG(msg)		LOG(webserv::kEmerg, msg)
-# define LOG_ERROR(msg)		LOG(webserv::kError, msg)
-# define LOG_WARN(msg)		LOG(webserv::kWarn, msg)
-# define LOG_INFO(msg)		LOG(webserv::kInfo, msg)
-# define LOG_DEBUG(msg)		LOG(webserv::kDebug, msg)
+# define LOG_EMERG(msg)		LOG(webserv::LogLevel::kEmerg, msg)
+# define LOG_ERROR(msg)		LOG(webserv::LogLevel::kError, msg)
+# define LOG_WARN(msg)		LOG(webserv::LogLevel::kWarn, msg)
+# define LOG_INFO(msg)		LOG(webserv::LogLevel::kInfo, msg)
+# define LOG_DEBUG(msg)		LOG(webserv::LogLevel::kDebug, msg)
 
 namespace	webserv
 {
 
-	enum	LogLevel {
-		kEmerg,		// The system is in an unusable state and requires immediate attention
-		kError, 	// Something was unsuccessful
-		kWarn,		// Something unexpected happened, however is not a cause for concern
-		kInfo,		// Informational messages that aren't necessary to read but may be good to know
-		kDebug		// Useful debugging information to help determine where the problem lies
+	struct LogLevel {
+		enum Level {
+			kEmerg,		// The system is in an unusable state and requires immediate attention
+			kError, 	// Something was unsuccessful
+			kWarn,		// Something unexpected happened, however is not a cause for concern
+			kInfo,		// Informational messages that aren't necessary to read but may be good to know
+			kDebug		// Useful debugging information to help determine where the problem lies
+		};
 	};
-
-	enum	LogOutput {
-		kNone = 0x00,
-		kConsole = 0x01,
-		kFile = 0x10,
-		kBoth = 0x11
+	
+	struct LogOutput {
+		enum Type {
+			kNone = 0x00,
+			kConsole = 0x01,
+			kFile = 0x10,
+			kBoth = 0x11
+		};
 	};
 
 	struct	ColorCode {
@@ -51,8 +55,8 @@ namespace	webserv
 		void	log(std::string file, int line,
 					int level, const std::string& msg);
 
-		const std::ofstream&	getLogfile() const { return (_logfile); }
-		const enum LogOutput&	getChannel() const { return (_channel); }
+		const std::ofstream&		getLogfile() const { return (_logfile); }
+		const LogOutput::Type&		getChannel() const { return (_channel); }
 	private:
 		Logger();
 		Logger(const Logger& src);
@@ -63,8 +67,8 @@ namespace	webserv
 //		std::stringstream	format(std::string file, int line, int level);
 
 		struct ColorCode	_cc[5];
-		enum LogLevel		_threshold;
-		enum LogOutput		_channel;
+		LogLevel::Level		_threshold;
+		LogOutput::Type		_channel;
 		std::ofstream		_logfile;
 	};
 
