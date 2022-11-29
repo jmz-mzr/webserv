@@ -17,13 +17,13 @@ namespace	webserv
 		const std::string&	getResponseBuffer() const;
 		int					getResponseCode() const { return (_responseCode); }
 
-		bool	isKeepAlive() const { return (_isKeepAlive); }
+		bool	isKeepAlive() const;
 		bool	isResponseReady() const { return (_isResponseReady); }
 		bool	isChunkedResponse() const { return (_isChunkedResponse); }
 
 		void	setResponseCode(int responseCode);
 		void	prepareResponse(const Request& request);
-		void	prepareErrorResponse(int errorCode = 0);
+		void	prepareErrorResponse(const Request& request, int errorCode = 0);
 
 		void	clearResponse();
 

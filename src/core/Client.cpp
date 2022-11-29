@@ -15,7 +15,7 @@ namespace	webserv
 												_serverFd(serverFd),
 												_serverConfigs(serverConfigs),
 												_socket(serverFd),
-												_isKeepAlive(true),
+//												_isKeepAlive(true),
 												_request(_socket)
 	{
 		LOG_INFO("New Client instance");
@@ -28,7 +28,7 @@ namespace	webserv
 	Client::Client(const Client& src): _id(src._id), _serverFd(src._serverFd),
 										_serverConfigs(src._serverConfigs),
 										_socket(src._socket),
-										_isKeepAlive(src._isKeepAlive),
+//										_isKeepAlive(src._isKeepAlive),
 										_request(src._request),
 										_response(src._response)
 	{
@@ -93,12 +93,17 @@ namespace	webserv
 		return (_response.isResponseReady());
 	}
 
+	bool	Client::isKeepAlive() const
+	{
+		// TO DO: Implement a timeout: setResponseCode(408) and return (false)
+		// si timeout pour ne pas clutter le server?
+		// If so, either implement a timeout directive, or a default timeout
+
+		return (true);
+	}
+
 	void	Client::prepareResponse()
 	{
-		// TO DO: If implemented, compute keepalive parameters and update
-		// 		  the client, request and/or response accordingly
-		// 		  Also update it relative to the error codes (like 400)
-
 		_response.prepareResponse(_request);	// try-catch
 		if (!_response.isChunkedResponse())
 			_request.clearRequest();
@@ -106,11 +111,7 @@ namespace	webserv
 
 	void	Client::prepareErrorResponse(int errorCode)
 	{
-		// TO DO: If implemented, compute keepalive parameters and update
-		// 		  the client, request and/or response accordingly
-		// 		  Also update it relative to the error codes (like 400)
-
-		_response.prepareErrorResponse(errorCode);	// add request, try-catch
+		_response.prepareErrorResponse(_request, errorCode);	// add try-catch
 		_request.clearRequest();
 	}
 

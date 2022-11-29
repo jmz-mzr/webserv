@@ -64,7 +64,11 @@ namespace	webserv
 		std::string			_uri;
 
 		std::string			_host;
-		bool				_isKeepAlive;	// divide in a Class with parameters?
+
+		// TO DO: 1) Ignore 'Keep-Alive' Header and do not implement "timeout"
+		// and "max" parameters: "HTTP/1.1 does not define any parameters"
+		// 2) Only set it to false if 'Connection' Header is set to "close"
+		bool				_isKeepAlive;
 		bool				_hasReceivedHeaders;
 
 		// TO DO: The Content-Length also limits the size of what is actually
