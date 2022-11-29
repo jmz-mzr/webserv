@@ -53,17 +53,23 @@ namespace	webserv
 		_responseCode = responseCode;
 	}
 
+	bool	Response::isKeepAlive() const
+	{
+		if (!_isKeepAlive)
+			return (false);
+		if (_responseCode == 400 || _responseCode == 408 || _responseCode == 413
+				|| _responseCode == 414 || _responseCode == 495
+				|| _responseCode == 496 || _responseCode == 497
+				|| _responseCode == 500 || _responseCode == 501)
+			return (false);
+		return (true);
+	}
+
 	void	Response::_loadHeaders()
 	{
-		const std::string&	specialBody = Response::
-										_getSpecialResponseBody(_responseCode);
 		const char*			connection = isKeepAlive() ? "keep-alive" : "close";
 		std::ostringstream	headers;
 
-		if (!specialBody.empty()) {
-			_contentType = "text/html";
-			_contentLength = specialBody.length();
-		}
 		headers << "HTTP/1.1 " << _responseCode
 			<< Response::_getResponseStatus(_responseCode) << CRLF
 			<< "Server: webserv" << CRLF
@@ -115,26 +121,28 @@ namespace	webserv
 		(void)request;
 	}
 
-	void	Response::prepareErrorResponse(int errorCode)
+	void	Response::prepareErrorResponse(const Request& request,
+											int errorCode)
 	{
-		// TO DO: if (errorCode == 0
-		// 		    && _responseCode < 300 && _responseCode > 599)
-		// 		      errorCode = 500;
-		//		  clearResponse();
-		// 		  load error response corresponding to the errorCode;
-		// 		  set _isResponseReady;
-		// 		  First code simple error, then with _errorPages
+		// TO DO: Handle case when using _errorPages
+
+		const std::string&	specialBody = Response::
+										_getSpecialResponseBody(_responseCode);
 
 		if (errorCode == 0 && (_responseCode < 300 || _responseCode > 599))
-			_responseCode = 500;
-		else if (_responseCode == 0)
-			_responseCode = errorCode;
-		if (_responseCode == 400 || _responseCode == 413 || _responseCode == 414
-				|| _responseCode == 497 || _responseCode == 495
-				|| _responseCode == 496 || _responseCode == 500
-				|| _responseCode == 501)
-			_isKeepAlive = false;
+			errorCode = 500;
+		else if (errorCode == 0)
+			errorCode = _responseCode;
+		clearResponse();
+		_responseCode = errorCode;
+		_isKeepAlive = (request.isKeepAlive() && isKeepAlive());
+		if (!specialBody.empty()) {
+			_contentType = "text/html";
+			_contentLength = specialBody.length();
+		}
 		_loadHeaders();
+		_responseBuffer += specialBody;
+		_isResponseReady = true;
 	}
 
 	void	Response::clearResponse()
@@ -209,6 +217,8 @@ namespace	webserv
 		};
 		static int		size = sizeof(responseStatus) / sizeof(*responseStatus);
 
+		if (responseCode < 200 || responseCode > 507)
+			return (emptyStatus);
 		for (int i = 0; i < size; ++i) {
 			if (responseStatus[i].first == responseCode)
 				return (responseStatus[i].second);
@@ -402,6 +412,8 @@ namespace	webserv
 		};
 		static int		size = sizeof(responsePairs) / sizeof(responsePairs[0]);
 
+		if (responseCode < 301 || responseCode > 507)
+			return (emptyString);
 		for (int i = 0; i < size; ++i) {
 			if (responsePairs[i].first == responseCode)
 				return (responsePairs[i].second);

@@ -220,6 +220,8 @@ namespace	webserv
 		// 		  		   check and set Headers, returning 400 error if an
 		// 		  		   existing header has an incorrect value, or if a
 		// 		  		   request header field is too long (> 8192);
+		// 		  		   and only read the Content-Length amount to prevent
+		// 		  		   incomplete messages or reading the next request?;
 		//				 save what is not read in unprocessedBuff;
 		// 		  		 set _isChunkedRequest/_isTerminatedRequest if needed;
 		// 		  if (error) {
@@ -265,6 +267,8 @@ namespace	webserv
 		// 		  		 existing header has an incorrect value;
 		//				 save what is not read in unprocessedBuff;
 		// 		  		 set _isChunked/_hasReceived/_isTerminated if needed;
+		// 		  		 and only read the Content-Length amount to prevent
+		// 		  		 incomplete messages or reading the next request?;
 		// 		  if (error) {
 		// 		    log error;
 		// 		    clearRequest(); // only if closing connection error?

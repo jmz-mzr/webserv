@@ -32,9 +32,9 @@ namespace	webserv
 		bool	hasError() const;
 		bool	hasUnprocessedBuffer() const;
 		bool	isProcessingRequest() const;
-		bool	isKeepAlive() const { return (_isKeepAlive); }	// compute parameters?
 		bool	hasRequestTerminated() const;
 		bool	hasResponseReady() const;
+		bool	isKeepAlive() const;
 
 		void	prepareResponse();
 		void	prepareErrorResponse(int errorCode = 0);
@@ -52,7 +52,12 @@ namespace	webserv
 		int						_serverFd;
 		const server_configs&	_serverConfigs;
 		AcceptSocket			_socket;
-		bool					_isKeepAlive;	// divide in a Class with parameters?
+
+		// TO DO: Rather record the time of last action (connection/interaction),
+		// and check for a timeout (either by default or through directive) in
+		// "isKeepAlive()" to avoid too many idle clients
+//		bool					_isKeepAlive;
+
 		std::string				_unprocessedBuffer;
 		Request					_request;
 		Response				_response;

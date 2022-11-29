@@ -387,11 +387,12 @@ namespace	webserv
 
 	bool	Webserv::_handleClientResponse(Client& client, pollFd_iter pollFd)
 	{
-		// TO DO: 1) Some errorCodes (like 400) go with a "Connection: close",
-		// 		  meaning that the connection won't be kept alive
-		// 		  2) At the project's end, implement keepalive with its
-		// 		  parameters "timeout"/"max"
+		// TO DO: 1) NGINX doesn't even send a response for the 408 code, it
+		// just closes the connection (because of "return"/"timeout" directive)
+		// 2) If needed, implement a timeout directive, or default timeout
 
+		if (client.getResponse().getResponseCode() == 408)
+			return (true);
 		if ((pollFd->revents & POLLOUT) != 0 && client.hasResponseReady()) {
 			if (!_sendResponse(client, client.getSocket().getFd()))
 				return (true);
