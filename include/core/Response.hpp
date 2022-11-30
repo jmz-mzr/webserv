@@ -26,7 +26,6 @@ namespace	webserv
 		void	prepareErrorResponse(const Request& request, int errorCode = 0);
 
 		void	clearResponse();
-
 	private:
 		Response&	operator=(const Response& rhs);
 
@@ -45,6 +44,8 @@ namespace	webserv
 		std::string		_contentType;
 		long long		_contentLength;
 		bool			_isKeepAlive;
+		// The "Location" header
+		std::string		_location;
 		bool			_isChunkedResponse;
 		bool			_isResponseReady;
 	};

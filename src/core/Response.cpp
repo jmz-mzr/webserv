@@ -125,6 +125,8 @@ namespace	webserv
 											int errorCode)
 	{
 		// TO DO: Handle case when using _errorPages
+		// -> method becomes GET, and if str doesn't start with "/" it is
+		// treated as a 302 redirect with a URL (then written in Location)
 
 		const std::string&	specialBody = Response::
 										_getSpecialResponseBody(_responseCode);
@@ -154,6 +156,7 @@ namespace	webserv
 		_contentType = "application/octet-stream";
 		_contentLength = 0;
 		_isKeepAlive = true;
+		_location.clear();
 		_isChunkedResponse = false;
 		_isResponseReady = false;
 	}
