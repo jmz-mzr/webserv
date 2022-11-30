@@ -8,9 +8,12 @@
 
 #include "config/Lexer.hpp"
 #include "config/Location.hpp"
-#include "config/Config.hpp"
+//#include "config/Config.hpp"
 
 namespace	webserv {
+
+	class	Location;
+	class	ServerConfig;
 
 namespace	config {
 
@@ -47,7 +50,7 @@ namespace	config {
 				size_t			argc;
 			};
 
-			void	operator()(token_queue& tokens);
+			void	operator()(Lexer::token_queue& tokens);
 
 			void	createServer();
 			void	createLocation();
@@ -55,7 +58,7 @@ namespace	config {
 
 
 		private:
-			Token*								_currToken;
+			Lexer::Token*						_currToken;
 			Location*							_currLocation;
 			ServerConfig*						_currServer;
 			std::map<std::string, Directive>	_syntaxRules;
