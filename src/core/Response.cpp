@@ -30,6 +30,7 @@ namespace	webserv
 									_contentType(src._contentType),
 									_contentLength(src._contentLength),
 									_isKeepAlive(src._isKeepAlive),
+									_location(src._location),
 									_isChunkedResponse(src._isChunkedResponse),
 									_isResponseReady(src._isResponseReady)
 	{
@@ -65,6 +66,18 @@ namespace	webserv
 		return (true);
 	}
 
+	const std::string	Response::_loadLocation()
+	{
+		std::string		location;
+
+		if (_responseCode == 301 || _responseCode == 302 || _responseCode == 303
+				|| _responseCode == 307 || _responseCode == 308) {
+			location = "Location: ";
+			location += _location;
+		}
+		return (location);
+	}
+
 	void	Response::_loadHeaders()
 	{
 		const char*			connection = isKeepAlive() ? "keep-alive" : "close";
@@ -76,15 +89,18 @@ namespace	webserv
 			<< "Date: " << Response::_getDate() << CRLF
 			<< "Content-Type: " << _contentType << CRLF
 			<< "Content-Length: " << _contentLength << CRLF
+			<< _loadLocation() << CRLF
+			// load Transfer-Encoding
 			<< "Connection: " << connection << CRLF
+			// load ETag
 			<< CRLF;
 		_responseBuffer = headers.str();
 	}
 
-	void	Response::_prepareChunkedResponse(const Request& request)
+	void	Response::_prepareChunkedResponse(Request& request)
 	{
 		// TO DO: try {	// or try-catch in client?
-		// 		    load chunk [set Headers & Flags, response code, etc]
+		// 		    load chunk [set Headers & Flags, code (if unset), etc]
 		// 		  } catch (const std::exception& e) {
 		// 		    log error;
 		// 		    return (prepareErrorResponse(errorCode));
@@ -100,12 +116,13 @@ namespace	webserv
 		(void)request;
 	}
 
-	void	Response::prepareResponse(const Request& request)
+	void	Response::prepareResponse(Request& request)
 	{
 		// TO DO: if (_isChunkedResponse)
 		// 		    return (_prepareChunkedResponse);
 		// 		  try {	// or try-catch in client?
-		// 		    load response [set Headers & Flags, response code, etc,
+		// 		    load response [set Headers & Flags, code (if unset), check
+		// 		    	 request method (405 like if POST for GET), etc
 		// 		  		 or set _isChunkedResponse and return (_prepareChunked)
 		// 		  		 if (response size > (SEND_BUFFER_SIZE || SO_SNDBUF))?]
 		// 		  } catch (const std::exception& e) {
@@ -121,38 +138,60 @@ namespace	webserv
 		(void)request;
 	}
 
-	void	Response::prepareErrorResponse(const Request& request,
-											int errorCode)
+	bool	Response::_loadErrorPage(Request& request)
 	{
-		// TO DO: Handle case when using _errorPages
-		// -> method becomes GET, and if str doesn't start with "/" it is
-		// treated as a 302 redirect with a URL (then written in Location)
+		Location::error_pages_map::const_iterator	errorPage;
+		int											errorCode;
 
-		const std::string&	specialBody = Response::
-										_getSpecialResponseBody(_responseCode);
+		if (request.isInternalRedirect())
+			return (false);
+		errorPage = request.getLocation()->getErrorPages().find(_responseCode);
+		if (errorPage != request.getLocation()->getErrorPages().end()) {
+			if (errorPage->second[0] == '/') {
+				if (request.getRequestMethod() != Method::kGet)
+					request.setRequestMethod(Method::kGet);
+				errorCode = request.loadInternalRedirect(errorPage->second);
+				if (errorCode != 0) {
+					prepareErrorResponse(request, errorCode);
+				} else
+					prepareResponse(request);
+				return (true);
+			} else {
+				_responseCode = 302;
+				_location = errorPage->second;
+			}
+		}
+		return (false);
+	}
+
+	void	Response::prepareErrorResponse(Request& request, int errorCode)
+	{
+		const std::string*	specialBody = &Response::_getSpecialResponseBody(0);
 
 		if (errorCode == 0 && (_responseCode < 300 || _responseCode > 599))
 			errorCode = 500;
 		else if (errorCode == 0)
 			errorCode = _responseCode;
-		clearResponse();
-		_responseCode = errorCode;
+		clearResponse(errorCode);
 		_isKeepAlive = (request.isKeepAlive() && isKeepAlive());
-		if (!specialBody.empty()) {
+		if (_loadErrorPage(request))
+			return ;
+		specialBody = &(Response::_getSpecialResponseBody(_responseCode));
+		if (!specialBody->empty()) {
 			_contentType = "text/html";
-			_contentLength = specialBody.length();
+			_contentLength = specialBody->length();
 		}
 		_loadHeaders();
-		_responseBuffer += specialBody;
+		_responseBuffer += *specialBody;
 		_isResponseReady = true;
 	}
 
-	void	Response::clearResponse()
+	void	Response::clearResponse(int responseCodeToKeep)
 	{
 		// TO DO: clear requested file;	// with try-catch if necessary
 
 		_responseBuffer.clear();
-		_responseCode = 0;
+		_responseCode = responseCodeToKeep;
 		_contentType = "application/octet-stream";
 		_contentLength = 0;
 		_isKeepAlive = true;

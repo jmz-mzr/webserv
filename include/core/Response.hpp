@@ -22,15 +22,17 @@ namespace	webserv
 		bool	isChunkedResponse() const { return (_isChunkedResponse); }
 
 		void	setResponseCode(int responseCode);
-		void	prepareResponse(const Request& request);
-		void	prepareErrorResponse(const Request& request, int errorCode = 0);
+		void	prepareResponse(Request& request);
+		void	prepareErrorResponse(Request& request, int errorCode = 0);
 
-		void	clearResponse();
+		void	clearResponse(int responseCodeToKeep = 0);
 	private:
 		Response&	operator=(const Response& rhs);
 
-		void	_prepareChunkedResponse(const Request& request);
-		void	_loadHeaders();
+		bool				_loadErrorPage(Request& request);
+		void				_prepareChunkedResponse(Request& request);
+		void				_loadHeaders();
+		const std::string	_loadLocation();
 
 		static const std::string&	_getResponseStatus(int responseCode);
 		static const std::string&	_getDate();
@@ -44,7 +46,7 @@ namespace	webserv
 		std::string		_contentType;
 		long long		_contentLength;
 		bool			_isKeepAlive;
-		// The "Location" header
+		// The "Location" header if (201 if created?)/301/302/303/307/308
 		std::string		_location;
 		bool			_isChunkedResponse;
 		bool			_isResponseReady;
