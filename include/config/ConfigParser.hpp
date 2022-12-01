@@ -101,12 +101,6 @@ namespace	config {
 		std::vector<ServerConfig>		_serverConfigs;
 	};
 
-	class	SyntaxErrorException: public std::logic_error {
-	public:
-		SyntaxErrorException(const std::string& msg = "A syntax error occured")
-				: logic_error(msg) { }
-	};
-
 }	// namespace config
 
 }	// namespace webserv

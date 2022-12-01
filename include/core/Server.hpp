@@ -26,7 +26,6 @@ namespace	webserv
 
 		void	addConfig(const ServerConfig& serverConfig);
 
-		void	closeSocket() { _socket.closeFd(); }
 	private:
 		Server();
 

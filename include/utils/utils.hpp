@@ -2,19 +2,11 @@
 # define UTILS_HPP
 
 # include <algorithm>
-# include <stdexcept>
 # include <string>
 
 # include <stddef.h>
 
 # include <netinet/in.h>
-
-// Concatenates strings
-# define JOIN_IMPL_(foo, bar)	foo##bar
-# define JOIN(foo, bar)			JOIN_IMPL_(foo, bar)
-
-// Creates a string literal, enclosing the argument between quotes
-# define STRINGIZE(name)		#name
 
 namespace	webserv
 {
@@ -37,20 +29,6 @@ namespace	webserv
 			return (std::lexicographical_compare(s2.begin(), s2.end(),
 						s1.begin(), s1.end()));
 		}
-	};
-
-	class	FatalErrorException: public std::runtime_error {
-	public:
-		FatalErrorException(const std::string& msg = "A fatal error occured")
-				: std::runtime_error(msg) 
-		{ }
-	};
-
-	class	LogicErrorException: public std::logic_error {
-	public:
-		LogicErrorException(const std::string& msg = "A logic error occured")
-				: std::logic_error(msg)
-		{ }
 	};
 
 }	// namespace webserv

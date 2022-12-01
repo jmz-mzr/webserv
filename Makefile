@@ -50,7 +50,7 @@ LDFLAGS		=	$(addprefix -L, $(LIBDIR)) $(addprefix -l, $(LIB))
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 
 ifeq (test,$(strip $(MAKECMDGOALS)))						# if testing
-	CXXFLAGS	+=	-fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g3 -DCONF_LOG_OUT=kNone
+	CXXFLAGS	+=	-fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g3 -DCONF_LOG_OUT="Logger::kNone"
 	BIN			=	$(TESTER)
 	SRCS		=	$(SRC) $(TEST)
 else

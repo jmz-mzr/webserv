@@ -1,11 +1,11 @@
 #include "core/Response.hpp"
-#include "utils/Logger.hpp"
 
 #include <sstream>
 #include <ctime>
 #include <utility>
 
-#define CRLF	"\r\n"
+#include "utils/global_defs.hpp"
+#include "utils/Logger.hpp"
 
 namespace	webserv
 {

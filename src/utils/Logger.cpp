@@ -17,19 +17,19 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Logger::Logger(): _threshold(CONF_LOG_LVL), _channel(CONF_LOG_OUT)
+	Logger::Logger(): _threshold(CONF_LOG_LVL), _ostream(CONF_LOG_OUT)
 	{
 		_cc[0].str = "EMERG", _cc[0].color = HMAG;
 		_cc[1].str = "ERROR", _cc[1].color = HRED;
 		_cc[2].str = "WARN", _cc[2].color = HYEL;
 		_cc[3].str = "INFO", _cc[3].color = HWHT;
 		_cc[4].str = "DEBUG", _cc[4].color = HCYN;
-		if (_channel & kFile)
+		if (_ostream & kFile)
 		{
 			_logfile.open(CONF_LOG_FILE);
 			if (!(_logfile.good())) {
 				LOG_WARN("Cannot open \"" << CONF_LOG_FILE << "\", ignored");
-				_channel &= ~kFile;
+				_ostream &= ~kFile;
 			}
 		}
 	}
@@ -56,14 +56,14 @@ namespace	webserv
 		std::ostringstream	stream;
 		std::string			output;
 
-		if (_channel != kNone && level <= _threshold) {
+		if (_ostream != kNone && level <= _threshold) {
 			stream << "webserv: [" << _cc[level].color << _cc[level].str << RESET
 				<< "] " << BWHT << file << ":" << line << RESET
 				<< ": " << msg;
 			output = stream.str();
-			if (_channel & kConsole)
+			if (_ostream & kConsole)
 				_logfile << output << std::endl;
-			if (_channel & kFile)
+			if (_ostream & kFile)
 				std::cerr << output << std::endl;
 		}
 	}

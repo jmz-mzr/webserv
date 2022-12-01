@@ -2,10 +2,10 @@
 
 # include <csignal>
 # include <cstdlib>
-# include <exception>
 # include <iostream>
 
 # include "core/Webserv.hpp"
+# include "utils/exceptions.hpp"
 # include "utils/Logger.hpp"
 
 static void	handleSigInt(int signum)

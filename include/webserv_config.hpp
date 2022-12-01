@@ -2,11 +2,11 @@
 # define WEBSERV_CONFIG_HPP
 
 # ifndef CONF_LOG_LVL
-#  define CONF_LOG_LVL		kDebug
+#  define CONF_LOG_LVL		webserv::Logger::kDebug
 # endif
 
 # ifndef CONF_LOG_OUT
-#  define CONF_LOG_OUT		kBoth
+#  define CONF_LOG_OUT		webserv::Logger::kBoth
 # endif
 
 # define CONF_LOG_FILE		"webserv.log"

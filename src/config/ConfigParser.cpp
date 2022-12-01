@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "config/ConfigParser.hpp"
+#include "utils/exceptions.hpp"
 #include "utils/Logger.hpp"
 #include "utils/utils.hpp"
 #include "webserv_config.hpp"
@@ -89,7 +90,7 @@ void	ConfigParser::operator()() try
 	} while (_file.good());
 }
 catch (const SyntaxErrorException& e) {
-	Logger::getInstance().log(_filePath, _currentLineNb, kEmerg, e.what());
+	Logger::getInstance().log(_filePath, _currentLineNb, Logger::kEmerg, e.what());
 	throw ;
 }
 catch (...) {

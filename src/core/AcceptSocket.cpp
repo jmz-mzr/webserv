@@ -5,9 +5,9 @@
 
 #include <fcntl.h>
 
+#include "utils/exceptions.hpp"
 #include "utils/Logger.hpp"
 #include "webserv_config.hpp"
-#include "utils/utils.hpp"
 
 namespace	webserv
 {
@@ -24,7 +24,7 @@ namespace	webserv
 				reinterpret_cast<struct sockaddr*>(&_addr), &_addrLen);
 		if (_fd < 0) {
 			LOG_DEBUG("accept() error: " << strerror(errno));
-			throw FatalErrorException("Fatal error on accept() call");
+			throw FatalErrorException();
 		}
 #ifdef MACOS
 		fcntl(_fd, F_SETFL, O_NONBLOCK);

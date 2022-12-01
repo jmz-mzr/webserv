@@ -9,11 +9,10 @@
 #include <sys/socket.h>
 
 #include "config/ConfigParser.hpp"
+#include "utils/exceptions.hpp"
+#include "utils/global_defs.hpp"
 #include "utils/Logger.hpp"
 #include "utils/utils.hpp"
-
-#define SERVER		"server"
-#define CLIENT		"client"
 
 namespace	webserv
 {
@@ -36,19 +35,7 @@ namespace	webserv
 	}
 
 	Webserv::~Webserv()
-	{
-		std::vector<Server>::iterator	server = _servers.begin();
-		std::list<Client>::iterator		client = _clients.begin();
-
-		while (server != _servers.end()) {
-			server->closeSocket();
-			++server;
-		}
-		while (client != _clients.end()) {
-			client->closeSocket();
-			++client;
-		}
-	}
+	{ }
 
 	/**************************************************************************/
 	/*                            MEMBER FUNCTIONS                            */
@@ -190,7 +177,6 @@ namespace	webserv
 		msg << "server: client " << client->getId() << " just left\n";	// tmp exam version
 		_broadcastMsg(msg.str(), client->getId());	// tmp exam version
 		LOG_INFO("Removing client (fd=" << client->getSocket().getFd() << ")");
-		client->closeSocket();
 		if (pollFd != _pollFds.end())
 			_pollFds.erase(pollFd);
 		return (_clients.erase(client));
