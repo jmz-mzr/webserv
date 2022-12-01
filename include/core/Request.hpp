@@ -36,6 +36,7 @@ namespace	webserv
 
 		Request&	operator=(const Request& rhs);
 
+		bool	_parseRequestTarget(const std::string& requestTarget);
 		int		_parseChunkedRequest(std::string& unprocessedBuffer,
 										const char* buffer,
 										const server_configs& serverConfigs);
@@ -47,21 +48,41 @@ namespace	webserv
 		int		_checkHost();
 		int		_checkMaxBodySize();
 		int		_checkMethod();
+		bool	_internalRedirect(const std::string& redirectTo);
 
 		const AcceptSocket&	_clientSocket;
 		const ServerConfig*	_serverConfig;
 		const Location*		_location;
-		Method::Type		_requestMethod;
 
-		// TO DO: 1) If the request line is incorrect, immediately return 400
+		// TO DO: 1) If the request line is invalid, immediately return 400
 		// 2) If the request line is > 8192, immediately return 414
 		std::string			_requestLine;
 
-		// TO DO: If the requested uri has no "/" prefix, or if it goes up in
-		// directories (with '..') such that it would go above "/"
+		// TO DO: 1) The uppercase letters, '_' and '-' are valid characters
+		// that must be accepted when parsing the method in the request line,
+		// that will lead to unallowed methods (like "_GET" or "P-OST")
+		// 2) If invalid return 400, if not allowed _checkHeaders will return 405
+		Method::Type		_requestMethod;
+
+		// TO DO: 1) It is what comes before '#', or the first '?' starting the args,
+		// and after the potential valid full scheme, domain name and port
+		// 2) If the requested origin-form URI has no '/' prefix, or if it goes up
+		// in directories (with "/..") such that it would go above "/"
 		// (like '/../abc'), it should return a 400 error (but '/abc/../cde',
 		// '/././.', '/...' are all fine)
+		// 3) "/." becomes '/', "//" -> '/', "%4d" -> 'M', "%4E" -> 'N', etc...
+		// All the many other rules are in the RFCs (9112 et 3986) and in the
+		// NGINX implementation (https://bit.ly/3XEvVs1)
 		std::string			_uri;
+
+		// TO DO: It is what comes after the first '?' in the URI
+		std::string			_args;
+
+		// TO DO: It is what comes after the last '.' in the URI part, but only
+		// if it is not part of "/.." that goes up in a directory, if it is
+		// preceded and follwed by a valid usual character
+		// It is used to set the Response's "Content-Type"
+		std::string			_ext;
 
 		std::string			_host;
 
@@ -81,6 +102,7 @@ namespace	webserv
 //		std::ofstream		_chunks;	// or with a swap space?
 
 		bool				_isTerminatedRequest;
+		bool				_isInternalRedirect;
 	};
 
 }	// namespace webserv

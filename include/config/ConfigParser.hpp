@@ -12,7 +12,7 @@
 
 namespace	webserv {
 
-class	ServerConfig;
+	class	ServerConfig;
 
 namespace	config {
 
@@ -59,7 +59,7 @@ namespace	config {
 		uint32_t			_currentLineNb;
 
 		Lexer				_lexer;
-		Parser				_parser;
+//		Parser				_parser;
 
 		// Token*						_currToken;
 		// std::stack<struct Block&>	_currentBlock;

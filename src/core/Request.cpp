@@ -21,7 +21,8 @@ namespace	webserv
 												_hasReceivedHeaders(false),
 												_bodySize(-1),
 												_isChunkedRequest(false),
-												_isTerminatedRequest(false)
+												_isTerminatedRequest(false),
+												_isInternalRedirect(false)
 	{
 		LOG_INFO("New Request instance");
 	}
@@ -29,15 +30,16 @@ namespace	webserv
 	Request::Request(const Request& src): _clientSocket(src._clientSocket),
 								_serverConfig(src._serverConfig),
 								_location(src._location),
-								_requestMethod(src._requestMethod),
 								_requestLine(src._requestLine),
+								_requestMethod(src._requestMethod),
 								_uri(src._uri),
 								_host(src._host),
 								_isKeepAlive(src._isKeepAlive),
 								_hasReceivedHeaders(src._hasReceivedHeaders),
 								_bodySize(src._bodySize),
 								_isChunkedRequest(src._isChunkedRequest),
-								_isTerminatedRequest(src._isTerminatedRequest)
+								_isTerminatedRequest(src._isTerminatedRequest),
+								_isInternalRedirect(src._isInternalRedirect)
 	{
 		// TO DO: handle swap of std::ofstream (or other _chunks object)
 		// 		  or not if Request in only copied at Client creation?
@@ -84,6 +86,8 @@ namespace	webserv
 
 	int	Request::_checkMethod()
 	{
+		if (_requestMethod == Method::kEmpty)
+			return (405);
 		if (!_location->getLimitExcept().empty()
 				&& !_location->getLimitExcept().count(_requestMethod)) {
 			LOG_ERROR("Access forbidden by rule, client: "
@@ -256,6 +260,30 @@ namespace	webserv
 		return (0);
 	}
 
+	bool	Request::_parseRequestTarget(const std::string& requestTarget)
+	{
+		// TO DO: This is a temp version of the function, used for the internal
+		// redirections, and mainly for parsing the request line (after parsing
+		// the Method, and before parsing the HTTP version)
+		// All the many rules to correctly parse the request line are in the
+		// RFCs (9112 et 3986) and in the NGINX code (https://bit.ly/3XEvVs1)
+
+		bool	error = false;
+
+		_uri = requestTarget;
+		if (error) {
+			LOG_INFO("Client sent invalid request while reading client request"
+					<< " line, client: " << _clientSocket.getIpAddr() << ":"
+					<< _clientSocket.getPort() << ", server: "
+					<< _serverConfig->getListenPairs()[0].first << ":"
+					<< _serverConfig->getListenPairs()[0].second << " (\""
+					<< _serverConfig->getServerNames()[0] << "\"), request: \""
+					<< _requestLine << "\"");
+			return (false);
+		}
+		return (true);
+	}
+
 	int	Request::parseRequest(std::string& unprocessedBuffer,
 								const char* recvBuffer,
 								const server_configs& serverConfigs)
@@ -292,6 +320,18 @@ namespace	webserv
 		return (0);
 	}
 
+	bool	Request::_internalRedirect(const std::string& redirectTo)
+	{
+		_isInternalRedirect = true;
+		if (redirectTo.empty() || redirectTo[0] != '/') {
+			LOG_DEBUG("Incorrect internal redirect: \"" << redirectTo << "\"");
+			return (false);
+		}
+		if (!_parseRequestTarget(redirectTo))
+			return (false);	// set _uri, _args, _extension
+		return (_loadLocation(*_serverConfig));
+	}
+
 	void	Request::clearRequest()
 	{
 		// TO DO: clear saved chunks;	// with try-catch if necessary
@@ -305,6 +345,7 @@ namespace	webserv
 		_bodySize = -1;
 		_isChunkedRequest = false;
 		_isTerminatedRequest = false;
+		_isInternalRedirect = false;
 	}
 
 }	// namespace webserv
