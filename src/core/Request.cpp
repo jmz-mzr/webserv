@@ -320,16 +320,37 @@ namespace	webserv
 		return (0);
 	}
 
-	bool	Request::_internalRedirect(const std::string& redirectTo)
+	void	Request::setRequestMethod(const Method::Type& method)
 	{
+		_requestMethod = method;
+	}
+
+	void	Request::_parseInternalTarget(const std::string& redirectTo)
+	{
+		size_t	args = redirectTo.find('?');
+
+		_uri = redirectTo.substr(0, args);
+		if (args != std::string::npos)
+			_args = redirectTo.substr(args + 1);
+		else
+			_args.clear();
+	}
+
+	int	Request::loadInternalRedirect(const std::string& redirectTo)
+	{
+		// TO DO: During internal redirections, NGINX does not check the URI
+		// validity (!!!) and allows it to go up like "/../../../[file]"
+
 		_isInternalRedirect = true;
 		if (redirectTo.empty() || redirectTo[0] != '/') {
 			LOG_DEBUG("Incorrect internal redirect: \"" << redirectTo << "\"");
-			return (false);
+			return (500);
 		}
-		if (!_parseRequestTarget(redirectTo))
-			return (false);	// set _uri, _args, _extension
-		return (_loadLocation(*_serverConfig));
+		_parseInternalTarget(redirectTo);
+		LOG_DEBUG("Internal redirect: \"" << _uri << "?" << _args << "\"");
+		if (!_loadLocation(*_serverConfig))
+			return (500);
+		return (_checkHeaders());
 	}
 
 	void	Request::clearRequest()

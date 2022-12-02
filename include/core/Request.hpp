@@ -19,14 +19,21 @@ namespace	webserv
 		Request(const Request& src);
 		~Request() { }	// clear _chunks if not automatic
 
-		const Method::Type&		getRequestMethod() const { return (_requestMethod); }
+		const Method::Type&		getRequestMethod() const
+										{ return (_requestMethod); }
+		const Location*			getLocation() const
+										{ return (_location); }
 
 		bool	isChunkedRequest() const { return (_isChunkedRequest); }
 		bool	isTerminatedRequest() const { return (_isTerminatedRequest); }
 		bool	isKeepAlive() const { return (_isKeepAlive); }
+		bool	isInternalRedirect() const { return (_isInternalRedirect); }
 
 		int		parseRequest(std::string& unprocessedBuffer, const char* buffer,
 								const server_configs& serverConfigs);
+
+		void	setRequestMethod(const Method::Type& method);
+		int		loadInternalRedirect(const std::string& redirectTo);
 
 		void	clearRequest();
 	private:
@@ -37,6 +44,7 @@ namespace	webserv
 		Request&	operator=(const Request& rhs);
 
 		bool	_parseRequestTarget(const std::string& requestTarget);
+		void	_parseInternalTarget(const std::string& redirectTo);
 		int		_parseChunkedRequest(std::string& unprocessedBuffer,
 										const char* buffer,
 										const server_configs& serverConfigs);
@@ -48,7 +56,6 @@ namespace	webserv
 		int		_checkHost();
 		int		_checkMaxBodySize();
 		int		_checkMethod();
-		bool	_internalRedirect(const std::string& redirectTo);
 
 		const AcceptSocket&	_clientSocket;
 		const ServerConfig*	_serverConfig;
