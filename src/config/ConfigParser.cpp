@@ -9,43 +9,26 @@
 
 namespace webserv {
 
-namespace config {
-
 /******************************************************************************/
 /*                         CONSTRUCTORS / DESTRUCTORS                         */
 /******************************************************************************/
-
-ConfigParser::ConfigParser()
-		: _filePath(DEFAULT_CONF_FILE)
-		, _currentLineNb(0)
-		, _lexer()
-		, _maxBodySize(0)
-{
-	_file.open(_filePath.c_str());
-	if (!_file.good()) {
-		LOG_WARN("Cannot open \"" << _filePath << "\"");
-		LOG_ERROR("Loading configuration failed")
-		throw LogicErrorException();
-	}
-	LOG_INFO("New ConfigParser instance with default configuration");
-	LOG_DEBUG("_filePath=" << _filePath);
-}
 
 ConfigParser::ConfigParser(const std::string& path)
 		: _filePath(path)
 		, _currentLineNb(0)
 		, _lexer()
-		, _maxBodySize(0)
+		, _parser()
 {
 	_file.open(_filePath.c_str());
 	if (!_file.good()) {
 		LOG_WARN("Cannot open \"" << _filePath << "\"");
+		if (_filePath == DEFAULT_CONF_FILE)
+			throw LogicErrorException("Loading configuration failed");
 		_filePath = DEFAULT_CONF_FILE;
 		_file.open(_filePath.c_str());
 		if (!_file.good()) {
 			LOG_WARN("Cannot open \"" << _filePath << "\"");
-			LOG_ERROR("Loading configuration failed")
-			throw LogicErrorException();
+			throw LogicErrorException("Loading configuration failed");
 		}
 		LOG_INFO("New ConfigParser instance with default configuration");
 	} else {
@@ -71,7 +54,27 @@ ConfigParser::~ConfigParser()
 /*                              MEMBER FUNCTIONS                              */
 /******************************************************************************/
 
-bool	ConfigParser::_readline()
+const std::vector<ServerConfig>&	ConfigParser::getServerConfigs() const
+{
+	return (_serverConfigs);
+}
+
+const std::ifstream&				ConfigParser::getFile() const
+{
+	return (_file);
+}
+
+const std::string&					ConfigParser::getFilePath() const
+{
+	return (_filePath);
+}
+
+const uint32_t&						ConfigParser::getCurrentLineNb() const
+{
+	return (_currentLineNb);
+}
+
+bool								ConfigParser::_readline()
 {
 	std::getline(_file, _lineBuffer);
 	if (_file.fail())
@@ -80,38 +83,26 @@ bool	ConfigParser::_readline()
 	return ((_lexer.isEof = _file.eof()) || !_lineBuffer.empty());
 }
 
-void	ConfigParser::operator()() try
+void	ConfigParser::parseFile()
 {
-	do {
-		if (_readline()) {
-			_lexer(_lineBuffer);
-			// _parser();
-		}
-	} while (_file.good());
+	try {
+		do {
+			if (_readline() == true) {
+				_lexer(_lineBuffer);
+				LOG_DEBUG(_lexer.getTokens());
+				_parser(_lexer.getTokens());
+			}
+		} while (_file.good());
+	} catch (const SyntaxErrorException& e) {
+		Logger::getInstance().log(_filePath, _currentLineNb, Logger::kEmerg, e.what());
+		throw ;
+	} catch (...) {
+		throw ;
+	}
 }
-catch (const SyntaxErrorException& e) {
-	Logger::getInstance().log(_filePath, _currentLineNb, Logger::kEmerg, e.what());
-	throw ;
-}
-catch (...) {
-	throw ;
-}
-
-// ServerConfig	serverConfig(*this);
-
-// TODO: actual parsing of every Server block
-// serverConfig.addListenPair(std::make_pair("127.0.0.1", 8081));
-// serverConfig.addName("webserv");
-// _serverConfigs.push_back(serverConfig);
-
-// error_pages_map					_errorPages;
-// long long						_maxBodySize;
-// std::vector<ServerConfig>		_serverConfigs;
 
 /******************************************************************************/
 /*                            NON-MEMBER FUNCTIONS                            */
 /******************************************************************************/
-
-}	// namespace config
 
 }	// namespace webserv

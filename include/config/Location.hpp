@@ -35,22 +35,22 @@ namespace	webserv
 		Location(const Location& src);
 		~Location() { }
 
+		const error_pages_map&		getErrorPages() const
+												{ return (_errorPages); }
 		const long long&			getMaxBodySize() const
 												{ return (_maxBodySize); }
 		const limit_except_set&		getLimitExcept() const
 												{ return (_limitExcept); }
 		const return_pair&			getReturnPair() const
 												{ return (_return); }
-		const std::string&			getFastCgiPass() const
-												{ return (_fastCgiPass); }
-		const std::string&			getIndex() const
-												{ return (_index); }
-		bool						isAutoIndex() const
-												{ return (_autoIndex); }
 		const std::string&			getRoot() const
 												{ return (_root); }
-		const error_pages_map&		getErrorPages() const
-												{ return (_errorPages); }
+		bool						isAutoIndex() const
+												{ return (_autoIndex); }
+		const std::string&			getIndex() const
+												{ return (_index); }
+		const std::string&			getFastCgiPass() const
+												{ return (_fastCgiPass); }
 		const locations_map&		getLocations() const
 												{ return (_locations); }
 	private:

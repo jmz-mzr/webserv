@@ -1,5 +1,6 @@
 #ifdef DOCTEST_CONFIG_DISABLE	// Compile without tests
 
+# include <cerrno>
 # include <csignal>
 # include <cstdlib>
 # include <iostream>
@@ -28,10 +29,11 @@ int	main(int argc, char** argv) try
 	return (EXIT_SUCCESS);
 }
 catch (const webserv::FatalErrorException& e) {
-	std::cerr << "Fatal error: " << e.what() << std::endl;
+	LOG_ERROR(e.what());
 	return (EXIT_FAILURE);
 }
 catch (const webserv::LogicErrorException& e) {
+	LOG_EMERG(e.what());
 	return (EXIT_FAILURE);
 }
 catch (...) {

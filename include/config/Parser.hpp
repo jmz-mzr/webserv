@@ -1,74 +1,88 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
-#include <list>
+#include <map>
 #include <stack>
 #include <string>
 #include <vector>
 
+#include "config/Config.hpp"
 #include "config/Lexer.hpp"
 #include "config/Location.hpp"
-//#include "config/Config.hpp"
+#include "config/ServerConfig.hpp"
+#include "utils/utils.hpp"
 
 namespace	webserv {
 
-	class	Location;
-	class	ServerConfig;
-
 namespace	config {
 
-	class	ConfigParser;
-	class	Lexer;
-
 	class Parser {
-		public:
-			Parser();
-			~Parser();
+	public:
 
-			struct Directive {
-				enum Type {
-					kServerBlock,
-					kLocationBlock,
-					kServerName,
-					kListen,
-					kErrorPage,
-					kLimitExcept,
-					kRoot,
-					kIndex,
-					kBodyBufSize,
-					kReturn,
-					kAutoindex,
-					kFastcgi
-				}				type;
-				enum DupRule {
-					kIgnore,
-					kForbid,
-					kAccept
-				}				dupRule;
-				enum Context {
-					kServer,
-					kLocation,
-					kBoth
-				}				context;
-				size_t			argc;
-			};
+		enum Type {
+			kErrorPage = 0,
+			kMaxBodySize = 1,
+			kLimitExcept = 2,
+			kReturn = 3,
+			kRoot = 4,
+			kAutoindex = 5,
+			kIndex = 6,
+			kFastCgiPass = 7,
+			kServerName = 8,
+			kListen = 9,
+			kServer = 10,
+			kLocation = 11
+		};
 
-			void	operator()(Lexer::token_queue& tokens);
+		enum Rule {
+			kIgnoreDup = 0x00001000,
+			kForbiddenDup = 0x00002000,
+			kAcceptDup = 0x00004000,
+			kDuplicate = 0x00007000,
+			kArgcStrict = 0x00008000,
+			kServCtx = 0x00010000,
+			kLocCtx = 0x00020000,
+			kNoCtx = 0x00040000,
+			kContext = 0x00070000
+		};
 
-			void	createServer();
-			void	createLocation();
+		struct Directive {
+			enum Type		type;
+			int				rules;
+			size_t			argc;
+			std::string		str;
+		};
 
+		struct ConfigData {
+			Type			type;	
+			Config			config;
+			bool			isDefined[12];
+		};
 
+		Parser();
+		~Parser() { };
 
-		private:
-			Lexer::Token*						_currToken;
-			Location*							_currLocation;
-			ServerConfig*						_currServer;
-			std::map<std::string, Directive>	_syntaxRules;
+		void	operator()(Lexer::token_queue& tokens);
+
+		void	createServer();
+		void	createLocation();
+
+	private:
+		std::stack<ConfigData>				_currConfig;
+		std::map<std::string, Directive>	_syntaxRules;
+
+		void	_parseContext(const Directive& directive);
+		void	_parseDup(const Directive& directive);
+		void	_parseArgc(const Directive& directive, size_t argc);
+		void	_dupError(const std::string& str);
+		void	_contextError(const std::string& str);
+		void	_argcError(const std::string& str);
+		bool	_isNotWord(Lexer::token_queue::const_iterator cit);
+
 	};
 
 }	// namespace config
 
 }	// namespace webserv
 
-#endif	// PARSER_HPP
+#endif // PARSER_HPP

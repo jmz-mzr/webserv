@@ -8,7 +8,6 @@
 
 # include <stdint.h>
 
-# include "config/ConfigParser.hpp"
 # include "config/Location.hpp"
 # include "utils/utils.hpp"
 
@@ -24,7 +23,6 @@ namespace	webserv
 		typedef std::map<std::string, Location,
 							location_compare>				locations_map;
 
-		ServerConfig(const config::ConfigParser& src);
 		ServerConfig(const ServerConfig& src);
 		~ServerConfig() { }
 

@@ -43,20 +43,20 @@ namespace	webserv
 				<< "port=" << _port);
 	}
 
-	Socket::~Socket()
-	{
-		if (_fd >= 0)
-		{
-			if (close(_fd) < 0) {
-				LOG_WARN("Bad close() on fd=" << _fd);
-			} else {
-				LOG_INFO ("close(" << _fd << ")");
-			}
-		}
-	}
-
 	/**************************************************************************/
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
+
+	void	Socket::closeFd()
+	{
+		if (_fd >= 0) {
+			if (close(_fd) < 0) {
+				LOG_WARN("Bad close() on fd=" << _fd);
+			} else {
+				LOG_INFO("close(" << _fd << ")");
+				_fd = -1;
+			}
+		}
+	}
 
 }	// namespace webserv

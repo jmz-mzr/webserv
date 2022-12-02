@@ -35,7 +35,19 @@ namespace	webserv
 	}
 
 	Webserv::~Webserv()
-	{ }
+	{
+		std::vector<Server>::iterator	server = _servers.begin();
+		std::list<Client>::iterator		client = _clients.begin();
+
+		while (server != _servers.end()) {
+			server->closeSocket();
+			++server;
+		}
+		while (client != _clients.end()) {
+			client->closeSocket();
+			++client;
+		}
+	}
 
 	/**************************************************************************/
 	/*                            MEMBER FUNCTIONS                            */
@@ -113,12 +125,12 @@ namespace	webserv
 		}
 	}
 
-	void	Webserv::_loadServers()
+	void	Webserv::_loadServers(const ConfigParser& config)
 	{
 		std::vector<ServerConfig>::const_iterator	serverConfig;
 
-		serverConfig = _config.getServerConfigs().begin();
-		while (serverConfig != _config.getServerConfigs().end()) {
+		serverConfig = config.getServerConfigs().begin();
+		while (serverConfig != config.getServerConfigs().end()) {
 			_addServer(*serverConfig);
 			++serverConfig;
 		}
@@ -129,29 +141,17 @@ namespace	webserv
 		std::cerr << "Usage: ./webserv [CONFIG FILE]" << std::endl;
 	}
 
-	void	Webserv::_parseConfig(std::string configFilePath)
-	{
-		config::ConfigParser	configParser(configFilePath);
-
-		configParser();
-		LOG_DEBUG("Tokenised config file = [ "
-					<< configParser.getLexer().getTokens()
-					<< " ]");
-	}
-
 	void	Webserv::init(int argc, char** argv)
 	{
 		if (argc > 2 || argc < 1) {
 			_usageHelper();
-			LOG_EMERG("bad number of arguments");
 			LOG_DEBUG("argc=" << argc);
-			throw LogicErrorException();
-		} else if (argc == 2) {
-			_parseConfig(argv[1]);
+			throw LogicErrorException("Bad number of arguments");
 		} else {
-			_parseConfig(DEFAULT_CONF_FILE);
+			ConfigParser config( (argc == 2) ? argv[1] : DEFAULT_CONF_FILE );
+			config.parseFile();
+			//_loadServers(config);
 		}
-		_loadServers();
 	}
 
 	void	Webserv::_broadcastMsg(const std::string& msg,
@@ -177,6 +177,7 @@ namespace	webserv
 		msg << "server: client " << client->getId() << " just left\n";	// tmp exam version
 		_broadcastMsg(msg.str(), client->getId());	// tmp exam version
 		LOG_INFO("Removing client (fd=" << client->getSocket().getFd() << ")");
+		client->closeSocket();
 		if (pollFd != _pollFds.end())
 			_pollFds.erase(pollFd);
 		return (_clients.erase(client));

@@ -45,7 +45,7 @@ namespace	webserv
 								const Server& server) const;
 		void		_deleteRedundantNames(ServerConfig& serverConfig,
 											const Server& server) const;
-		void		_loadServers();
+		void		_loadServers(const ConfigParser& config);
 		void		_acceptConnections();
 		pollFd_iter	_findPollFd(const int fdToFind, const size_t hint,
 											const std::string& object);
@@ -66,7 +66,6 @@ namespace	webserv
 		void		_parseConfig(std::string configFilePath);
 
 		char						_buffer[RECV_BUFFER_SIZE];
-		config::ConfigParser		_config;	//! Cette classe n'a pas besoin d'une duree de vie aussi longue
 		std::vector<Server>			_servers;
 		std::list<Client>			_clients;
 		std::vector<struct pollfd>	_pollFds;

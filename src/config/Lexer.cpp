@@ -115,17 +115,6 @@ void	Lexer::operator()(const std::string& lineBuffer)
 		_addToken(Token(Token::kEOF, "EOF"));
 }
 
-// ServerConfig	serverConfig(*this);
-
-// TODO: actual parsing of every Server block
-// serverConfig.addListenPair(std::make_pair("127.0.0.1", 8081));
-// serverConfig.addName("webserv");
-// _serverConfigs.push_back(serverConfig);
-
-// error_pages_map					_errorPages;
-// long long						_maxBodySize;
-// std::vector<ServerConfig>		_serverConfigs;
-
 /******************************************************************************/
 /*                            NON-MEMBER FUNCTIONS                            */
 /******************************************************************************/

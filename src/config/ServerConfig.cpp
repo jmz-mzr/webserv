@@ -12,14 +12,6 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	ServerConfig::ServerConfig(const config::ConfigParser& src):
-											_errorPages(src.getErrorPages()),
-											_maxBodySize(src.getMaxBodySize())
-	{
-		LOG_INFO("New ServerConfig instance");
-		_locations.insert(std::make_pair("", Location(*this)));
-	}
-
 	ServerConfig::ServerConfig(const ServerConfig& src):
 												_listenPairs(src._listenPairs),
 												_serverNames(src._serverNames),

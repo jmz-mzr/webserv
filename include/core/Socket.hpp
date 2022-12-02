@@ -23,12 +23,14 @@ namespace	webserv
 		};
 
 		Socket(const Socket& src);
-		virtual ~Socket();
+		virtual ~Socket() { };
 
 		const Type&				getType() const { return (_type); }
 		const int&				getFd() const { return (_fd); }
 		const std::string&		getIpAddr() const { return (_ipAddr); }
 		const uint16_t&			getPort() const { return (_port); }
+
+		void					closeFd();
 
 	protected:
 		Socket(const Type t);

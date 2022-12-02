@@ -11,8 +11,6 @@ namespace	webserv {
 
 namespace	config {
 
-class	ConfigParser;
-
 	class	Lexer {
 	public:
 
@@ -41,7 +39,7 @@ class	ConfigParser;
 		void					operator()(const std::string& lineBuffer);
 		friend std::ostream&	operator<<(std::ostream&, const token_queue&);
 
-		const token_queue&		getTokens() const { return (_tokens); }
+		token_queue&			getTokens() { return (_tokens); }
 
 		bool	isEof;
 

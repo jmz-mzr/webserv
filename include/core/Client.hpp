@@ -42,6 +42,8 @@ namespace	webserv
 		void	clearRequest() { _request.clearRequest(); }
 		void	clearResponse() { _response.clearResponse(); }
 
+		void	closeSocket() { _socket.closeFd(); }
+
 		std::string		buffer;	// tmp exam version
 	private:
 		Client&	operator=(const Client& rhs);

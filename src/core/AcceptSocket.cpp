@@ -1,8 +1,5 @@
 #include "core/AcceptSocket.hpp"
 
-#include <cstring>
-#include <cerrno>
-
 #include <fcntl.h>
 
 #include "utils/exceptions.hpp"
@@ -23,8 +20,7 @@ namespace	webserv
 		_fd = accept(fdListened,
 				reinterpret_cast<struct sockaddr*>(&_addr), &_addrLen);
 		if (_fd < 0) {
-			LOG_DEBUG("accept() error: " << strerror(errno));
-			throw FatalErrorException();
+			throw FatalErrorException("accept() error: ", errno);
 		}
 #ifdef MACOS
 		fcntl(_fd, F_SETFL, O_NONBLOCK);
