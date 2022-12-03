@@ -16,8 +16,10 @@ namespace	webserv {
 
 namespace	config {
 
+
 	class Parser {
 	public:
+		typedef Lexer::token_queue::iterator	it_t;
 
 		enum Type {
 			kErrorPage = 0,
@@ -46,17 +48,32 @@ namespace	config {
 			kContext = 0x00070000
 		};
 
+		struct Directive;
+
+		struct DirectiveSyntax {
+			typedef void (Parser::*parserMemFn)(Directive&);
+
+			enum Type			type;
+			int					rules;
+			size_t				argc;
+			std::string			str;
+			parserMemFn			parseFn;
+		};
+
 		struct Directive {
-			enum Type		type;
-			int				rules;
-			size_t			argc;
-			std::string		str;
+			std::string					name;
+			std::vector<std::string>	argv;
+			DirectiveSyntax				syntax;
+
+			Directive(it_t first, it_t last);
 		};
 
 		struct ConfigData {
 			Type			type;	
-			Config			config;
+			Config&			config;
 			bool			isDefined[12];
+
+			ConfigData(Type t, Config& conf);
 		};
 
 		Parser();
@@ -68,16 +85,30 @@ namespace	config {
 		void	createLocation();
 
 	private:
-		std::stack<ConfigData>				_currConfig;
-		std::map<std::string, Directive>	_syntaxRules;
+		std::vector<Config>							_configs;
+		std::stack<ConfigData>						_currConfig;
+		std::map<std::string, DirectiveSyntax>		_grammar;
 
 		void	_parseContext(const Directive& directive);
 		void	_parseDup(const Directive& directive);
-		void	_parseArgc(const Directive& directive, size_t argc);
+		void	_parseArgc(const Directive& directive);
 		void	_dupError(const std::string& str);
 		void	_contextError(const std::string& str);
 		void	_argcError(const std::string& str);
-		bool	_isNotWord(Lexer::token_queue::const_iterator cit);
+		bool	_isNotWord(it_t it);
+
+		void	_addErrorPage(Directive& currDirective);
+		void	_setMaxBodySize(Directive& currDirective);
+		void	_setLimitExcept(Directive& currDirective);
+		void	_setReturnPair(Directive& currDirective);
+		void	_setRoot(Directive& currDirective);
+		void	_setAutoIndex(Directive& currDirective);
+		void	_setIndex(Directive& currDirective);
+		void	_setFastCgiPass(Directive& currDirective);
+		void	_addListenPair(Directive& currDirective);
+		void	_addServerName(Directive& currDirective);
+		void	_addLocation(Directive& currDirective);
+		void	_addServer(Directive& currDirective);
 
 	};
 

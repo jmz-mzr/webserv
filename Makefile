@@ -15,7 +15,8 @@ BUILDIR		=	build
 DEPDIR		=	$(BUILDIR)/.deps
 
 #>	FILES
-CONFIG		=	ConfigParser.cpp \
+CONFIG		=	Config.cpp \
+				ConfigParser.cpp \
 				Lexer.cpp \
 				Location.cpp \
 				Parser.cpp \

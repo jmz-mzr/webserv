@@ -18,10 +18,11 @@ namespace	config {
 			enum	Type {
 				kEOF = 0,
 				kWord = 1,
-				kBlockStart = 2,
-				kBlockEnd = 3,
-				kDirectiveEnd = 4,
-				kComment = 5
+				kComment = 2,
+				kCtrlToken = 4,		// 00000100
+				kBlockStart = 5,	// 00000101
+				kBlockEnd = 6,		// 00000110
+				kDirectiveEnd = 7,	// 00000111
 			};
 
 			Token(enum Type t, std::string v) : type(t), value(v) {}
