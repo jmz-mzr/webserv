@@ -26,16 +26,13 @@ int	main(int argc, char** argv) try
 	std::signal(SIGINT, handleSigInt);
 	webserv.run();
 	return (EXIT_SUCCESS);
-}
-catch (const webserv::FatalErrorException& e) {
+} catch (const webserv::FatalErrorException& e) {
 	LOG_ERROR(e.what());
 	return (EXIT_FAILURE);
-}
-catch (const webserv::LogicErrorException& e) {
+} catch (const webserv::LogicErrorException& e) {
 	LOG_EMERG(e.what());
 	return (EXIT_FAILURE);
-}
-catch (...) {
+} catch (...) {
 	return (EXIT_FAILURE);
 }
 

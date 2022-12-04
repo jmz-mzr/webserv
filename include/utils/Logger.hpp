@@ -48,7 +48,7 @@ namespace	webserv
 			return (instance);
 		}
 
-		void	log(std::string file, int line,
+		void	log(const std::string& file, int line,
 					int level, const std::string& msg);
 
 		const std::ofstream&	getLogfile() const { return (_logfile); }
@@ -59,8 +59,6 @@ namespace	webserv
 		~Logger();
 
 		Logger&	operator=(const Logger& rhs);
-
-//		std::stringstream	format(std::string file, int line, int level);
 
 		struct ColorCode	_cc[5];
 		LogLevel			_threshold;

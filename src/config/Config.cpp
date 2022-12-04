@@ -14,13 +14,6 @@ Config::Config()
 		, _autoIndex(false)
 { }
 
-Config::Config(std::string p)
-		: _maxBodySize(0)
-		, _limitExcept(0)
-		, _autoIndex(false)
-		, _path(p)
-{ }
-
 Config::Config(const Config& src)
 		: _errorPages(src._errorPages)
 		, _maxBodySize(src._maxBodySize)
@@ -33,7 +26,6 @@ Config::Config(const Config& src)
 		, _listenPairs(src._listenPairs)
 		, _serverNames(src._serverNames)
 		, _configs(src._configs)
-		, _path(src._path)
 { }
 
 void	Config::addErrorPage(const int status, const std::string& uri)
@@ -63,11 +55,11 @@ void	Config::setFastCgiPass(const std::string& path)
 void	Config::addListenPair(const listen_pair& listenPair)
 { _listenPairs.push_back(listenPair); }
 
-void	Config::addName(const std::string& name)
-{ _serverNames.push_back(name); }
+void	Config::addServerName(const std::string& name)
+{ _serverNames.insert(name); }
 
-void	Config::addConfig(const Config& config)
-{ _configs.push_back(config); }
+Config&	Config::addConfig(const std::string& path, const Config& config)
+{ return (_configs.insert(std::make_pair(path, config)).first->second); }
 
 }	// namespace config
 

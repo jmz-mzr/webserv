@@ -25,9 +25,9 @@ namespace	config {
 				kDirectiveEnd = 7,	// 00000111
 			};
 
-			Token(enum Type t, std::string v) : type(t), value(v) {}
+			Token(Type t, std::string v) : type(t), value(v) {}
 
-			enum Type		type;
+			Type			type;
 			std::string		value;
 		};
 
@@ -41,6 +41,8 @@ namespace	config {
 		friend std::ostream&	operator<<(std::ostream&, const token_queue&);
 
 		token_queue&			getTokens() { return (_tokens); }
+
+		static bool				isNotWord(Lexer::Token tk);
 
 		bool	isEof;
 

@@ -50,7 +50,7 @@ namespace	webserv
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 
-	void	Logger::log(std::string file, int line,
+	void	Logger::log(const std::string& file, int line,
 						int level, const std::string& msg)
 	{
 		std::ostringstream	stream;

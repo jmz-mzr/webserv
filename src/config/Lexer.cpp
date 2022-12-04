@@ -119,6 +119,14 @@ void	Lexer::operator()(const std::string& lineBuffer)
 /*                            NON-MEMBER FUNCTIONS                            */
 /******************************************************************************/
 
+/**
+ * @brief Unary predicate, checking token is not a Lexer::Token::kWord
+ * 
+ * @param Lexer::Token 
+ */
+bool			Lexer::isNotWord(Lexer::Token tk)
+{ return (tk.type != Lexer::Token::kWord); };
+
 std::ostream&	operator<<(std::ostream& os, const Lexer::token_queue& rhs)
 {
 	typedef std::deque<struct Lexer::Token>::const_iterator const_iter;

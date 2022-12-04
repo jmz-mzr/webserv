@@ -1,10 +1,10 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
+#include <list>
 #include <map>
 #include <stack>
 #include <string>
-#include <vector>
 
 #include "config/Config.hpp"
 #include "config/Lexer.hpp"
@@ -19,7 +19,9 @@ namespace	config {
 
 	class Parser {
 	public:
-		typedef Lexer::token_queue::iterator	it_t;
+		typedef Lexer::token_queue::iterator			it_t;
+
+		static const size_t		kDirectiveNb = 12;
 
 		enum Type {
 			kErrorPage = 0,
@@ -40,7 +42,7 @@ namespace	config {
 			kBlock = 0x00000100,
 			kDirective = 0x00000200,
 			kType = 0x00000700,			// mask
-			kIgnoreDup = 0x00001000,
+			kIgnoreDup = 0x00001000,	// only needed by single definitions
 			kForbiddenDup = 0x00002000,
 			kAcceptDup = 0x00004000,
 			kDuplicate = 0x00007000,	// mask
@@ -64,21 +66,22 @@ namespace	config {
 		};
 
 		struct Directive {
-			std::string					name;
-			std::string					ctrlToken;
+			std::string&				name;
+			it_t&						ctrlToken;
 			std::vector<std::string>	argv;
-			DirectiveSyntax				syntax;
+			DirectiveSyntax&			syntax;
 
-			Directive(it_t first, it_t last);
+			Directive(it_t& first, it_t& last, DirectiveSyntax& syntax);
 		};
 
 		struct ConfigData {
 			Type			type;	
 			Config&			config;
-			bool			isDefined[12];
+			bool			isDefined[Parser::kDirectiveNb];
 
 			ConfigData(Type t, Config& conf);
 		};
+
 
 		Parser();
 		~Parser() { };
@@ -89,9 +92,9 @@ namespace	config {
 		void	createLocation();
 
 	private:
-		std::vector<Config>							_configs;
-		std::stack<ConfigData>						_currConfig;
-		std::map<std::string, DirectiveSyntax>		_grammar;
+		std::list<Config>						_configs;
+		std::stack<ConfigData>					_currConfig;
+		std::map<std::string, DirectiveSyntax>	_grammar;
 
 		void	_parseDirective(it_t nameToken, it_t ctrlToken);
 		void	_parseType(const Directive& directive);

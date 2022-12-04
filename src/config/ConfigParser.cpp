@@ -83,7 +83,7 @@ bool								ConfigParser::_readline()
 	return ((_lexer.isEof = _file.eof()) || !_lineBuffer.empty());
 }
 
-void	ConfigParser::parseFile()
+void								ConfigParser::parseFile()
 {
 	try {
 		do {

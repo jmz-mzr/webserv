@@ -2,8 +2,11 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <map>
+#include <set>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "utils/exceptions.hpp"
 #include "utils/Logger.hpp"
@@ -13,9 +16,13 @@ namespace	webserv {
 
 namespace	config {
 
+/******************************************************************************/
+/*                         CONSTRUCTORS / DESTRUCTORS                         */
+/******************************************************************************/
+
 Parser::Parser()
 {
-	DirectiveSyntax	directives[12] = {
+	DirectiveSyntax	directives[Parser::kDirectiveNb] = {
 		{
 			kErrorPage,
 			kDirective | kIgnoreDup | kServCtx,
@@ -101,10 +108,27 @@ Parser::Parser()
 			&Parser::_addServer
 		}
 	};
-	for (int i = 0; i < 12; i++) {
+	for (size_t i = 0; i < Parser::kDirectiveNb; i++) {
 		_grammar.insert(std::make_pair(directives[i].str, directives[i]));
 	}
 }
+
+Parser::Directive::Directive(it_t& first, it_t& last, DirectiveSyntax& syntax)
+		: name(first->value)
+		, ctrlToken(last)
+		, syntax(syntax)
+{
+	while (++first != last) {
+		argv.push_back(first->value);
+	}
+}
+
+Parser::ConfigData::ConfigData(Type t, Config& conf) : type(t), config(conf)
+{ std::fill(isDefined, isDefined + Parser::kDirectiveNb, false); }
+
+/******************************************************************************/
+/*                              MEMBER FUNCTIONS                              */
+/******************************************************************************/
 
 void	Parser::_dupError(const std::string& str)
 {
@@ -131,17 +155,21 @@ void	Parser::_argcError(const std::string& str)
 	throw SyntaxErrorException(ss.str());
 }
 
+/**
+ * @brief Check ending char
+ * @param directive 
+ */
 void	Parser::_parseType(const Directive& directive)
 {
 	switch (directive.syntax.rules & Parser::kType) {
 		case Parser::kDirective :
-			if (directive.ctrlToken != ";") {
+			if (directive.ctrlToken->type != Lexer::Token::kDirectiveEnd) {
 				throw SyntaxErrorException("directive \"" + directive.name
 											+ "\" is not terminated by \";\"");
 			}
 			break;
 		case Parser::kBlock :
-			if (directive.ctrlToken != "{") {
+			if (directive.ctrlToken->type != Lexer::Token::kBlockStart) {
 				throw SyntaxErrorException("directive \"" + directive.name
 											+ "\" has no opening \"{\"");
 			}
@@ -149,6 +177,11 @@ void	Parser::_parseType(const Directive& directive)
 	}
 }
 
+/**
+ * @brief Check the containing block
+ * 
+ * @param directive 
+ */
 void	Parser::_parseContext(const Directive& directive)
 {
 	switch (directive.syntax.rules & Parser::kContext) {
@@ -167,24 +200,29 @@ void	Parser::_parseContext(const Directive& directive)
 	}
 }
 
+/**
+ * @brief Check if duplicate
+ * 
+ * @param directive 
+ */
 void	Parser::_parseDup(const Directive& directive)
 {
-	if (directive.syntax.rules & Parser::kForbiddenDup) {
+	if (_currConfig.top().isDefined[directive.syntax.type]) {
 		if (directive.syntax.type == kLocation) {
-			std::vector<Config>& confs = _currConfig.top().config.getConfigs();
-			if (confs.empty() || directive.argv[0].empty())
-				return ;
-			for (std::vector<Config>::iterator it = confs.begin();
-					it != confs.end();
-					it++) {
-				if (it->getPath() == directive.argv[0])
-					_dupError(directive.syntax.str);
-			}
-		} else if (_currConfig.top().isDefined[directive.syntax.type])
+			Config::config_map& conf = _currConfig.top().config.getConfigs();
+			if (conf.find(directive.argv[0]) != conf.end())
+				_dupError(directive.syntax.str);
+		} else {
 			_dupError(directive.syntax.str);
+		}
 	}
 }
 
+/**
+ * @brief Check the argument count
+ * 
+ * @param directive 
+ */
 void	Parser::_parseArgc(const Directive& directive)
 {
 	if (directive.syntax.rules & Parser::kArgcStrict) {
@@ -194,53 +232,43 @@ void	Parser::_parseArgc(const Directive& directive)
 		_argcError(directive.syntax.str);
 }
 
-Parser::Directive::Directive(it_t first, it_t last)
-		: name(first->value), ctrlToken(last->value)
-{
-	while (++first != last) {
-		argv.push_back(first->value);
-	}
-}
-
-Parser::ConfigData::ConfigData(Type t, Config& conf) : type(t), config(conf)
-{ std::fill(isDefined, isDefined + 11, false); }
-
-static bool	isNotWord(Lexer::Token tk)
-{ return (tk.type != Lexer::Token::kWord); };
-
 void	Parser::_parseDirective(it_t nameToken, it_t ctrlToken)
 {
-	typedef std::map<std::string, DirectiveSyntax>::const_iterator	syntaxIt_t;
-
-	Directive		currDirective(nameToken, ctrlToken);
-	syntaxIt_t		it = _grammar.find(currDirective.name);
+	std::map<std::string, DirectiveSyntax>::iterator syntaxIter;
 	
-	if (it == _grammar.end()) {	
+	if ((syntaxIter = _grammar.find(nameToken->value)) == _grammar.end()) {
 		throw SyntaxErrorException("unknown directive \""
-									+ currDirective.name + "\"");
-	}
-	currDirective.syntax = it->second;
-	_parseType(currDirective);
-	_parseContext(currDirective);
-	_parseDup(currDirective);
-	_parseArgc(currDirective);
-	if ((currDirective.syntax.rules & Parser::kAcceptDup) //! MUST be checked first or could check empty stack
-		|| (_currConfig.top().isDefined[currDirective.syntax.type] == false))
-	{
-		(this->*(currDirective.syntax.parseFn))(currDirective);
-		_currConfig.top().isDefined[currDirective.syntax.type] = true;
+									+ nameToken->value + "\"");
+	} else {
+		Directive currDirective(nameToken, ctrlToken, syntaxIter->second);
+
+		_parseType(currDirective);
+		_parseContext(currDirective);
+		if (currDirective.syntax.rules & Parser::kForbiddenDup)
+			_parseDup(currDirective);
+		_parseArgc(currDirective);
+		if ((currDirective.syntax.rules & ~Parser::kIgnoreDup) //! MUST be checked first or could check empty stack
+			|| !(_currConfig.top().isDefined[currDirective.syntax.type]))
+		{
+			(this->*(currDirective.syntax.parseFn))(currDirective);
+			_currConfig.top().isDefined[currDirective.syntax.type] = true;
+		}
 	}
 }
 
 void	Parser::operator()(Lexer::token_queue& tokens)
 {
-	it_t ctrlToken;
+	it_t	ctrlToken;
 
-	while ((ctrlToken = std::find_if(tokens.begin(), tokens.end(), isNotWord))
-			!= tokens.end()) {
+	while ((ctrlToken = std::find_if(tokens.begin(),
+										tokens.end(),
+										Lexer::isNotWord))
+															!= tokens.end()) {
 		if ((ctrlToken->type == Lexer::Token::kBlockEnd)
 				&& (ctrlToken == tokens.begin())) {
 			_currConfig.pop();
+			tokens.pop_front();
+		} else if (ctrlToken->type == Lexer::Token::kEOF) {
 			tokens.pop_front();
 		} else {
 			_parseDirective(tokens.begin(), ctrlToken);
@@ -252,6 +280,7 @@ void	Parser::operator()(Lexer::token_queue& tokens)
 void	Parser::_addErrorPage(Directive& currDirective)
 {
 	int					errorCode;
+	Config& 			config = _currConfig.top().config;
 	const std::string&	uri = currDirective.argv.back();
 
 	for (std::vector<std::string>::iterator it = currDirective.argv.begin();
@@ -262,7 +291,7 @@ void	Parser::_addErrorPage(Directive& currDirective)
 			throw SyntaxErrorException("value \"" + (*it)
 										+ "\" must be between 300 and 599");
 		}
-		_currConfig.top().config.addErrorPage(errorCode, uri);
+		config.addErrorPage(errorCode, uri);
 	}
 	LOG_DEBUG("_addErrorPage");
 }
@@ -317,16 +346,18 @@ void	Parser::_addListenPair(Directive& currDirective)
 
 void	Parser::_addServerName(Directive& currDirective)
 {
-	(void)currDirective;
+	Config& config = _currConfig.top().config;
+
+	config.addServerName(currDirective.argv[0]);
 	LOG_DEBUG("_addServerName");
 }
 
 void	Parser::_addLocation(Directive& currDirective)
 {
-	std::vector<Config>& _locationConfs = _currConfig.top().config.getConfigs();
-	_locationConfs.push_back(Config(currDirective.argv[0]));
-	_currConfig.push(ConfigData(kLocation, _locationConfs.back()));
-	_currConfig.top().isDefined[kLocation] = true;
+	Config& serverConf = _currConfig.top().config;
+	Config& locConf = serverConf.addConfig(currDirective.argv[0], Config());
+
+	_currConfig.push(ConfigData(kLocation, locConf));
 	LOG_DEBUG("_addLocation");
 }
 
@@ -337,6 +368,10 @@ void	Parser::_addServer(Directive& currDirective)
 	_currConfig.push(ConfigData(kServer, _configs.back()));
 	LOG_DEBUG("_addServer");
 }
+
+/******************************************************************************/
+/*                            NON-MEMBER FUNCTIONS                            */
+/******************************************************************************/
 
 }	// namespace config
 
