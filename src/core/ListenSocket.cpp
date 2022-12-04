@@ -1,5 +1,7 @@
 #include "core/ListenSocket.hpp"
 
+#include <cerrno>
+
 #include "utils/Logger.hpp"
 #include "utils/exceptions.hpp"
 
@@ -48,7 +50,7 @@ namespace	webserv
 		const char*			portStr = STRINGIZE(port);
 		int					error;
 
-		ft_memset(&addrHints, 0, sizeof(struct addrinfo));
+		memset(&addrHints, 0, sizeof(struct addrinfo));
 		addrHints.ai_family = AF_INET;
 		addrHints.ai_socktype = SOCK_STREAM;
 		addrHints.ai_protocol = IPPROTO_TCP;

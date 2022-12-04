@@ -1,7 +1,7 @@
 #include "core/Webserv.hpp"
 
-#include <cstring>
 #include <cerrno>
+#include <cstring>
 #include <iostream>
 
 #include <unistd.h>

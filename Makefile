@@ -32,7 +32,6 @@ CORE		=	AcceptSocket.cpp \
 				Webserv.cpp
 UTILS		=	ft_charcmp_icase.cpp \
 				ft_inet_ntoa.cpp \
-				ft_memset.cpp \
 				ft_sleep.cpp \
 				ft_str_tolower.cpp \
 				ft_strcmp_icase.cpp \

@@ -1,6 +1,8 @@
 #include "core/Socket.hpp"
 #include "utils/Logger.hpp"
 
+#include <cstring>
+
 #include <unistd.h>
 
 namespace	webserv
@@ -17,7 +19,7 @@ namespace	webserv
 			, _port(0)
 			, _addrLen(sizeof(_addr))
 	{
-		ft_memset(&_addr, 0, _addrLen);
+		memset(&_addr, 0, _addrLen);
 	}
 
 	Socket::Socket(const Type t, const std::string& ipAddr, const uint16_t port)
@@ -26,7 +28,7 @@ namespace	webserv
 			, _port(port)
 			, _addrLen(sizeof(_addr))
 	{
-		ft_memset(&_addr, 0, _addrLen);
+		memset(&_addr, 0, _addrLen);
 	}
 
 	Socket::Socket(const Socket& src) :

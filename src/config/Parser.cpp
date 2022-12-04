@@ -1,11 +1,13 @@
 #include "config/Parser.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <sstream>
 #include <string>
 
 #include "utils/exceptions.hpp"
 #include "utils/Logger.hpp"
+#include "utils/utils.hpp"
 
 namespace	webserv {
 
@@ -16,84 +18,84 @@ Parser::Parser()
 	DirectiveSyntax	directives[12] = {
 		{
 			kErrorPage,
-			kIgnoreDup | kServCtx,
+			kDirective | kIgnoreDup | kServCtx,
 			2,
 			"error_page",
 			&Parser::_addErrorPage
 		},
 		{
 			kMaxBodySize,
-			kForbiddenDup | kArgcStrict | kServCtx,
+			kDirective | kForbiddenDup | kArgcStrict | kServCtx,
 			1,
 			"client_max_body_size",
 			&Parser::_setMaxBodySize
 		},
 		{
 			kLimitExcept,
-			kIgnoreDup | kLocCtx,
+			kDirective | kIgnoreDup | kLocCtx,
 			1,
 			"limit_except",
 			&Parser::_setLimitExcept
 		},
 		{
 			kReturn,
-			kIgnoreDup | kLocCtx,
+			kDirective | kIgnoreDup | kLocCtx,
 			1,
 			"return",
 			&Parser::_setReturnPair
 		},
 		{
 			kRoot,
-			kForbiddenDup | kArgcStrict | kLocCtx,
+			kDirective | kForbiddenDup | kArgcStrict | kLocCtx,
 			1,
 			"root",
 			&Parser::_setRoot
 		},
 		{
 			kAutoindex,
-			kForbiddenDup | kArgcStrict | kLocCtx,
+			kDirective | kForbiddenDup | kArgcStrict | kLocCtx,
 			1,
 			"autoindex",
 			&Parser::_setAutoIndex
 		},
 		{
 			kIndex,
-			kIgnoreDup | kArgcStrict | kLocCtx,
+			kDirective | kIgnoreDup | kArgcStrict | kLocCtx,
 			1,
 			"index",
 			&Parser::_setIndex
 		},
 		{
 			kFastCgiPass,
-			kForbiddenDup | kArgcStrict | kLocCtx,
+			kDirective | kForbiddenDup | kArgcStrict | kLocCtx,
 			1,
 			"fastcgi_pass",
 			&Parser::_setFastCgiPass
 		},
 		{
 			kListen,
-			kAcceptDup | kArgcStrict | kServCtx,
+			kDirective | kAcceptDup | kArgcStrict | kServCtx,
 			1,
 			"listen",
 			&Parser::_addListenPair
 		},
 		{
 			kServerName,
-			kAcceptDup | kServCtx,
+			kDirective | kAcceptDup | kServCtx,
 			1,
 			"server_name",
 			&Parser::_addServerName
 		},
 		{
 			kLocation,
-			kForbiddenDup | kArgcStrict | kServCtx,
+			kBlock | kForbiddenDup | kArgcStrict | kServCtx,
 			1,
 			"location",
 			&Parser::_addLocation
 		},
 		{
 			kServer,
-			kAcceptDup | kArgcStrict | kNoCtx,
+			kBlock | kAcceptDup | kArgcStrict | kNoCtx,
 			0,
 			"server",
 			&Parser::_addServer
@@ -127,6 +129,24 @@ void	Parser::_argcError(const std::string& str)
 	ss << "invalid number of arguments in "
 		<< "\"" << str << "\"" << " directive";
 	throw SyntaxErrorException(ss.str());
+}
+
+void	Parser::_parseType(const Directive& directive)
+{
+	switch (directive.syntax.rules & Parser::kType) {
+		case Parser::kDirective :
+			if (directive.ctrlToken != ";") {
+				throw SyntaxErrorException("directive \"" + directive.name
+											+ "\" is not terminated by \";\"");
+			}
+			break;
+		case Parser::kBlock :
+			if (directive.ctrlToken != "{") {
+				throw SyntaxErrorException("directive \"" + directive.name
+											+ "\" has no opening \"{\"");
+			}
+			break;
+	}
 }
 
 void	Parser::_parseContext(const Directive& directive)
@@ -175,7 +195,7 @@ void	Parser::_parseArgc(const Directive& directive)
 }
 
 Parser::Directive::Directive(it_t first, it_t last)
-		: name(first->value)
+		: name(first->value), ctrlToken(last->value)
 {
 	while (++first != last) {
 		argv.push_back(first->value);
@@ -188,32 +208,62 @@ Parser::ConfigData::ConfigData(Type t, Config& conf) : type(t), config(conf)
 static bool	isNotWord(Lexer::Token tk)
 { return (tk.type != Lexer::Token::kWord); };
 
+void	Parser::_parseDirective(it_t nameToken, it_t ctrlToken)
+{
+	typedef std::map<std::string, DirectiveSyntax>::const_iterator	syntaxIt_t;
+
+	Directive		currDirective(nameToken, ctrlToken);
+	syntaxIt_t		it = _grammar.find(currDirective.name);
+	
+	if (it == _grammar.end()) {	
+		throw SyntaxErrorException("unknown directive \""
+									+ currDirective.name + "\"");
+	}
+	currDirective.syntax = it->second;
+	_parseType(currDirective);
+	_parseContext(currDirective);
+	_parseDup(currDirective);
+	_parseArgc(currDirective);
+	if ((currDirective.syntax.rules & Parser::kAcceptDup) //! MUST be checked first or could check empty stack
+		|| (_currConfig.top().isDefined[currDirective.syntax.type] == false))
+	{
+		(this->*(currDirective.syntax.parseFn))(currDirective);
+		_currConfig.top().isDefined[currDirective.syntax.type] = true;
+	}
+}
+
 void	Parser::operator()(Lexer::token_queue& tokens)
 {
 	it_t ctrlToken;
 
-	ctrlToken = std::find_if(tokens.begin(), tokens.end(), isNotWord);
-	if (ctrlToken == tokens.end())
-		return ;
-	else if (ctrlToken->type == Lexer::Token::kBlockEnd) {
-		_currConfig.pop();
-		tokens.pop_front();
-	} else {
-		Directive	currDirective(tokens.begin(), ctrlToken);
-
-		currDirective.syntax = _grammar.find(currDirective.name)->second;
-		_parseContext(currDirective);
-		_parseDup(currDirective);
-		_parseArgc(currDirective);
-		if (!(currDirective.syntax.rules & Parser::kIgnoreDup))
-			(this->*(currDirective.syntax.parseFn))(currDirective);
-		tokens.erase(tokens.begin(), ctrlToken + 1);
+	while ((ctrlToken = std::find_if(tokens.begin(), tokens.end(), isNotWord))
+			!= tokens.end()) {
+		if ((ctrlToken->type == Lexer::Token::kBlockEnd)
+				&& (ctrlToken == tokens.begin())) {
+			_currConfig.pop();
+			tokens.pop_front();
+		} else {
+			_parseDirective(tokens.begin(), ctrlToken);
+			tokens.erase(tokens.begin(), ctrlToken + 1);
+		}
 	}
 }
 
 void	Parser::_addErrorPage(Directive& currDirective)
 {
-	(void)currDirective;
+	int					errorCode;
+	const std::string&	uri = currDirective.argv.back();
+
+	for (std::vector<std::string>::iterator it = currDirective.argv.begin();
+			it != currDirective.argv.end() - 1;
+			it++) {
+		errorCode = atoi(it->c_str());
+		if ((errorCode < 300) || (errorCode > 599)) {
+			throw SyntaxErrorException("value \"" + (*it)
+										+ "\" must be between 300 and 599");
+		}
+		_currConfig.top().config.addErrorPage(errorCode, uri);
+	}
 	LOG_DEBUG("_addErrorPage");
 }
 
