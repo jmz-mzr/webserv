@@ -26,6 +26,7 @@ CORE		=	AcceptSocket.cpp \
 				ConnectSocket.cpp \
 				ListenSocket.cpp \
 				Request.cpp \
+				RequestParser.cpp \
 				Response.cpp \
 				Server.cpp \
 				Socket.cpp \

@@ -1,6 +1,8 @@
 #ifndef CONNECTSOCKET_HPP
 # define CONNECTSOCKET_HPP
 
+# include <cerrno>
+
 # include "core/Socket.hpp"
 
 namespace	webserv
