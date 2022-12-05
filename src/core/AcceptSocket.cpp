@@ -1,5 +1,7 @@
 #include "core/AcceptSocket.hpp"
 
+#include <cerrno>
+
 #include <fcntl.h>
 
 #include "utils/exceptions.hpp"

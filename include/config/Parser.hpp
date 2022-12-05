@@ -37,15 +37,18 @@ namespace	config {
 		};
 
 		enum Rule {
+			kBlock = 0x00000100,
+			kDirective = 0x00000200,
+			kType = 0x00000700,			// mask
 			kIgnoreDup = 0x00001000,
 			kForbiddenDup = 0x00002000,
 			kAcceptDup = 0x00004000,
-			kDuplicate = 0x00007000,
+			kDuplicate = 0x00007000,	// mask
 			kArgcStrict = 0x00008000,
 			kServCtx = 0x00010000,
 			kLocCtx = 0x00020000,
 			kNoCtx = 0x00040000,
-			kContext = 0x00070000
+			kContext = 0x00070000		// mask
 		};
 
 		struct Directive;
@@ -62,6 +65,7 @@ namespace	config {
 
 		struct Directive {
 			std::string					name;
+			std::string					ctrlToken;
 			std::vector<std::string>	argv;
 			DirectiveSyntax				syntax;
 
@@ -89,13 +93,14 @@ namespace	config {
 		std::stack<ConfigData>						_currConfig;
 		std::map<std::string, DirectiveSyntax>		_grammar;
 
+		void	_parseDirective(it_t nameToken, it_t ctrlToken);
+		void	_parseType(const Directive& directive);
 		void	_parseContext(const Directive& directive);
 		void	_parseDup(const Directive& directive);
 		void	_parseArgc(const Directive& directive);
 		void	_dupError(const std::string& str);
 		void	_contextError(const std::string& str);
 		void	_argcError(const std::string& str);
-		bool	_isNotWord(it_t it);
 
 		void	_addErrorPage(Directive& currDirective);
 		void	_setMaxBodySize(Directive& currDirective);

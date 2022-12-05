@@ -1,6 +1,5 @@
 #ifdef DOCTEST_CONFIG_DISABLE	// Compile without tests
 
-# include <cerrno>
 # include <csignal>
 # include <cstdlib>
 # include <iostream>

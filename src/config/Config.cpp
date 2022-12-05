@@ -8,6 +8,19 @@ namespace webserv {
 
 namespace config {
 
+Config::Config()
+		: _maxBodySize(0)
+		, _limitExcept(0)
+		, _autoIndex(false)
+{ }
+
+Config::Config(std::string p)
+		: _maxBodySize(0)
+		, _limitExcept(0)
+		, _autoIndex(false)
+		, _path(p)
+{ }
+
 Config::Config(const Config& src)
 		: _errorPages(src._errorPages)
 		, _maxBodySize(src._maxBodySize)

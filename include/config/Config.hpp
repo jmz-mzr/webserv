@@ -17,8 +17,8 @@ namespace config {
 		typedef std::pair<std::string, uint16_t>			listen_pair;
 		typedef std::map<int, std::string>					error_pages_map;
 
-		Config() {}
-		Config(std::string p) : _path(p) {}
+		Config();
+		Config(std::string p);
 		Config(const Config& src);
 		~Config() {}
 
