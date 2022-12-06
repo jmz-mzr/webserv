@@ -114,7 +114,7 @@ namespace	config {
 		void	_setAutoIndex(Directive& currDirective);
 		void	_setIndex(Directive& currDirective);
 		void	_setFastCgiPass(Directive& currDirective);
-		void	_addListenPair(Directive& currDirective);
+		void	_addListen(Directive& currDirective);
 		void	_addServerName(Directive& currDirective);
 		void	_addLocation(Directive& currDirective);
 		void	_addServer(Directive& currDirective);

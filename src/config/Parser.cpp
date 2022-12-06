@@ -11,6 +11,11 @@
 #include <string>
 #include <vector>
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
 #include "utils/exceptions.hpp"
 #include "utils/Logger.hpp"
 #include "utils/utils.hpp"
@@ -71,7 +76,7 @@ Parser::Parser()
 		},
 		{
 			kIndex,
-			kDirective | kIgnoreDup | kArgcStrict | kLocCtx,
+			kDirective | kAcceptDup | kArgcStrict | kLocCtx,
 			1,
 			"index",
 			&Parser::_setIndex
@@ -88,7 +93,7 @@ Parser::Parser()
 			kDirective | kAcceptDup | kArgcStrict | kServCtx,
 			1,
 			"listen",
-			&Parser::_addListenPair
+			&Parser::_addListen
 		},
 		{
 			kServerName,
@@ -299,9 +304,10 @@ void	Parser::_addErrorPage(Directive& currDirective)
 			it++) {
 		if (std::find_if(it->begin(), it->end(), &isnotdigit) != it->end())
 			throw SyntaxErrorException("invalid value \"" + (*it) + "\"");
-		errorCode = strtol((*it).c_str(), NULL, 10);
+		errno = 0;
+		errorCode = strtol(it->c_str(), NULL, 10);
 		if (errno)
-			throw FatalErrorException(errno, "strtoll(): ");
+			throw FatalErrorException(errno, "strtol(): ");
 		if ((errorCode < 300) || (errorCode > 599)) {
 			throw SyntaxErrorException("value \"" + (*it)
 										+ "\" must be between 300 and 599");
@@ -355,43 +361,100 @@ void	Parser::_setLimitExcept(Directive& currDirective)
 	LOG_DEBUG("_addLimitExcept");
 }
 
+//TODO: URL parser
 void	Parser::_setReturnPair(Directive& currDirective)
 {
-	if (currDirective.argv.size() == 1) {
-
-	}
-	// URL parser
 	(void)currDirective;
 	LOG_DEBUG("_setReturnPair");
 }
 
 void	Parser::_setRoot(Directive& currDirective)
 {
-	(void)currDirective;
+	_currConfig.top().config.setRoot(currDirective.argv[0]);
 	LOG_DEBUG("_setRoot");
 }
 
 void	Parser::_setAutoIndex(Directive& currDirective)
 {
-	(void)currDirective;
+	if (currDirective.argv[0] == "on")
+		_currConfig.top().config.setAutoIndex(true);
+	else if (currDirective.argv[0] == "off")
+		_currConfig.top().config.setAutoIndex(false);
+	else
+		throw SyntaxErrorException("invalid value \"" + currDirective.argv[0]
+			+ "\" in \"autoindex\" directive, it must be \"on\" or \"off\"");
 	LOG_DEBUG("_setAutoIndex");
 }
 
 void	Parser::_setIndex(Directive& currDirective)
 {
-	(void)currDirective;
+	_currConfig.top().config.setIndex(currDirective.argv[0]);
 	LOG_DEBUG("_setIndex");
 }
 
+//TODO
 void	Parser::_setFastCgiPass(Directive& currDirective)
 {
 	(void)currDirective;
 	LOG_DEBUG("_setFastCgiPass");
 }
 
-void	Parser::_addListenPair(Directive& currDirective)
+static in_port_t	parsePort(std::string& arg, std::string::iterator sep)
 {
-	(void)currDirective;
+	in_port_t	port;
+
+	if (sep == arg.end())
+		return (80);
+	if ((std::find_if(sep + 1, arg.end(), &isnotdigit) != arg.end()) ||
+			(errno = 0, (port = strtol(sep.base() + 1, NULL, 10)) > USHRT_MAX))
+		throw LogicErrorException("invalid port in \"" + arg
+										+ "\" of the \"listen\" directive");
+	if (errno)
+		throw FatalErrorException(errno, "strtol(): ");
+	return (port);
+}
+
+static void		resolveHost(const std::string& addr, Config& conf, in_port_t p)
+{
+	struct in_addr**	addr_list;
+	struct hostent*		hent = gethostbyname(addr.c_str());
+
+	if (hent == NULL)
+		throw LogicErrorException("host not found in \"" + addr
+									+ "\" of the \"listen\" directive");
+	addr_list = reinterpret_cast<struct in_addr**>(hent->h_addr_list);
+	for (int i = 0; addr_list[i] != NULL; i++) {
+		if (conf.addListen(addr_list[i]->s_addr, p) == false) {
+			std::stringstream ss;
+			ss << "a duplicate listen " << inet_ntoa(*addr_list[i]) << ":" << p;
+			throw SyntaxErrorException(ss.str());
+		}
+	}
+	LOG_DEBUG("_addListenPair");
+}
+
+void	Parser::_addListen(Directive& currDirective)
+{
+	in_addr_t				ipAddr;
+	std::string&			arg = currDirective.argv[0];
+	std::string::iterator	sep = std::find(arg.begin(), arg.end(), ':');
+	in_port_t				port = parsePort(arg, sep);
+	std::string				addr = arg.substr(0, sep - arg.begin());
+
+	if (addr == "*") {
+		ipAddr = INADDR_ANY;
+	} else {
+		ipAddr = inet_addr(addr.c_str());
+		if ((ipAddr == INADDR_NONE) && (addr != "255.255.255.255")) {
+			resolveHost(addr, _currConfig.top().config, port);
+			return ;
+		}
+	}
+	if (_currConfig.top().config.addListen(ipAddr, port) == false) {
+		std::stringstream ss;
+		ss << "a duplicate listen " << addr << ":" << port;
+		throw SyntaxErrorException(ss.str());
+	}
 	LOG_DEBUG("_addListenPair");
 }
 
