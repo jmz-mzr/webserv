@@ -43,23 +43,37 @@ namespace	webserv
 
 		Request&	operator=(const Request& rhs);
 
-		bool	_parseRequestTarget(const std::string& requestTarget);
-		void	_parseInternalTarget(const std::string& redirectTo);
-		int		_parseChunkedRequest(std::string& unprocessedBuffer,
+		void			_initHeaders();
+		bool			_findHeader(std::string key);
+		void    		_setHeader(std::string key, std::string value);
+		void			_parse(std::string str);
+		void        	_parseMethod(std::string line);
+		void        	_parsePath(std::string line);
+		std::string		_readLine();
+		std::string		_getKey(std::string line);
+		std::string		_getValue(std::string line);
+		bool			_parseRequestTarget(const std::string& requestTarget);
+		void			_parseInternalTarget(const std::string& redirectTo);
+		int				_parseChunkedRequest(std::string& unprocessedBuffer,
 										const char* buffer,
 										const server_configs& serverConfigs);
-		bool	_loadServerConfig(const server_configs& serverConfigs);
-		bool	_loadLocation(const ServerConfig& serverConfig);
-		bool	_loadExtensionLocation(const ServerConfig& serverConfig);
-		bool	_loadExtensionLocation(const Location& location);
-		int		_checkHeaders();
-		int		_checkHost();
-		int		_checkMaxBodySize();
-		int		_checkMethod();
+		bool			_loadServerConfig(const server_configs& serverConfigs);
+		bool			_loadLocation(const ServerConfig& serverConfig);
+		bool			_loadExtensionLocation(const ServerConfig& serverConfig);
+		bool			_loadExtensionLocation(const Location& location);
+		int				_checkHeaders();
+		int				_checkHost();
+		int				_checkMaxBodySize();
+		int				_checkMethod();
 
-		const AcceptSocket&	_clientSocket;
-		const ServerConfig*	_serverConfig;
-		const Location*		_location;
+		std::map<std::string, std::string>	_headers;
+		std::string							_body;
+		std::string							_buffer;
+		std::string							_method;
+		std::string::size_type				_bufferIndex;
+		const AcceptSocket&					_clientSocket;
+		const ServerConfig*					_serverConfig;
+		const Location*						_location;
 
 		// TO DO: 1) If the request line is invalid, immediately return 400
 		// 2) If the request line is > 8192, immediately return 414
