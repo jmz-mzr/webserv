@@ -148,8 +148,8 @@ namespace	webserv
 		errorPage = request.getLocation()->getErrorPages().find(_responseCode);
 		if (errorPage != request.getLocation()->getErrorPages().end()) {
 			if (errorPage->second[0] == '/') {
-				if (request.getRequestMethod() != Method::kGet)
-					request.setRequestMethod(Method::kGet);
+				if (request.getRequestMethod() != "GET")
+					request.setRequestMethod("GET");
 				errorCode = request.loadInternalRedirect(errorPage->second);
 				if (errorCode != 0) {
 					prepareErrorResponse(request, errorCode);

@@ -17,7 +17,7 @@ namespace	webserv
 	{
 		_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (_fd < 0) {
-			throw FatalErrorException("socket(): ", errno);
+			throw FatalErrorException(errno, "socket(): ");
 		}
 		_addr.sin_family = AF_INET;
 		_addr.sin_port = htons(_port);
@@ -29,7 +29,7 @@ namespace	webserv
 		if (connect(_fd, reinterpret_cast<struct sockaddr*>(&_addr),
 					_addrLen) < 0) {
 			closeFd();
-			throw FatalErrorException("connect(): ", errno);
+			throw FatalErrorException(errno, "connect(): ");
 		}
 		LOG_INFO("New connected socket");
 		LOG_DEBUG("fd=" << _fd << " ; addr=" << _ipAddr << " ; port=" << _port);

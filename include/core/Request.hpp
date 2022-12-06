@@ -19,7 +19,7 @@ namespace	webserv
 		Request(const Request& src);
 		~Request() { }	// clear _chunks if not automatic
 
-		const Method::Type&		getRequestMethod() const
+		const std::string&		getRequestMethod() const
 										{ return (_requestMethod); }
 		const Location*			getLocation() const
 										{ return (_location); }
@@ -32,7 +32,7 @@ namespace	webserv
 		int		parseRequest(std::string& unprocessedBuffer, const char* buffer,
 								const server_configs& serverConfigs);
 
-		void	setRequestMethod(const Method::Type& method);
+		void	setRequestMethod(const std::string& method);
 		int		loadInternalRedirect(const std::string& redirectTo);
 
 		void	clearRequest();
@@ -83,7 +83,7 @@ namespace	webserv
 		// that must be accepted when parsing the method in the request line,
 		// that will lead to unallowed methods (like "_GET" or "P-OST")
 		// 2) If invalid return 400, if not allowed _checkHeaders will return 405
-		Method::Type		_requestMethod;
+		std::string			_requestMethod;
 
 		// TO DO: 1) It is what comes before '#', or the first '?' starting the args,
 		// and after the potential valid full scheme, domain name and port

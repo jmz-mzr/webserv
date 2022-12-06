@@ -22,7 +22,7 @@ namespace	webserv
 		_fd = accept(fdListened,
 				reinterpret_cast<struct sockaddr*>(&_addr), &_addrLen);
 		if (_fd < 0) {
-			throw FatalErrorException("accept() error: ", errno);
+			throw FatalErrorException(errno, "accept() error: ");
 		}
 #ifdef MACOS
 		fcntl(_fd, F_SETFL, O_NONBLOCK);

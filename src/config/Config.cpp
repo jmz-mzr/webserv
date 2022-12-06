@@ -10,7 +10,6 @@ namespace config {
 
 Config::Config()
 		: _maxBodySize(0)
-		, _limitExcept(0)
 		, _autoIndex(false)
 { }
 
@@ -34,8 +33,8 @@ void	Config::addErrorPage(const int status, const std::string& uri)
 void	Config::setMaxBodySize(const long long size)
 { _maxBodySize = size; }
 
-void	Config::setLimitExcept(uint flags)
-{ _limitExcept = flags; }
+void	Config::addLimitExcept(const std::string& method)
+{ _limitExcept.insert(method); }
 
 void	Config::setReturnPair(const return_pair& returnPair)
 { _return = returnPair; }

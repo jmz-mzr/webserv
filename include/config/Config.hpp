@@ -16,6 +16,7 @@ namespace config {
 	public:
 		typedef std::pair<int, std::string>					return_pair;
 		typedef std::pair<std::string, uint16_t>			listen_pair;
+		typedef std::set<std::string>						limit_except_set;
 		typedef std::map<int, std::string>					error_pages_map;
 		typedef std::map<std::string, Config>				config_map;
 
@@ -25,7 +26,7 @@ namespace config {
 
 		void		addErrorPage(const int status, const std::string& uri);
 		void		setMaxBodySize(const long long size);
-		void		setLimitExcept(uint flags);
+		void		addLimitExcept(const std::string& method);
 		void		setReturnPair(const return_pair& returnPair);
 		void		setRoot(const std::string& path);
 		void		setAutoIndex(bool b);
@@ -41,7 +42,7 @@ namespace config {
 	private:
 		error_pages_map					_errorPages;
 		long long						_maxBodySize;
-		int								_limitExcept;
+		limit_except_set				_limitExcept;
 		return_pair						_return;
 		std::string						_root;
 		std::string						_index;

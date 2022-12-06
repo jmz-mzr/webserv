@@ -1,6 +1,9 @@
 #include "config/Parser.hpp"
 
 #include <algorithm>
+#include <cctype>
+#include <cerrno>
+#include <climits>
 #include <cstdlib>
 #include <map>
 #include <set>
@@ -22,7 +25,8 @@ namespace	config {
 
 Parser::Parser()
 {
-	DirectiveSyntax	directives[Parser::kDirectiveNb] = {
+	DirectiveSyntax	directives[Parser::kDirectiveNb] =
+	{
 		{
 			kErrorPage,
 			kDirective | kIgnoreDup | kServCtx,
@@ -108,9 +112,13 @@ Parser::Parser()
 			&Parser::_addServer
 		}
 	};
+	
 	for (size_t i = 0; i < Parser::kDirectiveNb; i++) {
 		_grammar.insert(std::make_pair(directives[i].str, directives[i]));
 	}
+	_methods.insert("get");
+	_methods.insert("post");
+	_methods.insert("delete");
 }
 
 Parser::Directive::Directive(it_t& first, it_t& last, DirectiveSyntax& syntax)
@@ -277,16 +285,23 @@ void	Parser::operator()(Lexer::token_queue& tokens)
 	}
 }
 
+static bool isnotdigit(char c)
+{ return (!bool(std::isdigit(c))); }
+
 void	Parser::_addErrorPage(Directive& currDirective)
 {
-	int					errorCode;
 	Config& 			config = _currConfig.top().config;
 	const std::string&	uri = currDirective.argv.back();
+	long				errorCode;
 
 	for (std::vector<std::string>::iterator it = currDirective.argv.begin();
 			it != currDirective.argv.end() - 1;
 			it++) {
-		errorCode = atoi(it->c_str());
+		if (std::find_if(it->begin(), it->end(), &isnotdigit) != it->end())
+			throw SyntaxErrorException("invalid value \"" + (*it) + "\"");
+		errorCode = strtol((*it).c_str(), NULL, 10);
+		if (errno)
+			throw FatalErrorException(errno, "strtoll(): ");
 		if ((errorCode < 300) || (errorCode > 599)) {
 			throw SyntaxErrorException("value \"" + (*it)
 										+ "\" must be between 300 and 599");
@@ -298,18 +313,54 @@ void	Parser::_addErrorPage(Directive& currDirective)
 
 void	Parser::_setMaxBodySize(Directive& currDirective)
 {
-	(void)currDirective;
+	uint		shift;
+	char*		unitPtr;
+	const char*	strPtr = currDirective.argv[0].c_str();
+	long long	size = strtoll(strPtr, &unitPtr, 10);
+
+	if ((unitPtr == strPtr) || (strlen(unitPtr) > 1) || (size < 0))
+		throw SyntaxErrorException(
+							"\"client_max_body_size\" directive invalid value");
+	if (errno)
+		throw FatalErrorException(errno, "strtoll(): ");
+	switch (std::tolower(*unitPtr)) {
+		case 'k': shift = 10; break;
+		case 'm': shift = 20; break;
+		case 'g': shift = 30; break;
+		case 0: shift = 0; break;
+		default: throw SyntaxErrorException(
+							"\"client_max_body_size\" directive invalid value");
+	}
+	if (size > (LLONG_MAX >> shift))
+		throw SyntaxErrorException(
+							"\"client_max_body_size\" directive invalid value");
+	size <<= shift;
+	_currConfig.top().config.setMaxBodySize(size);
 	LOG_DEBUG("_setMaxBodySize");
 }
 
 void	Parser::_setLimitExcept(Directive& currDirective)
 {
-	(void)currDirective;
+	typedef std::vector<std::string>::const_iterator	argIter_t;
+	typedef std::set<std::string>::const_iterator		methodIter_t;
+
+	for (argIter_t argIt = currDirective.argv.begin();
+			argIt != currDirective.argv.end();
+			argIt++) {
+		methodIter_t it = _methods.find(ft_str_tolower(*argIt));
+		if (it == _methods.end())
+			throw SyntaxErrorException("invalid method \"" + (*argIt) + "\"");
+		_currConfig.top().config.addLimitExcept(*it);
+	}
 	LOG_DEBUG("_addLimitExcept");
 }
 
 void	Parser::_setReturnPair(Directive& currDirective)
 {
+	if (currDirective.argv.size() == 1) {
+
+	}
+	// URL parser
 	(void)currDirective;
 	LOG_DEBUG("_setReturnPair");
 }

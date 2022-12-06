@@ -9,7 +9,7 @@ namespace webserv {
 				: std::runtime_error(msg) 
 		{ }
 
-		FatalErrorException(std::string msg, int err)
+		FatalErrorException(int err, std::string msg = "A fatal error occured")
 				: std::runtime_error(msg + strerror(err))
 		{ }
 	};
@@ -20,7 +20,7 @@ namespace webserv {
 				: std::logic_error(msg)
 		{ }
 		
-		LogicErrorException(std::string msg, int err)
+		LogicErrorException(int err, std::string msg)
 				: std::logic_error(msg + strerror(err))
 		{ }
 	};

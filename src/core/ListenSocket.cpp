@@ -16,7 +16,7 @@ namespace	webserv
 												Socket(kListen, ipAddr, port)
 	{
 		if ((_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-			throw FatalErrorException("socket() error: ", errno);
+			throw FatalErrorException(errno, "socket() error: ");
 		}
 		_addr.sin_family = AF_INET;
 		_addr.sin_port = htons(_port);
@@ -28,11 +28,11 @@ namespace	webserv
 		if (bind(_fd, reinterpret_cast<struct sockaddr*>(&_addr),
 					_addrLen) < 0) {
 			closeFd();
-			throw FatalErrorException("bind() error: ", errno);
+			throw FatalErrorException(errno, "bind() error: ");
 		}
 		if (listen(_fd, _kListenBacklog) < 0) {
 			closeFd();
-			throw FatalErrorException("listen() error: ", errno);
+			throw FatalErrorException(errno, "listen() error: ");
 		}
 		LOG_INFO("New listening socket");
 		LOG_DEBUG("fd=" << _fd << " ; addr=" << _ipAddr << " ; port=" << _port);

@@ -16,7 +16,6 @@ namespace	webserv
 												_clientSocket(clientSocket),
 												_serverConfig(0),
 												_location(0),
-												_requestMethod(Method::kEmpty),
 												_isKeepAlive(true),
 												_hasReceivedHeaders(false),
 												_bodySize(-1),
@@ -86,7 +85,7 @@ namespace	webserv
 
 	int	Request::_checkMethod()
 	{
-		if (_requestMethod == Method::kEmpty)
+		if (_requestMethod.empty())
 			return (405);
 		if (!_location->getLimitExcept().empty()
 				&& !_location->getLimitExcept().count(_requestMethod)) {
@@ -320,7 +319,7 @@ namespace	webserv
 		return (0);
 	}
 
-	void	Request::setRequestMethod(const Method::Type& method)
+	void	Request::setRequestMethod(const std::string& method)
 	{
 		_requestMethod = method;
 	}
@@ -359,7 +358,7 @@ namespace	webserv
 
 		_serverConfig = 0;
 		_location = 0;
-		_requestMethod = Method::kEmpty;
+		_requestMethod.clear();
 		_host.clear();
 		_isKeepAlive = true;
 		_hasReceivedHeaders = false;

@@ -94,6 +94,7 @@ namespace	config {
 	private:
 		std::list<Config>						_configs;
 		std::stack<ConfigData>					_currConfig;
+		std::set<std::string>					_methods;
 		std::map<std::string, DirectiveSyntax>	_grammar;
 
 		void	_parseDirective(it_t nameToken, it_t ctrlToken);
