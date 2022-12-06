@@ -38,8 +38,9 @@ UTILS		=	ft_charcmp_icase.cpp \
 				ft_strcmp_icase.cpp \
 				Logger.cpp \
 				trim.cpp
+TEST		=	Logger.test.cpp \
+				trim.test.cpp
 SRC			=	main.cpp $(CORE) $(CONFIG) $(UTILS)
-TEST		=	$(SRC:.cpp=.test.cpp)
 OBJ			=	$(SRCS:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRCS:%.cpp=$(DEPDIR)/%.d)
 
@@ -152,7 +153,7 @@ ifeq (clean,$(MAKECMDGOALS))
 	@printf "$(FOOTER)\n"
 endif
 
-debug:			re
+debug:			all
 
 fclean:			clean
 				@printf "$(YELLOW)Deleting binaries and log file...\n$(DEFAULT)"
