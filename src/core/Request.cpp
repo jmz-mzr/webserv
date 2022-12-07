@@ -198,8 +198,9 @@ namespace	webserv
 				if (ft_strcmp_icase(_host, *name) == 0) {
 					_serverConfig = &(*config);
 					LOG_DEBUG("Using server: \"" << *name << "\" (on \""
-							<< _serverConfig->getListenPair().ipAddr << ":"
-							<< _serverConfig->getListenPair().port
+							<< inet_ntoa(_serverConfig->getListenPair().sin_addr)
+							<< ":"
+							<< ntohs(_serverConfig->getListenPair().sin_port)
 							<< "\")");
 					return (true);
 				}
@@ -209,8 +210,8 @@ namespace	webserv
 		}
 		_serverConfig = &(serverConfigs[0]);
 		LOG_DEBUG("Using default server (on \""
-				<< _serverConfig->getListenPair().ipAddr << ":"
-				<< _serverConfig->getListenPair().port << "\")");
+				<< inet_ntoa(_serverConfig->getListenPair().sin_addr) << ":"
+				<< ntohs(_serverConfig->getListenPair().sin_port) << "\")");
 		return (_loadLocation(*_serverConfig));
 	}
 

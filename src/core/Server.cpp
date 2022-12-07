@@ -8,7 +8,8 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Server::Server(const ServerConfig& serverConfig, const Address& listenPair)
+	Server::Server(const ServerConfig& serverConfig,
+					const sockaddr_in& listenPair)
 			: _socket(listenPair)
 			, _configs(1, serverConfig)
 	{

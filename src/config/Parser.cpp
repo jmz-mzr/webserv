@@ -278,8 +278,10 @@ void	Parser::operator()(Lexer::token_queue& tokens)
 				&& (ctrlToken == tokens.begin())) {
 			if ((_currConfig.top().type == kServer)
 					&& (_currConfig.top().config.getListens().empty())) {
-				in_addr	addr = {INADDR_ANY};
-				_currConfig.top().config.addListen(addr, 8000);
+				sockaddr_in	addr;
+				addr.sin_addr.s_addr = INADDR_ANY;
+				addr.sin_port = htons(8000);
+				_currConfig.top().config.addListen(addr);
 			}
 			_currConfig.pop();
 			tokens.pop_front();
@@ -397,86 +399,90 @@ void	Parser::_setFastCgiPass(Directive& currDirective)
 	LOG_DEBUG("_setFastCgiPass");
 }
 
-static void	_parsePort(const std::vector<std::string>& parts, uint16_t& port)
+static void	_parsePort(const std::vector<std::string>& parts, in_port_t& port)
 {
-	char*		endptr;
-	uint		portMax = ((2 << 15) - 1);
+	char*			endptr;
+	unsigned long	tmp;
+	uint			portMax = ((2 << 15) - 1);
 
 	errno = 0;
 	for (int i = 0; i < 2; i++) {
 		if (parts[i].empty())
 			continue ;
+		if (port != 0)
+			return ;
 		if (std::find_if(parts[i].begin(), parts[i].end(), &isnotdigit)
 											== parts[i].end()) {
-			port = strtol(parts[i].c_str(), &endptr, 10);
-			if ((port == 0) || (port > portMax))
+			tmp = strtol(parts[i].c_str(), &endptr, 10);
+			if ((tmp == 0) || (tmp > portMax))
 				THROW_LOGIC("invalid port in \"" << parts[i]
 								<< "\" of the \"listen\" directive");
 			if (errno)
 				THROW_FATAL("strtol(): " << strerror(errno));
+			port = htons(tmp);
 		}
 	}
 }
 
-bool	Parser::_resolveHost(const std::string& str, uint16_t& port)
+bool	Parser::_resolveHost(const std::string& str, sockaddr_in& addr,
+									Config& conf)
 {
 	struct in_addr**	addr_list;
 	struct hostent*		hent = gethostbyname(str.c_str());
 
-	if (!port)
-		port = 80;
 	if (hent == NULL)
 		THROW_LOGIC("host not found in \"" << str
-										<< "\" of the \"listen\" directive");
+									<< "\" of the \"listen\" directive");
 	addr_list = reinterpret_cast<struct in_addr**>(hent->h_addr_list);
 	for (int i = 0; addr_list[i] != NULL; i++) {
-		LOG_EMERG("test " << addr_list[i]->s_addr);
-		if (_currConfig.top().config.addListen(*addr_list[i], port) == false) {
-			THROW_SYNTAX("a duplicate listen " << ft_inet_ntoa(*addr_list[i])
-												<< ":" << port);
+		addr.sin_addr.s_addr = addr_list[i]->s_addr;
+		if (conf.addListen(addr) == true) {
+			return (true);
+		} else {
+			std::stringstream ss;
+			ss << "a duplicate listen " << inet_ntoa(*addr_list[i])
+				<< ":" << addr.sin_port;
+			THROW_SYNTAX(ss.str());
 		}
 	}
-	return (true);
+	return (false);
 }
 
-void	Parser::_parseListenUnit(const std::vector<std::string>& parts, 
-									uint16_t& port, in_addr& ipAddr)
+bool	Parser::_parseListenUnit(const std::vector<std::string>& part,
+									sockaddr_in& addr)
 {
-	_parsePort(parts, port);
+	_parsePort(part, addr.sin_port);
 	for (int i = 0; i < 2; i++) {
-		if (ipAddr.s_addr)
-			return ;
-		if (parts[i] == "*")
-			ipAddr.s_addr = INADDR_ANY;
-		else {
-			ipAddr.s_addr = inet_addr(parts[i].c_str());
-			if ((ipAddr.s_addr == INADDR_NONE)
-					&& (parts[i] != "255.255.255.255")) {
-				_resolveHost(parts[i], port);
-			}
-		}
+		if (addr.sin_addr.s_addr != 0)
+			return (false);
+		if (part[i] == "*")
+			addr.sin_addr.s_addr = INADDR_ANY;
+		else if ((ft_inet_aton(part[i].c_str(), &addr.sin_addr) == 0)
+				&& _resolveHost(part[i], addr, _currConfig.top().config))
+			return (true);
 	}
+	return (false);
 }
 
 void	Parser::_addListen(Directive& currDirective)
 {
-	in_addr						addr = {0};
-	uint16_t					port = 0;
-	std::vector<std::string> 	parts(2);
+	sockaddr_in					addr;
+	std::vector<std::string> 	part(2);
 	std::istringstream 			input(currDirective.argv[0]);
 
-	std::getline(input, parts[0], ':');
-	std::getline(input, parts[1]);
-	_parseListenUnit(parts, port, addr);
-	if (!port && addr.s_addr)
-		port = 80;
-	else if (!(addr.s_addr) && port)
-		addr.s_addr = INADDR_ANY;
-	if (_currConfig.top().config.addListen(addr, port) == false) {
+	memset(&addr, 0, sizeof(addr));
+	std::getline(input, part[0], ':');
+	std::getline(input, part[1]);
+	if (_parseListenUnit(part, addr))
+		return ;
+	if (!addr.sin_port && addr.sin_addr.s_addr)
+		addr.sin_port = htons(80);
+	else if (!(addr.sin_addr.s_addr) && addr.sin_port)
+		addr.sin_addr.s_addr = INADDR_ANY;
+	if (_currConfig.top().config.addListen(addr) == false) {
 		std::stringstream ss;
-		ss << "a duplicate listen "
-			<< ft_inet_ntoa(addr)
-			<< ":" << port;
+		ss << "a duplicate listen " << ft_inet_ntoa(addr.sin_addr) << ":"
+			<< ntohs(addr.sin_port);
 		THROW_SYNTAX(ss.str());
 	}
 	LOG_DEBUG("_addListen");

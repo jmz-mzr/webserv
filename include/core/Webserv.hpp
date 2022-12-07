@@ -39,8 +39,8 @@ namespace	webserv
 		Webserv&	operator=(const Webserv& rhs);
 
 		void		_addServer(const Config& serverConfig);
-		server_iter	_findSameSocket(const Address& listenPair);
-		bool		_sameSocket(const Address& listenPair,
+		server_iter	_findSameSocket(const sockaddr_in& listenPair);
+		bool		_sameSocket(const sockaddr_in& listenPair,
 								const Server& server) const;
 		void		_deleteRedundantNames(ServerConfig& serverConfig,
 											const Server& server) const;

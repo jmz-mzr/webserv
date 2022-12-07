@@ -106,9 +106,10 @@ namespace	config {
 		void	_contextError(const std::string& str);
 		void	_argcError(const std::string& str);
 
-		bool	_resolveHost(const std::string& str, uint16_t& port);
-		void	_parseListenUnit(const std::vector<std::string>& parts,
-									uint16_t& port, in_addr& ipAddr);
+		bool	_resolveHost(const std::string& str, sockaddr_in& addr,
+									Config& conf);
+		bool	_parseListenUnit(const std::vector<std::string>& parts,
+									sockaddr_in& addr);
 
 		void	_addErrorPage(Directive& currDirective);
 		void	_setMaxBodySize(Directive& currDirective);

@@ -13,10 +13,10 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	ConnectSocket::ConnectSocket(const Address& address)
+	ConnectSocket::ConnectSocket(const sockaddr_in& address)
 			: Socket(kConnect, address)
 	{
-		if (connect(_fd, reinterpret_cast<struct sockaddr*>(&_addr),
+		if (connect(_fd, reinterpret_cast<sockaddr*>(&_addr),
 					_addrLen) < 0) {
 			closeFd();
 			LOG_DEBUG("ip=" << _ip << " port=" << _port);

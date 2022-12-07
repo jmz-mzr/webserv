@@ -21,7 +21,7 @@ namespace webserv {
 		typedef std::map<int, std::string>					error_page_map;
 		typedef std::map<std::string, Config>				config_map;
 		typedef std::set<std::string>						hostname_set;
-		typedef std::set<Address>							listen_set;
+		typedef std::set<sockaddr_in, listen_compare>		listen_set;
 
 		Config();
 		Config(const Config& src);
@@ -35,7 +35,7 @@ namespace webserv {
 		void		setAutoIndex(bool b);
 		void		setIndex(const std::string& path);
 		void		setFastCgiPass(const std::string& path);
-		bool		addListen(in_addr ip, in_port_t port);
+		bool		addListen(const sockaddr_in& addr);
 		void		addServerName(const std::string& name);
 		Config&		addConfig(const std::string& path, const Config& config);
 

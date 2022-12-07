@@ -23,17 +23,16 @@ namespace	webserv
 		memset(&_addr, 0, _addrLen);
 	}
 
-	Socket::Socket(const Type t, const Address& address)
+	Socket::Socket(const Type t, const sockaddr_in& address)
 			: _type(t)
 			, _fd(-1)
 			, _addrLen(sizeof(_addr))
-			, _port(address.port)
-			, _id(address.id)
+			, _port(ntohs(address.sin_port))
 	{
 		memset(&_addr, 0, _addrLen);
 		_addr.sin_family = AF_INET;
-		_addr.sin_port = htons(address.port);
-		_addr.sin_addr.s_addr = address.ipAddr;
+		_addr.sin_port = address.sin_port;
+		_addr.sin_addr.s_addr = address.sin_addr.s_addr;
 		if (_addr.sin_addr.s_addr == INADDR_NONE) {
 			THROW_FATAL("inet_addr() error: invalid IP address");
 		}
@@ -50,7 +49,6 @@ namespace	webserv
 			, _addrLen(src._addrLen)
 			, _ip(src._ip)
 			, _port(src._port)
-			, _id(src._id)
 	{
 		LOG_INFO("Socket copied");
 		LOG_DEBUG("fd=" << _fd << " ; " 

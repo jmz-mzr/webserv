@@ -73,14 +73,16 @@ namespace	webserv
 		}
 	}
 
-	bool	Webserv::_sameSocket(const Address& listenPair,
+	bool	Webserv::_sameSocket(const sockaddr_in& listenPair,
 									const Server& server) const
 	{
-		return (listenPair.id == server.getSocket().getId());
+		return (listenPair.sin_port == server.getSocket().getAddr().sin_port
+				&& listenPair.sin_addr.s_addr
+					== server.getSocket().getAddr().sin_addr.s_addr);
 	}
 
 	Webserv::server_iter
-		Webserv::_findSameSocket(const Address& listenPair)
+		Webserv::_findSameSocket(const sockaddr_in& listenPair)
 	{
 		std::vector<Server>::iterator	server = _servers.begin();
 

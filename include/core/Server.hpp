@@ -14,7 +14,7 @@ namespace	webserv
 {
 	class	Server {
 	public:
-		Server(const ServerConfig& serverConfig, const Address& listenPair);
+		Server(const ServerConfig& serverConfig, const sockaddr_in& listenPair);
 		Server(const Server& src);
 		~Server() { }
 

@@ -26,10 +26,10 @@ namespace	webserv
 							location_compare>				location_map;
 		typedef std::set<std::string>						hostname_set;
 
-		ServerConfig(const Config& src, const Address& listenPair);
+		ServerConfig(const Config& src, const sockaddr_in& listenPair);
 		~ServerConfig() { }
 
-		const Address&					getListenPair() const
+		const sockaddr_in&				getListenPair() const
 													{ return (_listenPair); }
 		const hostname_set&				getServerNames() const
 													{ return (_serverNames); }
@@ -48,7 +48,7 @@ namespace	webserv
 
 		ServerConfig&	operator=(const ServerConfig& rhs);
 
-		Address						_listenPair;
+		sockaddr_in					_listenPair;
 		hostname_set				_serverNames;
 		error_page_map				_errorPages;
 		long long					_maxBodySize;

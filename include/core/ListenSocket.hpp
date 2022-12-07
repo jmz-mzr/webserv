@@ -10,7 +10,7 @@ namespace	webserv
 
 	class	ListenSocket: public Socket {
 	public:
-		ListenSocket(const Address& address);
+		ListenSocket(const sockaddr_in& address);
 		ListenSocket(const ListenSocket& src): Socket(src) { }
 		virtual ~ListenSocket() { }
 	private:

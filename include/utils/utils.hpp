@@ -4,6 +4,9 @@
 # include <algorithm>
 # include <string>
 
+# include <netinet/in.h>
+# include <arpa/inet.h>
+
 # include <stddef.h>
 
 namespace	webserv
@@ -26,6 +29,14 @@ namespace	webserv
 		{
 			return (std::lexicographical_compare(s2.begin(), s2.end(),
 						s1.begin(), s1.end()));
+		}
+	};
+
+	struct listen_compare {
+		bool	operator()(const sockaddr_in& s1, const sockaddr_in& s2) const
+		{
+			return ((s1.sin_port < s2.sin_port)
+					|| (s1.sin_addr.s_addr < s2.sin_addr.s_addr));
 		}
 	};
 

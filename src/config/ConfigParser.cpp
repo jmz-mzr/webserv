@@ -78,13 +78,14 @@ const std::list<Config>&			ConfigParser::parseFile()
 		do {
 			if (_readline() == true) {
 				_lexer(_lineBuffer);
+				LOG_INFO(_lexer.getTokens());
 				_parser(_lexer.getTokens());
 			}
 		} while (_file.good());
 		return (_parser.getConfigs());
 	} catch (const SyntaxErrorException& e) {
 		Logger::getInstance().log(_filePath, _currentLineNb,
-									Logger::kEmerg, e.what());
+										Logger::kEmerg, e.what());
 		throw ;
 	} catch (...) {
 		throw ;

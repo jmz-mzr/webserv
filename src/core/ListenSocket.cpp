@@ -12,10 +12,10 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	ListenSocket::ListenSocket(const Address& address)
+	ListenSocket::ListenSocket(const sockaddr_in& address)
 			: Socket(kListen, address)
 	{
-		if (bind(_fd, reinterpret_cast<struct sockaddr*>(&_addr),
+		if (bind(_fd, reinterpret_cast<sockaddr*>(&_addr),
 					_addrLen) < 0) {
 			closeFd();
 			LOG_DEBUG("ip=" << _ip << " port=" << _port);
