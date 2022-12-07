@@ -140,7 +140,7 @@ namespace	webserv
 
 	bool	Response::_loadErrorPage(Request& request)
 	{
-		Location::error_pages_map::const_iterator	errorPage;
+		Location::error_page_map::const_iterator	errorPage;
 		int											errorCode;
 
 		if (request.isInternalRedirect())

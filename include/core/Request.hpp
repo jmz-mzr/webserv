@@ -37,7 +37,7 @@ namespace	webserv
 
 		void	clearRequest();
 	private:
-		typedef ServerConfig::locations_map			locations_map;
+		typedef ServerConfig::location_map			locations_map;
 
 		Request();
 

@@ -8,15 +8,14 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Server::Server(const ServerConfig& serverConfig,
-					const listen_pair& listenPair):
-								_socket(listenPair.first, listenPair.second),
-								_configs(1, serverConfig)
+	Server::Server(const ServerConfig& serverConfig, const Address& listenPair)
+			: _socket(listenPair)
+			, _configs(1, serverConfig)
 	{
 		LOG_INFO("New Server instance");
 		LOG_DEBUG("fd=" << _socket.getFd() << " ; "
-				<< "addr=" << listenPair.first << " ; "
-				<< "port=" << listenPair.second);
+				<< "addr=" << _socket.getIpAddr() << " ; "
+				<< "port=" << _socket.getPort());
 	}
 
 	Server::Server(const Server& src): _socket(src._socket),
@@ -32,7 +31,7 @@ namespace	webserv
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 
-	const ListenSocket&	Server::getSocket() const
+	const ListenSocket&		Server::getSocket() const
 	{
 		return (_socket);
 	}

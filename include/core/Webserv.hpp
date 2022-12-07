@@ -31,7 +31,6 @@ namespace	webserv
 		volatile static std::sig_atomic_t	receivedSigInt;
 	private:
 		typedef std::vector<Server>::iterator				server_iter;
-		typedef std::pair<const std::string, uint16_t>		listen_pair;
 		typedef std::vector<struct pollfd>::iterator		pollFd_iter;
 		typedef std::list<Client>::iterator					client_iter;
 
@@ -39,13 +38,13 @@ namespace	webserv
 
 		Webserv&	operator=(const Webserv& rhs);
 
-		void		_addServer(const ServerConfig& serverConfig);
-		server_iter	_findSameSocket(const listen_pair& listenPair);
-		bool		_sameSocket(const listen_pair& listenPair,
+		void		_addServer(const Config& serverConfig);
+		server_iter	_findSameSocket(const Address& listenPair);
+		bool		_sameSocket(const Address& listenPair,
 								const Server& server) const;
 		void		_deleteRedundantNames(ServerConfig& serverConfig,
 											const Server& server) const;
-		void		_loadServers(const ConfigParser& config);
+		void		_loadServers(const std::list<Config>& config);
 		void		_acceptConnections();
 		pollFd_iter	_findPollFd(const int fdToFind, const size_t hint,
 											const std::string& object);

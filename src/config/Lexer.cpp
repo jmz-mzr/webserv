@@ -45,7 +45,7 @@ void	Lexer::_syntaxError(const Token& token, const char* expected)
 	} else {
 		ss << "\"" << token.value << "\"";
 	}
-	throw SyntaxErrorException(ss.str());
+	THROW_SYNTAX(ss.str());
 }
 
 void	Lexer::_addToken(const Token& token)
@@ -135,22 +135,22 @@ std::ostream&	operator<<(std::ostream& os, const Lexer::token_queue& rhs)
 					currentToken != rhs.end();
 					currentToken++) {
 		switch (currentToken->type) {
-			case Lexer::Token::kEOF:
-				os << HRED;
-				break ;
-			case Lexer::Token::kWord:
-				os << HBLU;
-					break ;
-				case Lexer::Token::kBlockStart:
-				case Lexer::Token::kBlockEnd:
-					os << HGRN;
-					break ;
-				case Lexer::Token::kDirectiveEnd:
-					os << HYEL;
-					break ;
-				default :
-					break;
-			}
+		case Lexer::Token::kEOF:
+			os << HRED;
+			break ;
+		case Lexer::Token::kWord:
+			os << HBLU;
+			break ;
+		case Lexer::Token::kBlockStart:
+		case Lexer::Token::kBlockEnd:
+			os << HGRN;
+			break ;
+		case Lexer::Token::kDirectiveEnd:
+			os << HYEL;
+			break ;
+		default :
+			break;
+		}
 		os << currentToken->value;
 		if (currentToken->type != Lexer::Token::kEOF)
 			os << HWHT << " -> ";

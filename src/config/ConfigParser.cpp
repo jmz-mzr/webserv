@@ -23,12 +23,12 @@ ConfigParser::ConfigParser(const std::string& path)
 	if (!_file.good()) {
 		LOG_WARN("Cannot open \"" << _filePath << "\"");
 		if (_filePath == DEFAULT_CONF_FILE)
-			throw LogicErrorException("Loading configuration failed");
+			THROW_LOGIC("Loading configuration failed");
 		_filePath = DEFAULT_CONF_FILE;
 		_file.open(_filePath.c_str());
 		if (!_file.good()) {
 			LOG_WARN("Cannot open \"" << _filePath << "\"");
-			throw LogicErrorException("Loading configuration failed");
+			THROW_LOGIC("Loading configuration failed");
 		}
 		LOG_INFO("New ConfigParser instance with default configuration");
 	} else {
@@ -54,47 +54,37 @@ ConfigParser::~ConfigParser()
 /*                              MEMBER FUNCTIONS                              */
 /******************************************************************************/
 
-const std::vector<ServerConfig>&	ConfigParser::getServerConfigs() const
-{
-	return (_serverConfigs);
-}
-
 const std::ifstream&				ConfigParser::getFile() const
-{
-	return (_file);
-}
+{ return (_file); }
 
 const std::string&					ConfigParser::getFilePath() const
-{
-	return (_filePath);
-}
+{ return (_filePath); }
 
 const uint32_t&						ConfigParser::getCurrentLineNb() const
-{
-	return (_currentLineNb);
-}
+{ return (_currentLineNb); }
 
 bool								ConfigParser::_readline()
 {
 	std::getline(_file, _lineBuffer);
 	if (_file.fail())
-		throw FatalErrorException("Error while reading configuration file");
+		THROW_FATAL("Error while reading configuration file");
 	_currentLineNb++;
 	return ((_lexer.isEof = _file.eof()) || !_lineBuffer.empty());
 }
 
-void								ConfigParser::parseFile()
+const std::list<Config>&			ConfigParser::parseFile()
 {
 	try {
 		do {
 			if (_readline() == true) {
 				_lexer(_lineBuffer);
-				LOG_DEBUG(_lexer.getTokens());
 				_parser(_lexer.getTokens());
 			}
 		} while (_file.good());
+		return (_parser.getConfigs());
 	} catch (const SyntaxErrorException& e) {
-		Logger::getInstance().log(_filePath, _currentLineNb, Logger::kEmerg, e.what());
+		Logger::getInstance().log(_filePath, _currentLineNb,
+									Logger::kEmerg, e.what());
 		throw ;
 	} catch (...) {
 		throw ;

@@ -10,7 +10,7 @@ namespace	webserv
 
 	class	ListenSocket: public Socket {
 	public:
-		ListenSocket(const std::string& ipAddr, uint16_t port);
+		ListenSocket(const Address& address);
 		ListenSocket(const ListenSocket& src): Socket(src) { }
 		virtual ~ListenSocket() { }
 	private:

@@ -12,30 +12,22 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	ListenSocket::ListenSocket(const std::string& ipAddr, uint16_t port):
-												Socket(kListen, ipAddr, port)
+	ListenSocket::ListenSocket(const Address& address)
+			: Socket(kListen, address)
 	{
-		if ((_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-			throw FatalErrorException(errno, "socket() error: ");
-		}
-		_addr.sin_family = AF_INET;
-		_addr.sin_port = htons(_port);
-		_addr.sin_addr.s_addr = inet_addr(_ipAddr.c_str());
-		if (_addr.sin_addr.s_addr == INADDR_NONE) {
-			closeFd();
-			throw FatalErrorException("inet_addr() error: invalid IP address");
-		}
 		if (bind(_fd, reinterpret_cast<struct sockaddr*>(&_addr),
 					_addrLen) < 0) {
 			closeFd();
-			throw FatalErrorException(errno, "bind() error: ");
+			LOG_DEBUG("ip=" << _ip << " port=" << _port);
+			THROW_FATAL("bind() error: " << strerror(errno));
 		}
 		if (listen(_fd, _kListenBacklog) < 0) {
 			closeFd();
-			throw FatalErrorException(errno, "listen() error: ");
+			LOG_DEBUG("ip=" << _ip << " port=" << _port);
+			THROW_FATAL("listen() error: " << strerror(errno));
 		}
-		LOG_INFO("New listening socket");
-		LOG_DEBUG("fd=" << _fd << " ; addr=" << _ipAddr << " ; port=" << _port);
+		LOG_INFO("New listening socket on " << _ip << ":" << _port);
+		LOG_DEBUG("fd=" << _fd);
 	}
 
 /*	ListenSocket::ListenSocket(const std::string& ipAddr, uint16_t port):
@@ -61,7 +53,7 @@ namespace	webserv
 				LOG_DEBUG("getaddrinfo() error: " << strerror(errno));
 			} else
 				LOG_DEBUG("getaddrinfo() error: " << gai_strerror(error));
-			throw FatalErrorException("Fatal error on getaddrinfo() call");
+			THROW_FATAL("Fatal error on getaddrinfo() call");
 		}
 		_addr = *(reinterpret_cast<sockaddr_in*>(addrList->ai_addr));
 		_addrLen = addrList->ai_addrlen;
@@ -69,19 +61,19 @@ namespace	webserv
 						addrList->ai_protocol)) < 0) {
 			freeaddrinfo(addrList);
 			LOG_DEBUG("socket() error: " << strerror(errno));
-			throw FatalErrorException("Fatal error on socket() call");
+			THROW_FATAL("Fatal error on socket() call");
 		}
 		if (bind(_fd, addrList->ai_addr, addrList->ai_addrlen) < 0) {
 			closeFd();
 			freeaddrinfo(addrList);
 			LOG_DEBUG("bind() error: " << strerror(errno));
-			throw FatalErrorException("Fatal error on bind() call");
+			THROW_FATAL("Fatal error on bind() call");
 		}
 		if (listen(_fd, _kListenBacklog) < 0) {
 			closeFd();
 			freeaddrinfo(addrList);
 			LOG_DEBUG("listen() error: " << strerror(errno));
-			throw FatalErrorException("Fatal error on listen() call");
+			THROW_FATAL("Fatal error on listen() call");
 		}
 		freeaddrinfo(addrList);
 		LOG_INFO("New listening socket");

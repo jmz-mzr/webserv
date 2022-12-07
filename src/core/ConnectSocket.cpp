@@ -1,6 +1,7 @@
 #include "core/ConnectSocket.hpp"
 
 #include <cerrno>
+#include <cstring>
 
 #include "utils/exceptions.hpp"
 #include "utils/Logger.hpp"
@@ -12,27 +13,17 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	ConnectSocket::ConnectSocket(const std::string& ipAddr, uint16_t port):
-												Socket(kConnect, ipAddr, port)
+	ConnectSocket::ConnectSocket(const Address& address)
+			: Socket(kConnect, address)
 	{
-		_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (_fd < 0) {
-			throw FatalErrorException(errno, "socket(): ");
-		}
-		_addr.sin_family = AF_INET;
-		_addr.sin_port = htons(_port);
-		_addr.sin_addr.s_addr = inet_addr(_ipAddr.c_str());
-		if (_addr.sin_addr.s_addr == INADDR_NONE) {
-			closeFd();
-			throw FatalErrorException("inet_addr(): invalid IP address");
-		}
 		if (connect(_fd, reinterpret_cast<struct sockaddr*>(&_addr),
 					_addrLen) < 0) {
 			closeFd();
-			throw FatalErrorException(errno, "connect(): ");
+			LOG_DEBUG("ip=" << _ip << " port=" << _port);
+			THROW_FATAL("connect() error: " << strerror(errno));
 		}
-		LOG_INFO("New connected socket");
-		LOG_DEBUG("fd=" << _fd << " ; addr=" << _ipAddr << " ; port=" << _port);
+		LOG_INFO("New connect socket on " << _ip << ":" << _port);
+		LOG_DEBUG("fd=" << _fd);
 	}
 
 /*	ConnectSocket::ConnectSocket(const std::string& ipAddr, uint16_t port):
@@ -56,7 +47,7 @@ namespace	webserv
 				LOG_DEBUG("getaddrinfo() error: " << strerror(errno));
 			} else
 				LOG_DEBUG("getaddrinfo() error: " << gai_strerror(error));
-			throw FatalErrorException("Fatal error on getaddrinfo() call");
+			THROW_FATAL("Fatal error on getaddrinfo() call");
 		}
 		_addr = *(reinterpret_cast<sockaddr_in*>(addrList->ai_addr));
 		_addrLen = addrList->ai_addrlen;
@@ -64,13 +55,13 @@ namespace	webserv
 						addrList->ai_protocol)) < 0) {
 			freeaddrinfo(addrList);
 			LOG_DEBUG("socket() error: " << strerror(errno));
-			throw FatalErrorException("Fatal error on socket() call");
+			THROW_FATAL("Fatal error on socket() call");
 		}
 		if (connect(_fd, addrList->ai_addr, addrList->ai_addrlen) < 0) {
 			closeFd();
 			freeaddrinfo(addrList);
 			LOG_DEBUG("connect() error: " << strerror(errno));
-			throw FatalErrorException("Fatal error on connect() call");
+			THROW_FATAL("Fatal error on connect() call");
 		}
 		freeaddrinfo(addrList);
 		LOG_INFO("New connected socket");

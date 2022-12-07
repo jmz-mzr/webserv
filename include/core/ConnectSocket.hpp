@@ -10,7 +10,7 @@ namespace	webserv
 
 	class	ConnectSocket: public Socket {
 	public:
-		ConnectSocket(const std::string& ipAddr, uint16_t port);
+		ConnectSocket(const Address& address);
 		ConnectSocket(const ConnectSocket& src): Socket(src) { }
 		virtual ~ConnectSocket() { }
 	private:

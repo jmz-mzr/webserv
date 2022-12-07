@@ -53,14 +53,14 @@ namespace	webserv
 	int	Request::_checkHost()
 	{
 		if (_host.empty()) {
-			LOG_INFO("Client sent HTTP/1.1 request without \"Host\" header"
-					<< " while reading client request headers, client: "
-					<< _clientSocket.getIpAddr() << ":"
-					<< _clientSocket.getPort() << ", server: "
-					<< _serverConfig->getListenPairs()[0].first << ":"
-					<< _serverConfig->getListenPairs()[0].second << " (\""
-					<< _serverConfig->getServerNames()[0] << "\"), request: \""
-					<< _requestLine << "\"");
+			// LOG_INFO("Client sent HTTP/1.1 request without \"Host\" header"
+			// 		<< " while reading client request headers, client: "
+			// 		<< _clientSocket.getIpAddr() << ":"
+			// 		<< _clientSocket.getPort() << ", server: "
+			// 		<< _serverConfig->getListenPair.ipAddr << ":"
+			// 		<< _serverConfig->getListenPair.port << " (\""
+			// 		<< _serverConfig->getServerNames()[0] << "\"), request: \""
+			// 		<< _requestLine << "\"");
 			return (400);
 		}
 		return (0);
@@ -71,13 +71,13 @@ namespace	webserv
 		LOG_DEBUG("Content-Length: " << _bodySize << ", max: "
 				<< _location->getMaxBodySize());
 		if (_bodySize > 0 && _bodySize > _location->getMaxBodySize()) {
-			LOG_ERROR("Client intended to send too large body: " << _bodySize
-					<< " bytes, client: " << _clientSocket.getIpAddr() << ":"
-					<< _clientSocket.getPort() << ", server: "
-					<< _serverConfig->getListenPairs()[0].first << ":"
-					<< _serverConfig->getListenPairs()[0].second << " (\""
-					<< _serverConfig->getServerNames()[0] << "\"), request: \""
-					<< _requestLine << "\", host: \"" << _host << "\"");
+			// LOG_ERROR("Client intended to send too large body: " << _bodySize
+			// 		<< " bytes, client: " << _clientSocket.getIpAddr() << ":"
+			// 		<< _clientSocket.getPort() << ", server: "
+			// 		<< _serverConfig->getListenPairs()[0].first << ":"
+			// 		<< _serverConfig->getListenPairs()[0].second << " (\""
+			// 		<< _serverConfig->getServerNames()[0] << "\"), request: \""
+			// 		<< _requestLine << "\", host: \"" << _host << "\"");
 			return (413);
 		}
 		return (0);
@@ -89,13 +89,13 @@ namespace	webserv
 			return (405);
 		if (!_location->getLimitExcept().empty()
 				&& !_location->getLimitExcept().count(_requestMethod)) {
-			LOG_ERROR("Access forbidden by rule, client: "
-					<< _clientSocket.getIpAddr() << ":"
-					<< _clientSocket.getPort() << ", server: "
-					<< _serverConfig->getListenPairs()[0].first << ":"
-					<< _serverConfig->getListenPairs()[0].second << " (\""
-					<< _serverConfig->getServerNames()[0] << "\"), request: \""
-					<< _requestLine << "\", host: \"" << _host << "\"");
+			// LOG_ERROR("Access forbidden by rule, client: "
+			// 		<< _clientSocket.getIpAddr() << ":"
+			// 		<< _clientSocket.getPort() << ", server: "
+			// 		<< _serverConfig->getListenPair().ipAddr << ":"
+			// 		<< _serverConfig->getListenPair().port << " (\""
+			// 		<< _serverConfig->getServerNames().begin() << "\"), request: \""
+			// 		<< _requestLine << "\", host: \"" << _host << "\"");
 			return (403);
 		}
 		return (0);
@@ -189,7 +189,7 @@ namespace	webserv
 	bool	Request::_loadServerConfig(const server_configs& serverConfigs)
 	{
 		server_configs::const_iterator				config;
-		std::vector<std::string>::const_iterator	name;
+		ServerConfig::hostname_set::const_iterator	name;
 
 		config = serverConfigs.begin();
 		while (config != serverConfigs.end()) {
@@ -198,8 +198,8 @@ namespace	webserv
 				if (ft_strcmp_icase(_host, *name) == 0) {
 					_serverConfig = &(*config);
 					LOG_DEBUG("Using server: \"" << *name << "\" (on \""
-							<< _serverConfig->getListenPairs()[0].first << ":"
-							<< _serverConfig->getListenPairs()[0].second
+							<< _serverConfig->getListenPair().ipAddr << ":"
+							<< _serverConfig->getListenPair().port
 							<< "\")");
 					return (true);
 				}
@@ -209,8 +209,8 @@ namespace	webserv
 		}
 		_serverConfig = &(serverConfigs[0]);
 		LOG_DEBUG("Using default server (on \""
-				<< _serverConfig->getListenPairs()[0].first << ":"
-				<< _serverConfig->getListenPairs()[0].second << "\")");
+				<< _serverConfig->getListenPair().ipAddr << ":"
+				<< _serverConfig->getListenPair().port << "\")");
 		return (_loadLocation(*_serverConfig));
 	}
 
@@ -271,13 +271,13 @@ namespace	webserv
 
 		_uri = requestTarget;
 		if (error) {
-			LOG_INFO("Client sent invalid request while reading client request"
-					<< " line, client: " << _clientSocket.getIpAddr() << ":"
-					<< _clientSocket.getPort() << ", server: "
-					<< _serverConfig->getListenPairs()[0].first << ":"
-					<< _serverConfig->getListenPairs()[0].second << " (\""
-					<< _serverConfig->getServerNames()[0] << "\"), request: \""
-					<< _requestLine << "\"");
+			// LOG_INFO("Client sent invalid request while reading client request"
+			// 		<< " line, client: " << _clientSocket.getIpAddr() << ":"
+			// 		<< _clientSocket.getPort() << ", server: "
+			// 		<< _serverConfig->getListenPair().ipAddr << ":"
+			// 		<< _serverConfig->getListenPair().port << " (\""
+			// 		<< _serverConfig->getServerNames().begin() << "\"), request: \""
+			// 		<< _requestLine << "\"");
 			return (false);
 		}
 		return (true);

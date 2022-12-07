@@ -67,7 +67,8 @@
 		"chrono": "cpp",
 		"condition_variable": "cpp",
 		"ratio": "cpp",
-		"cinttypes": "cpp"
+		"cinttypes": "cpp",
+		"climits": "cpp"
 	},
 	"files.eol": "\n",
 	"C/C++ Include Guard.Macro Type": "Filename",

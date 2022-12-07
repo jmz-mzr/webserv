@@ -1,6 +1,7 @@
 #include "core/AcceptSocket.hpp"
 
 #include <cerrno>
+#include <cstring>
 
 #include <fcntl.h>
 
@@ -22,16 +23,17 @@ namespace	webserv
 		_fd = accept(fdListened,
 				reinterpret_cast<struct sockaddr*>(&_addr), &_addrLen);
 		if (_fd < 0) {
-			throw FatalErrorException(errno, "accept() error: ");
+			LOG_DEBUG("ip=" << _ip << " port=" << _port);
+			THROW_FATAL("accept() error: " << strerror(errno));
 		}
 #ifdef MACOS
 		fcntl(_fd, F_SETFL, O_NONBLOCK);
 #endif
 		_port = ntohs(_addr.sin_port);
-		_ipAddr = ft_inet_ntoa(_addr.sin_addr);
+		_ip = ft_inet_ntoa(_addr.sin_addr);
 		setsockopt(_fd, SOL_SOCKET, SO_SNDBUF, &sendBufferSize, sizeof(int));
 		LOG_INFO("New accepted socket");
-		LOG_DEBUG("fd=" << _fd << " ; addr=" << _ipAddr << " ; port=" << _port);
+		LOG_DEBUG("fd=" << _fd << " ; addr=" << _ip << " ; port=" << _port);
 	}
 
 }	// namespace webserv

@@ -12,12 +12,9 @@
 
 namespace	webserv
 {
-
 	class	Server {
 	public:
-		typedef std::pair<const std::string, uint16_t>	listen_pair;
-
-		Server(const ServerConfig& serverConfig, const listen_pair& listenPair);
+		Server(const ServerConfig& serverConfig, const Address& listenPair);
 		Server(const Server& src);
 		~Server() { }
 
@@ -33,8 +30,8 @@ namespace	webserv
 
 		Server&	operator=(const Server& rhs);
 
-		ListenSocket				_socket;
-		std::vector<ServerConfig>	_configs;
+		ListenSocket					_socket;
+		std::vector<ServerConfig>		_configs;
 	};
 
 }	// namespace webserv

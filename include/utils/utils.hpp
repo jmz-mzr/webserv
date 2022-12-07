@@ -6,12 +6,11 @@
 
 # include <stddef.h>
 
-# include <netinet/in.h>
-
 namespace	webserv
 {
 
 	const char*	ft_inet_ntoa(struct in_addr in);
+	int			ft_inet_aton(const char *cp, struct in_addr *inp);
 	void		ft_sleep(double seconds);
 	bool		ft_charcmp_icase(const unsigned char c1,
 									const unsigned char c2);
@@ -29,6 +28,7 @@ namespace	webserv
 						s1.begin(), s1.end()));
 		}
 	};
+
 
 }	// namespace webserv
 

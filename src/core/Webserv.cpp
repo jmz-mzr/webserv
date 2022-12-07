@@ -57,7 +57,7 @@ namespace	webserv
 											const Server& server) const
 	{
 		std::vector<ServerConfig>::const_iterator	serverConfig;
-		std::vector<std::string>::const_iterator	name;
+		ServerConfig::hostname_set::const_iterator	name;
 
 		serverConfig = server.getConfigs().begin();
 		while (serverConfig != server.getConfigs().end()) {
@@ -73,20 +73,14 @@ namespace	webserv
 		}
 	}
 
-	bool	Webserv::_sameSocket(const listen_pair& listenPair,
+	bool	Webserv::_sameSocket(const Address& listenPair,
 									const Server& server) const
 	{
-		const std::string&	ipAddr = listenPair.first;
-		uint16_t			port = listenPair.second;
-
-		if (server.getSocket().getIpAddr() == ipAddr
-				&& server.getSocket().getPort() == port)
-			return (true);
-		return (false);
+		return (listenPair.id == server.getSocket().getId());
 	}
 
 	Webserv::server_iter
-		Webserv::_findSameSocket(const listen_pair& listenPair)
+		Webserv::_findSameSocket(const Address& listenPair)
 	{
 		std::vector<Server>::iterator	server = _servers.begin();
 
@@ -98,18 +92,16 @@ namespace	webserv
 		return (server);
 	}
 
-	void	Webserv::_addServer(const ServerConfig& serverConfig)
+	void	Webserv::_addServer(const Config& config)
 	{
-		std::vector<listen_pair>::const_iterator	listenPair;
-		server_iter				server;
-		struct pollfd			newPollFd;
+		Config::listen_set::const_iterator	listenPair;
+		server_iter							server;
+		struct pollfd						newPollFd;
 
-		listenPair = serverConfig.getListenPairs().begin();
-		while (listenPair != serverConfig.getListenPairs().end()) {
-			ServerConfig	newConfig(serverConfig);
+		listenPair = config.getListens().begin();
+		while (listenPair != config.getListens().end()) {
+			ServerConfig	newConfig(config, *listenPair);
 
-			newConfig.clearListenPairs();
-			newConfig.addListenPair(*listenPair);
 			server = _findSameSocket(*listenPair);
 			if (server != _servers.end()) {
 				_deleteRedundantNames(newConfig, *server);
@@ -125,14 +117,14 @@ namespace	webserv
 		}
 	}
 
-	void	Webserv::_loadServers(const ConfigParser& config)
+	void	Webserv::_loadServers(const std::list<Config>& config)
 	{
-		std::vector<ServerConfig>::const_iterator	serverConfig;
+		std::list<Config>::const_iterator	configIter;
 
-		serverConfig = config.getServerConfigs().begin();
-		while (serverConfig != config.getServerConfigs().end()) {
-			_addServer(*serverConfig);
-			++serverConfig;
+		configIter = config.begin();
+		while (configIter != config.end()) {
+			_addServer(*configIter);
+			++configIter;
 		}
 	}
 
@@ -141,16 +133,33 @@ namespace	webserv
 		std::cerr << "Usage: ./webserv [CONFIG FILE]" << std::endl;
 	}
 
+	// struct print {
+	// 	print() : depth(0) {}
+	// 	void operator()(const Config& confs)
+	// 	{
+	// 		for (int i = 0; i < depth; i++)
+	// 			std::cout << "\t";
+	// 		std::cout << confs;
+	// 		depth++;
+	// 		for (std::map<std::string, Config>::const_iterator it = confs.getConfigs().begin();
+	// 			it != confs.getConfigs().end();
+	// 			it++) {
+	// 			this->operator()(it->second);
+	// 			}
+	// 		depth--;
+	// 	}
+	// 	int depth;
+	// };
+
 	void	Webserv::init(int argc, char** argv)
 	{
 		if (argc > 2 || argc < 1) {
 			_usageHelper();
 			LOG_DEBUG("argc=" << argc);
-			throw LogicErrorException("Bad number of arguments");
+			THROW_LOGIC("Bad number of arguments");
 		} else {
 			ConfigParser config( (argc == 2) ? argv[1] : DEFAULT_CONF_FILE );
-			config.parseFile();
-			//_loadServers(config);
+			_loadServers(config.parseFile());
 		}
 	}
 

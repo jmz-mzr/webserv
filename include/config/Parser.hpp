@@ -10,6 +10,7 @@
 #include "config/Lexer.hpp"
 #include "config/Location.hpp"
 #include "config/ServerConfig.hpp"
+#include "core/Socket.hpp"
 #include "utils/utils.hpp"
 
 namespace	webserv {
@@ -86,10 +87,9 @@ namespace	config {
 		Parser();
 		~Parser() { };
 
-		void	operator()(Lexer::token_queue& tokens);
+		void						operator()(Lexer::token_queue& tokens);
 
-		void	createServer();
-		void	createLocation();
+		const std::list<Config>&	getConfigs() const { return (_configs); }
 
 	private:
 		std::list<Config>						_configs;
@@ -105,6 +105,10 @@ namespace	config {
 		void	_dupError(const std::string& str);
 		void	_contextError(const std::string& str);
 		void	_argcError(const std::string& str);
+
+		bool	_resolveHost(const std::string& str, uint16_t& port);
+		void	_parseListenUnit(const std::vector<std::string>& parts,
+									uint16_t& port, in_addr& ipAddr);
 
 		void	_addErrorPage(Directive& currDirective);
 		void	_setMaxBodySize(Directive& currDirective);
