@@ -392,7 +392,7 @@ void	Parser::_setIndex(Directive& currDirective)
 	LOG_DEBUG("_setIndex");
 }
 
-//TODO
+// TODO
 void	Parser::_setFastCgiPass(Directive& currDirective)
 {
 	(void)currDirective;
@@ -496,7 +496,7 @@ void	Parser::_addServerName(Directive& currDirective)
 	LOG_DEBUG("_addServerName");
 }
 
-//TODO: limit nested locations
+// TODO: limit nested locations
 void	Parser::_addLocation(Directive& currDirective)
 {
 	Config& serverConf = _currConfig.top().config;
