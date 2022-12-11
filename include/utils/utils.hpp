@@ -9,6 +9,8 @@
 
 # include <stddef.h>
 
+# include "core/Socket.hpp"
+
 namespace	webserv
 {
 
@@ -23,20 +25,15 @@ namespace	webserv
 	std::string trim_left(const std::string &s);
 	std::string trim_right(const std::string &s);
 	std::string	trim(const std::string& str);
+	void	initSockAddr(sockaddr_in& addr);
+	void	setSockAddr(sockaddr_in& addr, const in_addr_t ip, const uint16_t port);
+	void	copySockAddr(sockaddr_in& addr, const sockaddr_in& src);
 
 	struct location_compare {
 		bool	operator()(const std::string& s1, const std::string& s2) const
 		{
 			return (std::lexicographical_compare(s2.begin(), s2.end(),
 						s1.begin(), s1.end()));
-		}
-	};
-
-	struct listen_compare {
-		bool	operator()(const sockaddr_in& s1, const sockaddr_in& s2) const
-		{
-			return ((s1.sin_port < s2.sin_port)
-					|| (s1.sin_addr.s_addr < s2.sin_addr.s_addr));
 		}
 	};
 

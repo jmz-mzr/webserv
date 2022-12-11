@@ -41,7 +41,7 @@ namespace	webserv
 		void		_addServer(const Config& serverConfig);
 		server_iter	_findSameSocket(const sockaddr_in& listenPair);
 		bool		_sameSocket(const sockaddr_in& listenPair,
-								const Server& server) const;
+											const sockaddr_in& serverAddr) const;
 		void		_deleteRedundantNames(ServerConfig& serverConfig,
 											const Server& server) const;
 		void		_loadServers(const std::list<Config>& config);

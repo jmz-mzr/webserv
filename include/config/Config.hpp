@@ -35,7 +35,7 @@ namespace webserv {
 		void		setAutoIndex(bool b);
 		void		setIndex(const std::string& path);
 		void		setFastCgiPass(const std::string& path);
-		bool		addListen(const sockaddr_in& addr);
+		bool		addListenPair(const sockaddr_in& addr);
 		void		addServerName(const std::string& name);
 		Config&		addConfig(const std::string& path, const Config& config);
 

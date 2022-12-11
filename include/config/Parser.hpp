@@ -93,7 +93,9 @@ namespace	config {
 
 	private:
 		std::list<Config>						_configs;
-		std::stack<ConfigData>					_currConfig;
+		std::stack<ConfigData>					_configStack;
+		Config*									_currConfig;
+		Directive*								_currDirectivePtr;
 		std::set<std::string>					_methods;
 		std::map<std::string, DirectiveSyntax>	_grammar;
 
@@ -102,14 +104,16 @@ namespace	config {
 		void	_parseContext(const Directive& directive);
 		void	_parseDup(const Directive& directive);
 		void	_parseArgc(const Directive& directive);
+
+		void	_errorHandler(const std::string& error_msg);
 		void	_dupError(const std::string& str);
 		void	_contextError(const std::string& str);
 		void	_argcError(const std::string& str);
+		void	_listenError(const std::string& err);
 
-		bool	_resolveHost(const std::string& str, sockaddr_in& addr,
-									Config& conf);
-		bool	_parseListenUnit(const std::vector<std::string>& parts,
-									sockaddr_in& addr);
+		void	_parseHost(const std::string&, std::list<sockaddr_in>& );
+		void	_parseAddress(const std::string&, std::list<sockaddr_in>& );
+		int		_parsePort(const std::string&, std::list<sockaddr_in>& );
 
 		void	_addErrorPage(Directive& currDirective);
 		void	_setMaxBodySize(Directive& currDirective);

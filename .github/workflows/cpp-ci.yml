@@ -7,10 +7,7 @@ jobs:
     name: Build and run unit tests
     runs-on: ubuntu-latest
     steps:
-    - name: Install zsh
-      run: sudo apt-get update && sudo apt-get install zsh
     - name: Checkout repository
       uses: actions/checkout@v3
     - name: Run tests
-      shell: zsh {0}
       run: make test

@@ -53,11 +53,10 @@ void	Config::setIndex(const std::string& path)
 void	Config::setFastCgiPass(const std::string& path)
 { _fastCgiPass = path; }
 
-bool	Config::addListen(const sockaddr_in& addr)
-{
-	LOG_DEBUG(inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port));
-	return (_listens.insert(addr).second); 
-}
+bool	Config::addListenPair(const sockaddr_in& addr)
+{ 
+	LOG_DEBUG(ft_inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port));
+	return (_listens.insert(addr).second); }
 
 void	Config::addServerName(const std::string& name)
 { _serverNames.insert(name); }

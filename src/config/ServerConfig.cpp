@@ -5,6 +5,7 @@
 
 #include "config/ConfigParser.hpp"
 #include "utils/Logger.hpp"
+#include "utils/utils.hpp"
 
 namespace	webserv
 {
@@ -20,10 +21,7 @@ namespace	webserv
 	{
 		typedef Config::config_map::const_iterator	map_it;
 
-		memset(&_listenPair, 0, sizeof(sockaddr_in));
-		_listenPair.sin_addr.s_addr = listenPair.sin_addr.s_addr;
-		_listenPair.sin_family = listenPair.sin_family;
-		_listenPair.sin_port = listenPair.sin_port;
+		copySockAddr(_listenPair, listenPair);
 		if (_serverNames.empty())
 			_serverNames.insert("");
 		map_it configIt = src.getConfigs().begin();

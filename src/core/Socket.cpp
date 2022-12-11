@@ -1,7 +1,5 @@
 #include "core/Socket.hpp"
 
-#include <cstring>
-
 #include <unistd.h>
 
 #include "utils/exceptions.hpp"
@@ -19,27 +17,28 @@ namespace	webserv
 			: _type(t)
 			, _fd(-1)
 			, _addrLen(sizeof(_addr))
-	{
-		memset(&_addr, 0, _addrLen);
-	}
+	{ memset(&_addr, 0, _addrLen); }
 
 	Socket::Socket(const Type t, const sockaddr_in& address)
 			: _type(t)
 			, _fd(-1)
-			, _addrLen(sizeof(_addr))
-			, _port(ntohs(address.sin_port))
+			, _addrLen(sizeof(address))
 	{
 		memset(&_addr, 0, _addrLen);
-		_addr.sin_family = AF_INET;
-		_addr.sin_port = address.sin_port;
 		_addr.sin_addr.s_addr = address.sin_addr.s_addr;
+		_addr.sin_port = address.sin_port;
+		_addr.sin_family = address.sin_family;
+		_port = ntohs(_addr.sin_port);
+		_ip = ft_inet_ntoa(_addr.sin_addr);
+
 		if (_addr.sin_addr.s_addr == INADDR_NONE) {
+			LOG_DEBUG("ip=" << _ip << " port=" << _port);
 			THROW_FATAL("inet_addr() error: invalid IP address");
 		}
 		if ((_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+			LOG_DEBUG("ip=" << _ip << " port=" << _port);
 			THROW_FATAL("socket() error: " << strerror(errno));
 		}
-		_ip = ft_inet_ntoa(_addr.sin_addr);
 	}
 
 	Socket::Socket(const Socket& src)
@@ -71,5 +70,6 @@ namespace	webserv
 			}
 		}
 	}
+
 
 }	// namespace webserv
