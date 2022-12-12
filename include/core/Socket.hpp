@@ -43,6 +43,8 @@ namespace	webserv
 
 		void					closeFd();
 
+		friend std::ostream&	operator<<(std::ostream&, const Socket&);
+
 	protected:
 		explicit Socket(const Type t);
 		Socket(const Type t, const sockaddr_in& addr);

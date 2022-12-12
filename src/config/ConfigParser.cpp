@@ -30,11 +30,10 @@ ConfigParser::ConfigParser(const std::string& path)
 			LOG_WARN("Cannot open \"" << _filePath << "\"");
 			THROW_LOGIC("Loading configuration failed");
 		}
-		LOG_INFO("New ConfigParser instance with default configuration");
+		// LOG_INFO("New ConfigParser instance with default configuration");
 	} else {
-		LOG_INFO("New ConfigParser instance with provided configuration");
+		// LOG_INFO("New ConfigParser instance with provided configuration");
 	}
-	LOG_DEBUG("_filePath=" << _filePath);
 }
 
 ConfigParser::~ConfigParser()
@@ -78,7 +77,6 @@ const std::list<Config>&			ConfigParser::parseFile()
 		do {
 			if (_readline() == true) {
 				_lexer(_lineBuffer);
-				LOG_INFO(_lexer.getTokens());
 				_parser(_lexer.getTokens());
 			}
 		} while (_file.good());

@@ -17,16 +17,15 @@ namespace	webserv
 	{
 		if (bind(_fd, reinterpret_cast<sockaddr*>(&_addr), _addrLen) < 0) {
 			closeFd();
-			LOG_DEBUG("ip=" << _ip << " port=" << _port);
+			LOG_DEBUG(*this);
 			THROW_FATAL("bind() error: " << strerror(errno));
 		}
 		if (listen(_fd, _kListenBacklog) < 0) {
 			closeFd();
-			LOG_DEBUG("ip=" << _ip << " port=" << _port);
+			LOG_DEBUG(*this);
 			THROW_FATAL("listen() error: " << strerror(errno));
 		}
-		LOG_INFO("New listening socket on " << _ip << ":" << _port);
-		LOG_DEBUG("fd=" << _fd);
+		LOG_DEBUG(*this);
 	}
 
 /*	ListenSocket::ListenSocket(const std::string& ipAddr, uint16_t port):

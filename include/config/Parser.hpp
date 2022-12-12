@@ -106,9 +106,6 @@ namespace	config {
 		void	_parseArgc(const Directive& directive);
 
 		void	_errorHandler(const std::string& error_msg);
-		void	_dupError(const std::string& str);
-		void	_contextError(const std::string& str);
-		void	_argcError(const std::string& str);
 		void	_listenError(const std::string& err);
 
 		void	_parseHost(const std::string&, std::list<sockaddr_in>& );

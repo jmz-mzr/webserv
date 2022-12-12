@@ -74,7 +74,7 @@ namespace	webserv
 	}
 
 	bool	Webserv::_sameSocket(const sockaddr_in& listenPair,
-												const sockaddr_in& serverAddr) const
+										const sockaddr_in& serverAddr) const
 	{
 		return (listenPair.sin_port == serverAddr.sin_port &&
 				listenPair.sin_addr.s_addr == serverAddr.sin_addr.s_addr);
@@ -111,7 +111,6 @@ namespace	webserv
 				newPollFd.fd = _servers.back().getSocket().getFd();
 				newPollFd.events = POLLIN;
 				_pollFds.push_back(newPollFd);
-				LOG_INFO("Server added to Webserv");
 			}
 			++listenPair;
 		}
@@ -416,9 +415,11 @@ namespace	webserv
 			if (pollFd != _pollFds.end()) {
 				_showOtherRevents(pollFd, CLIENT);
 				received = _receiveClientRequest(*client, pollFd);
-				if (received > 0)
+				if (received > 0) {
+
 					_bufferAndSendMsg(*client);	// tmp exam version
-//					_handleClientRequest(*client);
+					// _handleClientRequest(*client);
+				}
 				if (received == 0 || _handleClientResponse(*client, pollFd)) {
 					client = _removeClient(client, pollFd);
 					continue ;

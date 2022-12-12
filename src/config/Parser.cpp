@@ -144,24 +144,7 @@ Parser::ConfigData::ConfigData(Type t, Config& conf) : type(t), config(conf)
 /******************************************************************************/
 
 void	Parser::_errorHandler(const std::string& error_msg)
-{
-	throw SyntaxErrorException(error_msg);
-}
-
-void	Parser::_dupError(const std::string& str)
-{
-	_errorHandler("\"" + str + "\" is duplicate");
-}
-
-void	Parser::_contextError(const std::string& str)
-{
-	_errorHandler("\"" + str + "\" directive is not allowed here");
-}
-
-void	Parser::_argcError(const std::string& str)
-{
-	_errorHandler("invalid number of arguments in \"" + str + "\" directive");
-}
+{ throw SyntaxErrorException(error_msg); }
 
 void	Parser::_listenError(const std::string& err)
 {
@@ -185,7 +168,7 @@ void	Parser::_parseType(const Directive& directive)
 		case Parser::kBlock :
 			if (directive.ctrlToken->type != Lexer::Token::kBlockStart) {
 				_errorHandler("directive \"" + directive.name
-											+ "\" has no opening \"{\"");
+												+ "\" has no opening \"{\"");
 			}
 			break;
 	}
@@ -198,20 +181,17 @@ void	Parser::_parseType(const Directive& directive)
  */
 void	Parser::_parseContext(const Directive& directive)
 {
-	switch (directive.syntax.rules & Parser::kContext) {
-		case Parser::kNoCtx :
-			if (!_configStack.empty())
-				_contextError(directive.syntax.str);
-			break;
-		case Parser::kLocCtx :
-			if (_configStack.empty() || _configStack.top().type != kLocation)
-				_contextError(directive.syntax.str);
-			break ;
-		case Parser::kServCtx :
-			if (_configStack.empty() || _configStack.top().type != kServer)
-				_contextError(directive.syntax.str);
-			break ;
+	int flag = (directive.syntax.rules & Parser::kContext);
+
+	if (flag & Parser::kNoCtx && _configStack.empty())
+		return ;
+	else if (!_configStack.empty()) {
+		if ((flag & Parser::kLocCtx && _configStack.top().type == kLocation)
+			|| (flag & Parser::kServCtx && _configStack.top().type == kServer))
+			return ;
 	}
+	_errorHandler("\"" + directive.syntax.str
+						+ "\" directive is not allowed here");
 }
 
 /**
@@ -225,11 +205,10 @@ void	Parser::_parseDup(const Directive& directive)
 
 	if (_configStack.top().isDefined[directive.syntax.type]) {
 		if (directive.syntax.type == kLocation) {
-			if (conf.find(directive.argv[0]) != conf.end())
-				_dupError(directive.syntax.str);
-		} else {
-			_dupError(directive.syntax.str);
+			if (conf.find(directive.argv[0]) == conf.end())
+				return ;
 		}
+		_errorHandler("\"" + directive.syntax.str + "\" is duplicate");
 	}
 }
 
@@ -240,11 +219,11 @@ void	Parser::_parseDup(const Directive& directive)
  */
 void	Parser::_parseArgc(const Directive& directive)
 {
-	if (directive.syntax.rules & Parser::kArgcStrict) {
-		if (directive.argv.size() != directive.syntax.argc)
-			_argcError(directive.syntax.str);
-	} else if (directive.argv.size() < directive.syntax.argc)
-		_argcError(directive.syntax.str);
+	if (((directive.syntax.rules & Parser::kArgcStrict)
+			&& (directive.argv.size() != directive.syntax.argc))
+		|| (directive.argv.size() < directive.syntax.argc))
+		_errorHandler("invalid number of arguments in \""
+						+ directive.syntax.str + "\" directive");
 }
 
 void	Parser::_parseDirective(it_t nameToken, it_t ctrlToken)
@@ -399,25 +378,30 @@ void	Parser::_setFastCgiPass(Directive& currDirective)
 // letters from a to z, the digits from 0 to 9, and the hyphen (-).
 // A hostname may not start with a hyphen. A bad host name should throw
 // "invalid host in "+=*&^%$!?<>" of the "listen" directive"
-void	Parser::_parseHost(const std::string& str, std::list<sockaddr_in>& addrList)
+void	Parser::_parseHost(const std::string& str,
+										std::list<sockaddr_in>& addrList)
 {
 	struct in_addr**	hostList;
 	struct hostent*		hent = gethostbyname(str.c_str());
+	in_port_t			port;
 
 	if (hent == NULL)
 		_listenError("host not found");
 	hostList = reinterpret_cast<struct in_addr**>(hent->h_addr_list);
+	port = addrList.back().sin_port;
+	addrList.pop_back();
 	for (int i = 0; hostList[i] != NULL; i++) {
 		sockaddr_in	addr;
 		initSockAddr(addr);
 		addr.sin_addr.s_addr = hostList[i]->s_addr;
-		addr.sin_port = addrList.front().sin_port;
+		addr.sin_port = port;
 		addr.sin_family = AF_INET;
 		addrList.push_back(addr);
 	}
 }
 
-void	Parser::_parseAddress(const std::string& str, std::list<sockaddr_in>& addrList)
+void	Parser::_parseAddress(const std::string& str,
+										std::list<sockaddr_in>& addrList)
 {
 	if (str.empty())
 		_listenError("no host");
@@ -432,20 +416,26 @@ void	Parser::_parseAddress(const std::string& str, std::list<sockaddr_in>& addrL
 	}
 }
 
-int		Parser::_parsePort(const std::string& str, std::list<sockaddr_in>& addrList)
+int		Parser::_parsePort(const std::string& str,
+									std::list<sockaddr_in>& addrList)
 {
+	sockaddr_in		addr;
 	uint16_t		port;
 	uint16_t		portMax = ((2 << 15) - 1);
 
 	if (std::find_if(str.begin(), str.end(), &isnotdigit) != str.end())
+	{
+		setSockAddr(addr, INADDR_ANY, 80);
+		addrList.push_back(addr);
 		return (-1);
-	port = strtoul(str.c_str(), NULL, 10);
-	if ((port == 0) || (port > portMax))
-		_listenError("invalid port");
-	sockaddr_in	addr;
-	setSockAddr(addr, INADDR_ANY, port);
-	addrList.push_back(addr);
-	return (0);
+	} else {
+		port = strtoul(str.c_str(), NULL, 10);
+		if ((port == 0) || (port > portMax))
+			_listenError("invalid port");
+		setSockAddr(addr, INADDR_ANY, port);
+		addrList.push_back(addr);
+		return (0);
+	}
 }
 
 void	Parser::_addListen(Directive& currDirective)

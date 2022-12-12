@@ -48,12 +48,7 @@ namespace	webserv
 			, _addrLen(src._addrLen)
 			, _ip(src._ip)
 			, _port(src._port)
-	{
-		LOG_INFO("Socket copied");
-		LOG_DEBUG("fd=" << _fd << " ; " 
-				<< "addr=" << _ip << " ; "
-				<< "port=" << _port);
-	}
+	{ }
 
 	/**************************************************************************/
 	/*                            MEMBER FUNCTIONS                            */

@@ -25,9 +25,11 @@ namespace	webserv
 	std::string trim_left(const std::string &s);
 	std::string trim_right(const std::string &s);
 	std::string	trim(const std::string& str);
-	void	initSockAddr(sockaddr_in& addr);
-	void	setSockAddr(sockaddr_in& addr, const in_addr_t ip, const uint16_t port);
-	void	copySockAddr(sockaddr_in& addr, const sockaddr_in& src);
+	void		initSockAddr(sockaddr_in& addr);
+	void		setSockAddr(sockaddr_in& addr, const in_addr_t ip,
+													const uint16_t port);
+	void		copySockAddr(sockaddr_in& addr, const sockaddr_in& src);
+	uint64_t	getSockAddrId(sockaddr_in& addr);
 
 	struct location_compare {
 		bool	operator()(const std::string& s1, const std::string& s2) const

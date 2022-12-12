@@ -8,6 +8,8 @@
 # include "utils/exceptions.hpp"
 # include "utils/Logger.hpp"
 
+#include "utils/utils.hpp"
+
 static void	handleSigInt(int signum)
 {
 	(void)signum;

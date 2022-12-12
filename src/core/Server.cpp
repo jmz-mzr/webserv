@@ -11,21 +11,11 @@ namespace	webserv
 	Server::Server(const ServerConfig& serverConfig, const sockaddr_in& listenPair)
 			: _socket(listenPair)
 			, _configs(1, serverConfig)
-	{
-		LOG_INFO("New Server instance");
-		LOG_DEBUG("fd=" << _socket.getFd() << " ; "
-				<< "addr=" << _socket.getIpAddr() << " ; "
-				<< "port=" << _socket.getPort());
-	}
+	{ }
 
 	Server::Server(const Server& src): _socket(src._socket),
 										_configs(src._configs)
-	{
-		LOG_INFO("Server copied");
-		LOG_DEBUG("fd=" << _socket.getFd() << " ; "
-				<< "addr=" << _socket.getIpAddr() << " ; "
-				<< "port=" << _socket.getPort());
-	}
+	{ }
 
 	/**************************************************************************/
 	/*                            MEMBER FUNCTIONS                            */
@@ -45,9 +35,15 @@ namespace	webserv
 	{
 		_configs.push_back(serverConfig);
 		LOG_INFO("ServerConfig added to a Server");
-		LOG_DEBUG("fd=" << _socket.getFd() << " ; "
-				<< "addr=" << _socket.getIpAddr() << " ; "
-				<< "port=" << _socket.getPort());
+		LOG_DEBUG(this);
+	}
+
+	std::ostream&	operator<<(std::ostream& os, const Socket& socket)
+	{
+		os << "fd=" << socket.getFd() << " ; "
+			<< "addr=" << socket.getIpAddr() << " ; "
+			<< "port=" << socket.getPort();
+		return (os);
 	}
 
 }	// namespace webserv
