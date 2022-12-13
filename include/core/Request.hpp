@@ -21,6 +21,10 @@ namespace	webserv
 
 		const std::string&		getRequestMethod() const
 										{ return (_requestMethod); }
+		const std::string&		getHost() const
+										{ return (_host); }
+		const ServerConfig*		getServerConfig() const
+										{ return (_serverConfig); }
 		const Location*			getLocation() const
 										{ return (_location); }
 
@@ -61,10 +65,11 @@ namespace	webserv
 		bool			_loadLocation(const ServerConfig& serverConfig);
 		bool			_loadExtensionLocation(const ServerConfig& serverConfig);
 		bool			_loadExtensionLocation(const Location& location);
-		int				_checkHeaders();
-		int				_checkHost();
-		int				_checkMaxBodySize();
-		int				_checkMethod();
+		int				_checkHeaders() const;
+		std::string		_getServerName() const;
+		int				_checkHost() const;
+		int				_checkMaxBodySize() const;
+		int				_checkMethod() const;
 
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;

@@ -40,7 +40,7 @@ namespace	webserv
 		void	prepareErrorResponse(int errorCode = 0);
 
 		void	clearRequest() { _request.clearRequest(); }
-		void	clearResponse() { _response.clearResponse(); }
+		void	clearResponse() { _response.clearResponse(_request); }
 
 		void	closeSocket() { _socket.closeFd(); }
 
