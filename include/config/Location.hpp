@@ -17,7 +17,7 @@ namespace	webserv
 	class	Location {
 	public:
 		typedef std::map<int, std::string>				error_page_map;
-		typedef std::set<std::string>					limit_except_set;
+		typedef std::set<std::string, strcmp_icase>		limit_except_set;
 		typedef std::pair<const int, std::string>		return_pair;
 		typedef std::map<std::string, Location,
 							location_compare>			locations_map;

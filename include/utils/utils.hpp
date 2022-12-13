@@ -37,6 +37,12 @@ namespace	webserv
 		}
 	};
 
+	struct strcmp_icase {
+		bool	operator()(const std::string& s1, const std::string& s2) const
+		{
+			return (ft_strcmp_icase(s1, s2));
+		}
+	};
 
 }	// namespace webserv
 

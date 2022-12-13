@@ -17,10 +17,10 @@ namespace webserv {
 	class Config {
 	public:
 		typedef std::pair<int, std::string>					return_pair;
-		typedef std::set<std::string>						limit_except_set;
+		typedef std::set<std::string, strcmp_icase>			limit_except_set;
 		typedef std::map<int, std::string>					error_page_map;
 		typedef std::map<std::string, Config>				config_map;
-		typedef std::set<std::string>						hostname_set;
+		typedef std::set<std::string, strcmp_icase>			hostname_set;
 		typedef std::set<sockaddr_in, listen_compare>		listen_set;
 
 		Config();

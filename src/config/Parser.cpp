@@ -322,7 +322,7 @@ void	Parser::_addErrorPage(Directive& currDirective)
 
 void	Parser::_setMaxBodySize(Directive& currDirective)
 {
-	uint		shift;
+	uint		shift = 0;
 	char*		unitPtr;
 	const char*	strPtr = currDirective.argv[0].c_str();
 	long long	size = strtoll(strPtr, &unitPtr, 10);
