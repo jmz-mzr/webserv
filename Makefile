@@ -5,17 +5,21 @@ include utils.mk
 #################
 
 NAME		=	webserv
+BUILD		?=	debug
 
 #>	DIRECTORIES
 SUBDIR		=	config core utils
-TESTDIR		=	test/src
-INCLDIR		:=	$(addprefix include/,$(LIBDIR)) include
-BUILDIR		=	build
+INCLDIR		=	include
+LIBDIR		=	lib/$(BUILD)
+BINDIR		=	bin/$(BUILD)
+BUILDIR		=	build/$(BUILD)
 DEPDIR		=	$(BUILDIR)/.deps
+TESTDIR		=	test
+ROOTDIR		:=	$(realpath .)
+INSTALL_DIR	:=	$(HOME)/.local
+VPATH		:=	$(addprefix src/,$(SUBDIR)) src
 
 #>	FILES
-VPATH		=	$(addprefix src/,$(SUBDIR)) src
-SRC			=	main.cpp
 CONFIG		=	Config.cpp \
 				ConfigParser.cpp \
 				Lexer.cpp \
@@ -40,36 +44,69 @@ UTILS		=	ft_charcmp_icase.cpp \
 				sockaddr_in.cpp \
 				Logger.cpp \
 				trim.cpp
+SRC			=	$(CORE) $(CONFIG) $(UTILS)
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
-TEST		:=	$(foreach file, $(wildcard $(TESTDIR)/*.cpp), $(notdir $(file)))
+BIN			=	$(BINDIR)/$(NAME)
+LIB			:=	$(LIBDIR)/lib$(NAME).a
+LOGFILE		=	$(NAME).log
 
 #>	COMPILATION FLAGS
-CXXFLAGS	=	-Wall -Wextra -Werror -std=c++98
-CXXFLAGS	+=	-DWEBSERV_ROOT=\"$(shell pwd)\"
-CPPFLAGS	:=	$(addprefix -I, $(INCLDIR))
-LDFLAGS		:=	$(addprefix -L, $(LIBDIR)) $(addprefix -l, $(LIB))
+CPPFLAGS	=	$(addprefix -I, $(INCLDIR)) -DWEBSERV_ROOT=\"$(ROOTDIR)\"
+CXXFLAGS	=	-Wall -Wextra -Werror
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$(*F).d
-
-ifeq (test,$(strip $(MAKECMDGOALS)))						# if testing
-	CXXFLAGS	+=	-fsanitize=address,undefined -fno-omit-frame-pointer -O1 -g3 -DCONF_LOG_OUT="Logger::kNone"
-	BIN			=	$(NAME).test
-	SRC			+=	$(TEST:%.test.cpp=%.cpp) $(TEST)
-	VPATH		+=	test/src
-else
-ifeq (debug,$(strip $(MAKECMDGOALS)))						# if debugging
-	CXXFLAGS	+=	-fsanitize=address,undefined -g3
-endif
-	CXXFLAGS 	+=	-DDOCTEST_CONFIG_DISABLE
-	BIN			=	$(NAME)
-	SRC			+=	$(CORE) $(CONFIG) $(UTILS)
-endif
 
 #>	ENVIRONMENT
 CXX			=	c++
+AR			=	/bin/ar rcs
 RM			=	/bin/rm -rf
 SHELL		:=	$(shell which bash)
 UNAME		:=	$(shell uname -s)
+
+ifneq ($(filter-out debug release,$(BUILD)),)
+  $(error '$(BUILD)' is not a correct value. Build options are 'debug' or 'release')
+endif
+ifeq (test,$(strip $(MAKECMDGOALS)))
+  override BUILD = debug
+  CXXFLAGS += -std=c++11
+else
+ifeq (install,$(strip $(MAKECMDGOALS)))
+  override BUILD = release
+endif
+  SRC += main.cpp
+  CXXFLAGS += -std=c++98
+endif
+ifeq ($(BUILD),debug)
+	CXXFLAGS += -fsanitize=address,undefined -Og \
+				-fstack-protector-all \
+				-Wshadow \
+				-Wnon-virtual-dtor \
+				-Wold-style-cast \
+				-Wcast-align \
+				-Wunused \
+				-Wpedantic \
+				-Wconversion \
+				-Wsign-conversion \
+				-Wnull-dereference \
+				-Wdouble-promotion \
+				-Wformat=2 \
+				-Wmisleading-indentation \
+				-Wduplicated-cond \
+				-Wduplicated-branches \
+				-Wlogical-op \
+				-Wuseless-cast
+else
+	CPPFLAGS += -DNDEBUG
+	CXXFLAGS += -O3 -march=native
+endif
+
+export DEPDIR
+export ROOTDIR
+export BUILDIR
+export INCLDIR
+export CPPFLAGS
+export CXXFLAGS
+export LIB
 
 #############
 ##> Rules <##
@@ -80,43 +117,57 @@ UNAME		:=	$(shell uname -s)
 all:			header $(BIN)
 
 $(BUILDIR)/%.o:	%.cpp | $(DEPDIR)
-				@$(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $(BUILDIR)/$(@F)
-				@printf "%9s► %-45s$(GRN)$(CHECK)$(RESET)\n" "" "$<"
+				@$(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+				@printf "%4s %-55s$(GRN)$(CHECK)$(RESET)\n" "" "./$<"
 
 $(DEPDIR):
-				@$(call print_title,COMPILE)
+				@$(call print_title,COMPILATING)
 				@mkdir -p $@
 
 -include $(wildcard $(DEP))
 
-$(BIN):			$(OBJ)
-				@$(call print_title,LINK)
-				@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^ $(LDFLAGS)
-				@printf "%9s► %-45s$(GRN)$(CHECK)$(RESET)\n" "" "./$@"
+$(BIN):			$(OBJ) | $(BINDIR)
+				@$(call print_title,LINKING)
+				@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^
+				@printf "%4s %-55s$(GRN)$(CHECK)$(RESET)\n" "" "./$@"
 				@printf "\n\n"
 
+$(BINDIR):
+				@mkdir -p $@
+
 clean:			header
-				@$(call print_title,DELETE)
-				@printf "%9s► "
-				$(RM) $(BUILDIR)
+				@$(call print_title,DELETING)
+				@printf "%4s "
+				$(RM) build
 ifeq (clean,$(MAKECMDGOALS))
 	@printf "\n\n"
 endif
 
 fclean:			clean
-				@printf "%9s► "
-				$(RM) $(NAME) $(NAME).test
+				@printf "%4s "
+				$(RM) lib bin $(LOGFILE)
 ifeq (fclean,$(MAKECMDGOALS))
 	@printf "\n\n"
 endif
 
+$(LIB):			$(OBJ) | $(LIBDIR)
+				@$(call print_title,ARCHIVING)
+				@$(AR) $@ $^
+				@printf "%4s %-55s$(GRN)$(CHECK)$(RESET)\n" "" "./$@"
+
+$(LIBDIR):
+				@mkdir -p $@
+
+install:		header $(BIN)
+				@$(call print_title,INSTALLING)
+				@cp $(BINDIR)/$(BIN) $(INSTALL_DIR)
+				@printf "%4s %s   ►   %s\n" "" "$(LIBDIR)/$(BIN)" "$(INSTALL_DIR)/$(BIN)"
+				@printf "\n\n"
+
 re:				fclean $(BIN)
 
-debug:			all
-
-test:			all
-				@chmod +x $(BIN)
-				@./$(BIN)
+test:			header $(LIB)
+				@$(MAKE) -sC $(TESTDIR)
 
 header:
 				@cat misc/header.txt

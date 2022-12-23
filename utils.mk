@@ -38,85 +38,85 @@ UHLINE		=	▄
 DHLINE		=	▀
 
 #>	Reset
-RESET		=	\e[0m
+RESET		=	\033[0m
 
 #>  Regular
-BLK			=	\e[0;30m
-RED			=	\e[0;31m
-GRN			=	\e[0;32m
-YEL			=	\e[0;33m
-BLU			=	\e[0;34m
-MAG			=	\e[0;35m
-CYN			=	\e[0;36m
-WHT			=	\e[0;37m
+BLK			=	\033[0;30m
+RED			=	\033[0;31m
+GRN			=	\033[0;32m
+YEL			=	\033[0;33m
+BLU			=	\033[0;34m
+MAG			=	\033[0;35m
+CYN			=	\033[0;36m
+WHT			=	\033[0;37m
 
 #>	Bold
-BBLK		=	\e[1;30m
-BRED		=	\e[1;31m
-BGRN		=	\e[1;32m
-BYEL		=	\e[1;33m
-BBLU		=	\e[1;34m
-BMAG		=	\e[1;35m
-BCYN		=	\e[1;36m
-BWHT		=	\e[1;37m
+BBLK		=	\033[1;30m
+BRED		=	\033[1;31m
+BGRN		=	\033[1;32m
+BYEL		=	\033[1;33m
+BBLU		=	\033[1;34m
+BMAG		=	\033[1;35m
+BCYN		=	\033[1;36m
+BWHT		=	\033[1;37m
 
 #>	Faint
-FBLK		=	\e[2;30m
-FRED		=	\e[2;31m
-FGRN		=	\e[2;32m
-FYEL		=	\e[2;33m
-FBLU		=	\e[2;34m
-FMAG		=	\e[2;35m
-FCYN		=	\e[2;36m
-FWHT		=	\e[2;37m
-FWHT2		=	\e[2;97m
+FBLK		=	\033[2;30m
+FRED		=	\033[2;31m
+FGRN		=	\033[2;32m
+FYEL		=	\033[2;33m
+FBLU		=	\033[2;34m
+FMAG		=	\033[2;35m
+FCYN		=	\033[2;36m
+FWHT		=	\033[2;37m
+FWHT2		=	\033[2;97m
 
 #>  Underline
-UBLK		=	\e[4;30m
-URED		=	\e[4;31m
-UGRN		=	\e[4;32m
-UYEL		=	\e[4;33m
-UBLU		=	\e[4;34m
-UMAG		=	\e[4;35m
-UCYN		=	\e[4;36m
-UWHT		=	\e[4;37m
+UBLK		=	\033[4;30m
+URED		=	\033[4;31m
+UGRN		=	\033[4;32m
+UYEL		=	\033[4;33m
+UBLU		=	\033[4;34m
+UMAG		=	\033[4;35m
+UCYN		=	\033[4;36m
+UWHT		=	\033[4;37m
 
 #>  Background
-BLKB		=	\e[40m
-REDB		=	\e[41m
-GRNB		=	\e[42m
-YELB		=	\e[43m
-BLUB		=	\e[44m
-MAGB		=	\e[45m
-CYNB		=	\e[46m
-WHTB		=	\e[47m
+BLKB		=	\033[40m
+REDB		=	\033[41m
+GRNB		=	\033[42m
+YELB		=	\033[43m
+BLUB		=	\033[44m
+MAGB		=	\033[45m
+CYNB		=	\033[46m
+WHTB		=	\033[47m
 
 #>  High intensity background
-BLKHB		=	\e[0;100m
-REDHB		=	\e[0;101m
-GRNHB		=	\e[0;102m
-YELHB		=	\e[0;103m
-BLUHB		=	\e[0;104m
-MAGHB		=	\e[0;105m
-CYNHB		=	\e[0;106m
-WHTHB		=	\e[0;107m
+BLKHB		=	\033[0;100m
+REDHB		=	\033[0;101m
+GRNHB		=	\033[0;102m
+YELHB		=	\033[0;103m
+BLUHB		=	\033[0;104m
+MAGHB		=	\033[0;105m
+CYNHB		=	\033[0;106m
+WHTHB		=	\033[0;107m
 
 #>	High intensity foreground
-HBLK		=	\e[0;90m
-HRED		=	\e[0;91m
-HGRN		=	\e[0;92m
-HYEL		=	\e[0;93m
-HBLU		=	\e[0;94m
-HMAG		=	\e[0;95m
-HCYN		=	\e[0;96m
-HWHT		=	\e[0;97m
+HBLK		=	\033[0;90m
+HRED		=	\033[0;91m
+HGRN		=	\033[0;92m
+HYEL		=	\033[0;93m
+HBLU		=	\033[0;94m
+HMAG		=	\033[0;95m
+HCYN		=	\033[0;96m
+HWHT		=	\033[0;97m
 
 #>	Bold high intensity foreground
-BHBLK		=	\e[1;90m
-BHRED		=	\e[1;91m
-BHGRN		=	\e[1;92m
-BHYEL		=	\e[1;93m
-BHBLU		=	\e[1;94m
-BHMAG		=	\e[1;95m
-BHCYN		=	\e[1;96m
-BHWHT		=	\e[1;97m
+BHBLK		=	\033[1;90m
+BHRED		=	\033[1;91m
+BHGRN		=	\033[1;92m
+BHYEL		=	\033[1;93m
+BHBLU		=	\033[1;94m
+BHMAG		=	\033[1;95m
+BHCYN		=	\033[1;96m
+BHWHT		=	\033[1;97m
