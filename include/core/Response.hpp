@@ -25,14 +25,16 @@ namespace	webserv
 		void	prepareResponse(Request& request);
 		void	prepareErrorResponse(Request& request, int errorCode = 0);
 
-		void	clearResponse(int responseCodeToKeep = 0);
+		void	clearResponse(const Request& request,
+								int responseCodeToKeep = 0);
 	private:
 		Response&	operator=(const Response& rhs);
 
+		bool				_loadReturn(Request& request);
 		bool				_loadErrorPage(Request& request);
 		void				_prepareChunkedResponse(Request& request);
 		void				_loadHeaders();
-		const std::string	_loadLocation();
+		const std::string	_loadLocation() const;
 
 		static const std::string&	_getResponseStatus(int responseCode);
 		static const std::string&	_getDate();

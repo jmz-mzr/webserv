@@ -24,7 +24,7 @@ namespace	webserv
 		typedef std::map<int, std::string>					error_page_map;
 		typedef std::map<std::string, Location,
 							location_compare>				location_map;
-		typedef std::set<std::string>						hostname_set;
+		typedef std::set<std::string, strcmp_icase>			hostname_set;
 
 		ServerConfig(const Config& src, const sockaddr_in& listenPair);
 		~ServerConfig() { }

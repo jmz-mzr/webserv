@@ -50,58 +50,66 @@ namespace	webserv
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 
-	int	Request::_checkHost()
+	std::string	Request::_getServerName() const
+	{
+		if (_serverConfig->getServerNames().begin()
+				== _serverConfig->getServerNames().end())
+			return (*_serverConfig->getServerNames().begin());
+		return ("");
+	}
+
+	int	Request::_checkHost() const
 	{
 		if (_host.empty()) {
-			// LOG_INFO("Client sent HTTP/1.1 request without \"Host\" header"
-			// 		<< " while reading client request headers, client: "
-			// 		<< _clientSocket.getIpAddr() << ":"
-			// 		<< _clientSocket.getPort() << ", server: "
-			// 		<< _serverConfig->getListenPair.ipAddr << ":"
-			// 		<< _serverConfig->getListenPair.port << " (\""
-			// 		<< _serverConfig->getServerNames()[0] << "\"), request: \""
-			// 		<< _requestLine << "\"");
+			LOG_INFO("Client sent HTTP/1.1 request without \"Host\" header"
+					<< " while reading client request headers, client: "
+					<< _clientSocket.getIpAddr() << ":"
+					<< _clientSocket.getPort() << ", server: "
+					<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
+					<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
+					<< " (\"" << _getServerName() << "\"), request: \""
+					<< _requestLine << "\"");
 			return (400);
 		}
 		return (0);
 	}
 
-	int Request::_checkMaxBodySize()
+	int Request::_checkMaxBodySize() const
 	{
 		LOG_DEBUG("Content-Length: " << _bodySize << ", max: "
 				<< _location->getMaxBodySize());
 		if (_bodySize > 0 && _bodySize > _location->getMaxBodySize()) {
-			// LOG_ERROR("Client intended to send too large body: " << _bodySize
-			// 		<< " bytes, client: " << _clientSocket.getIpAddr() << ":"
-			// 		<< _clientSocket.getPort() << ", server: "
-			// 		<< _serverConfig->getListenPairs()[0].first << ":"
-			// 		<< _serverConfig->getListenPairs()[0].second << " (\""
-			// 		<< _serverConfig->getServerNames()[0] << "\"), request: \""
-			// 		<< _requestLine << "\", host: \"" << _host << "\"");
+			LOG_ERROR("Client intended to send too large body: " << _bodySize
+					<< " bytes, client: " << _clientSocket.getIpAddr() << ":"
+					<< _clientSocket.getPort() << ", server: "
+					<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
+					<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
+					<< " (\"" << _getServerName() << "\"), request: \""
+					<< _requestLine << "\", host: \"" << _host << "\"");
 			return (413);
 		}
 		return (0);
 	}
 
-	int	Request::_checkMethod()
+	int	Request::_checkMethod() const
 	{
 		if (_requestMethod.empty())
 			return (405);
 		if (!_location->getLimitExcept().empty()
 				&& !_location->getLimitExcept().count(_requestMethod)) {
-			// LOG_ERROR("Access forbidden by rule, client: "
-			// 		<< _clientSocket.getIpAddr() << ":"
-			// 		<< _clientSocket.getPort() << ", server: "
-			// 		<< _serverConfig->getListenPair().ipAddr << ":"
-			// 		<< _serverConfig->getListenPair().port << " (\""
-			// 		<< _serverConfig->getServerNames().begin() << "\"), request: \""
-			// 		<< _requestLine << "\", host: \"" << _host << "\"");
+			LOG_ERROR("Access forbidden by rule, client: "
+					<< _clientSocket.getIpAddr() << ":"
+					<< _clientSocket.getPort() << ", server: "
+					<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
+					<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
+					<< " (\"" << _getServerName() << "\"), request: \""
+					<< _requestLine << "\", host: \"" << _host << "\"");
 			return (403);
 		}
 		return (0);
 	}
 
-	int	Request::_checkHeaders()
+	int	Request::_checkHeaders() const
 	{
 		int		responseCode;
 
@@ -182,7 +190,6 @@ namespace	webserv
 			++location;
 		}
 		LOG_ERROR("No suitable location found for uri: \"" << _uri << "\"");
-		clearRequest();
 		return (false);
 	}
 
@@ -198,7 +205,7 @@ namespace	webserv
 				if (ft_strcmp_icase(_host, *name) == 0) {
 					_serverConfig = &(*config);
 					LOG_DEBUG("Using server: \"" << *name << "\" (on \""
-							<< inet_ntoa(_serverConfig->getListenPair().sin_addr)
+							<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
 							<< ":"
 							<< ntohs(_serverConfig->getListenPair().sin_port)
 							<< "\")");
@@ -210,7 +217,7 @@ namespace	webserv
 		}
 		_serverConfig = &(serverConfigs[0]);
 		LOG_DEBUG("Using default server (on \""
-				<< inet_ntoa(_serverConfig->getListenPair().sin_addr) << ":"
+				<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr) << ":"
 				<< ntohs(_serverConfig->getListenPair().sin_port) << "\")");
 		return (_loadLocation(*_serverConfig));
 	}
@@ -272,13 +279,13 @@ namespace	webserv
 
 		_uri = requestTarget;
 		if (error) {
-			// LOG_INFO("Client sent invalid request while reading client request"
-			// 		<< " line, client: " << _clientSocket.getIpAddr() << ":"
-			// 		<< _clientSocket.getPort() << ", server: "
-			// 		<< _serverConfig->getListenPair().ipAddr << ":"
-			// 		<< _serverConfig->getListenPair().port << " (\""
-			// 		<< _serverConfig->getServerNames().begin() << "\"), request: \""
-			// 		<< _requestLine << "\"");
+			LOG_INFO("Client sent invalid request while reading client request"
+					<< " line, client: " << _clientSocket.getIpAddr() << ":"
+					<< _clientSocket.getPort() << ", server: "
+					<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
+					<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
+					<< " (\"" << _getServerName() << "\"), request: \""
+					<< _requestLine << "\"");
 			return (false);
 		}
 		return (true);

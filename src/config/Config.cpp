@@ -10,6 +10,7 @@ namespace webserv {
 
 Config::Config()
 		: _maxBodySize(0)
+		, _return(-1, "")
 		, _root("html")
 		, _index("index.html")
 		, _autoIndex(false)

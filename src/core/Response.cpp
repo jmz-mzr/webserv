@@ -66,7 +66,7 @@ namespace	webserv
 		return (true);
 	}
 
-	const std::string	Response::_loadLocation()
+	const std::string	Response::_loadLocation() const
 	{
 		std::string		location;
 
@@ -80,7 +80,7 @@ namespace	webserv
 
 	void	Response::_loadHeaders()
 	{
-		const char*			connection = isKeepAlive() ? "keep-alive" : "close";
+		const char*			connection = _isKeepAlive ? "keep-alive" : "close";
 		std::ostringstream	headers;
 
 		headers << "HTTP/1.1 " << _responseCode
@@ -122,7 +122,7 @@ namespace	webserv
 		// 		    return (_prepareChunkedResponse);
 		// 		  try {	// or try-catch in client?
 		// 		    load response [set Headers & Flags, code (if unset), check
-		// 		    	 request method (405 like if POST for GET), etc
+		// 		    	 request method (405 like if POST or G_ET for GET), etc
 		// 		  		 or set _isChunkedResponse and return (_prepareChunked)
 		// 		  		 if (response size > (SEND_BUFFER_SIZE || SO_SNDBUF))?]
 		// 		  } catch (const std::exception& e) {
@@ -136,6 +136,9 @@ namespace	webserv
 		// 		  set _isResponseReady;
 
 		(void)request;
+		if (request.getLocation()->getReturnPair().first >= 0)
+			return (prepareErrorResponse(request,
+						request.getLocation()->getReturnPair().first));
 	}
 
 	bool	Response::_loadErrorPage(Request& request)
@@ -164,6 +167,35 @@ namespace	webserv
 		return (false);
 	}
 
+	bool	Response::_loadReturn(Request& request)
+	{
+		int			returnCode = request.getLocation()->getReturnPair().first;
+		std::string	returnText = request.getLocation()->getReturnPair().second;
+		int			serverPort = ntohs(request.getServerConfig()
+												->getListenPair().sin_port);
+
+		if (returnCode == 444 && returnText.empty()) {
+			_isKeepAlive = false;
+			_isResponseReady = true;
+			return (true);
+		}
+		if (returnCode == 301 || returnCode == 302 || returnCode == 303
+				|| returnCode == 307 || returnCode == 308) {
+			if (!returnText.empty() && returnText[0] == '/') {
+				_location = std::string("http://") + request.getHost();
+				if (serverPort != 80)
+					_location += std::string(":") + STRINGIZE(serverPort);
+			}
+			_location += returnText;
+			return (false);
+		} else if (returnCode < 0 || returnText.empty())
+			return (false);
+		_loadHeaders();
+		_responseBuffer += returnText;
+		_isResponseReady = true;
+		return (true);
+	}
+
 	void	Response::prepareErrorResponse(Request& request, int errorCode)
 	{
 		const std::string*	specialBody = &Response::_getSpecialResponseBody(0);
@@ -172,9 +204,11 @@ namespace	webserv
 			errorCode = 500;
 		else if (errorCode == 0)
 			errorCode = _responseCode;
-		clearResponse(errorCode);
-		_isKeepAlive = (request.isKeepAlive() && isKeepAlive());
-		if (_loadErrorPage(request))
+		clearResponse(request, errorCode);
+		if (request.getLocation() && _loadReturn(request))
+			return ;
+		_isKeepAlive = isKeepAlive();
+		if (request.getLocation() && _loadErrorPage(request))
 			return ;
 		specialBody = &(Response::_getSpecialResponseBody(_responseCode));
 		if (!specialBody->empty()) {
@@ -186,7 +220,8 @@ namespace	webserv
 		_isResponseReady = true;
 	}
 
-	void	Response::clearResponse(int responseCodeToKeep)
+	void	Response::clearResponse(const Request& request,
+									int responseCodeToKeep)
 	{
 		// TO DO: clear requested file;	// with try-catch if necessary
 
@@ -194,7 +229,7 @@ namespace	webserv
 		_responseCode = responseCodeToKeep;
 		_contentType = "application/octet-stream";
 		_contentLength = 0;
-		_isKeepAlive = true;
+		_isKeepAlive = request.isKeepAlive();
 		_location.clear();
 		_isChunkedResponse = false;
 		_isResponseReady = false;
