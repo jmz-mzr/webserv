@@ -125,7 +125,7 @@ void	Lexer::operator()(const std::string& lineBuffer)
  * @param Lexer::Token 
  */
 bool			Lexer::isNotWord(Lexer::Token tk)
-{ return (tk.type != Lexer::Token::kWord); };
+{ return (tk.type != Lexer::Token::kWord); }
 
 std::ostream&	operator<<(std::ostream& os, const Lexer::token_queue& rhs)
 {

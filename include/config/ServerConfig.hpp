@@ -35,7 +35,7 @@ namespace	webserv
 													{ return (_serverNames); }
 		const error_page_map&			getErrorPages() const
 													{ return (_errorPages); }
-		const long long&				getMaxBodySize() const
+		const int64_t&				getMaxBodySize() const
 													{ return (_maxBodySize); }
 		const location_map&				getLocations() const
 													{ return (_locations); }
@@ -51,7 +51,7 @@ namespace	webserv
 		sockaddr_in					_listenPair;
 		hostname_set				_serverNames;
 		error_page_map				_errorPages;
-		long long					_maxBodySize;
+		int64_t					_maxBodySize;
 		location_map				_locations;
 	};
 

@@ -115,7 +115,7 @@ namespace	webserv
 
 		// TO DO: The Content-Length also limits the size of what is actually
 		// going to be processed from the body (even if it is longer)
-		long long			_bodySize;
+		int64_t			_bodySize;
 
 		bool				_isChunkedRequest;
 

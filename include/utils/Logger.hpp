@@ -5,6 +5,8 @@
 # include <fstream>
 # include <string>
 
+# include "webserv_config.hpp"
+
 # define LOG(level, msg)	{													 \
 	std::ostringstream stream;													 \
 	stream << msg;																 \
@@ -48,11 +50,12 @@ namespace	webserv
 			return (instance);
 		}
 
-		void	log(const std::string& file, int line,
-					int level, const std::string& msg);
+		void	log(const std::string& file, unsigned int line,
+						unsigned int level, const std::string& msg);
 
 		const std::ofstream&	getLogfile() const { return (_logfile); }
 		const OutputStream&		getOutputStream() const { return (_ostream); }
+
 	private:
 		Logger();
 		Logger(const Logger& src);

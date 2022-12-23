@@ -1,5 +1,3 @@
-#ifdef DOCTEST_CONFIG_DISABLE	// Compile without tests
-
 # include <csignal>
 # include <cstdlib>
 # include <iostream>
@@ -8,7 +6,7 @@
 # include "utils/exceptions.hpp"
 # include "utils/Logger.hpp"
 
-#include "utils/utils.hpp"
+# include "utils/utils.hpp"
 
 static void	handleSigInt(int signum)
 {
@@ -18,6 +16,7 @@ static void	handleSigInt(int signum)
 	LOG_INFO("SIGINT received");
 }
 
+#include <iostream>
 int	main(int argc, char** argv) try
 {
 	webserv::Webserv	webserv;
@@ -28,14 +27,7 @@ int	main(int argc, char** argv) try
 	std::signal(SIGINT, handleSigInt);
 	webserv.run();
 	return (EXIT_SUCCESS);
-} catch (...) {
+} catch (const std::exception& e) {
+	std::cout << e.what() << std::endl;
 	return (EXIT_FAILURE);
 }
-
-#else	// Generate a main function for testing
-
-# define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-# define DOCTEST_CONFIG_SUPER_FAST_ASSERTS //! undef if using debugger
-# include "doctest/doctest.h"
-
-#endif

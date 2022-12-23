@@ -126,10 +126,10 @@ Parser::Parser()
 	_methods.insert("delete");
 }
 
-Parser::Directive::Directive(it_t& first, it_t& last, DirectiveSyntax& syntax)
+Parser::Directive::Directive(it_t& first, it_t& last, DirectiveSyntax& s)
 		: name(first->value)
 		, ctrlToken(last)
-		, syntax(syntax)
+		, syntax(s)
 {
 	while (++first != last) {
 		argv.push_back(first->value);
@@ -295,7 +295,7 @@ void	Parser::_addErrorPage(Directive& currDirective)
 		if ((errorCode < 300) || (errorCode > 599)) {
 			_errorHandler("value \"" + (*it) + "\" must be between 300 and 599");
 		}
-		_currConfig->addErrorPage(errorCode, uri);
+		_currConfig->addErrorPage(static_cast<int>(errorCode), uri);
 	}
 }
 
@@ -304,7 +304,7 @@ void	Parser::_setMaxBodySize(Directive& currDirective)
 	uint		shift;
 	char*		unitPtr;
 	const char*	strPtr = currDirective.argv[0].c_str();
-	long long	size = strtoll(strPtr, &unitPtr, 10);
+	int64_t	size = strtoll(strPtr, &unitPtr, 10);
 
 	if ((unitPtr == strPtr) || (strlen(unitPtr) > 1) || (size < 0))
 		_errorHandler("\"client_max_body_size\" directive invalid value");
@@ -429,7 +429,7 @@ int		Parser::_parsePort(const std::string& str,
 		addrList.push_back(addr);
 		return (-1);
 	} else {
-		port = strtoul(str.c_str(), NULL, 10);
+		port = static_cast<uint16_t>(strtoul(str.c_str(), NULL, 10));
 		if ((port == 0) || (port > portMax))
 			_listenError("invalid port");
 		setSockAddr(addr, INADDR_ANY, port);

@@ -22,7 +22,7 @@ namespace	config {
 				kCtrlToken = 4,		// 00000100
 				kBlockStart = 5,	// 00000101
 				kBlockEnd = 6,		// 00000110
-				kDirectiveEnd = 7,	// 00000111
+				kDirectiveEnd = 7	// 00000111
 			};
 
 			Token(Type t, std::string v) : type(t), value(v) {}

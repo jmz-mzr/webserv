@@ -27,7 +27,7 @@ namespace	webserv
 		~Location() { }
 
 		const error_page_map&	getErrorPages() const { return (_errorPages); }
-		const long long&		getMaxBodySize() const { return (_maxBodySize);}
+		const int64_t&		getMaxBodySize() const { return (_maxBodySize);}
 
 		const limit_except_set&	getLimitExcept() const { return (_limitExcept);}
 		const return_pair&		getReturnPair() const { return (_return); }
@@ -43,7 +43,7 @@ namespace	webserv
 
 		Location&	operator=(const Location& rhs);
 
-		long long				_maxBodySize;
+		int64_t				_maxBodySize;
 		limit_except_set		_limitExcept;
 		return_pair				_return;
 		std::string				_fastCgiPass;

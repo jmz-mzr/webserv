@@ -28,7 +28,7 @@ namespace webserv {
 		~Config() {}
 
 		void		addErrorPage(const int status, const std::string& uri);
-		void		setMaxBodySize(const long long size);
+		void		setMaxBodySize(const int64_t size);
 		void		addLimitExcept(const std::string& method);
 		void		setReturnPair(const return_pair& returnPair);
 		void		setRoot(const std::string& path);
@@ -42,7 +42,7 @@ namespace webserv {
 		const listen_set&		getListens() const { return (_listens); }
 		const hostname_set&		getServerNames() const { return (_serverNames);}
 		const error_page_map&	getErrorPages() const { return (_errorPages); }
-		const long long&		getMaxBodySize() const { return (_maxBodySize);}
+		const int64_t&		getMaxBodySize() const { return (_maxBodySize);}
 
 		const limit_except_set&	getLimitExcept() const { return (_limitExcept);}
 		const return_pair&		getReturnPair() const { return (_return); }
@@ -111,7 +111,7 @@ namespace webserv {
 		// in /usr/local/etc/nginx/nginx.conf:114')
 		// 5) If the definition was inherited from the Config, the first
 		// definition line replaces it
-		long long					_maxBodySize;
+		int64_t					_maxBodySize;
 
 		// Same as with NGINX -> if the set is not empty, and the
 		// method is not in the set, we deny the access and return a 403

@@ -6,8 +6,6 @@
 #include "utils/ansi_colors.hpp"
 #include "utils/bitwise_op.hpp"
 
-#include "doctest/doctest.h"
-
 namespace	webserv
 {
 
@@ -17,7 +15,7 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Logger::Logger(): _threshold(CONF_LOG_LVL), _ostream(CONF_LOG_OUT)
+	Logger::Logger(): _threshold(LOG_LEVEL), _ostream(LOG_OSTREAM)
 	{
 		_cc[0].str = "EMERG", _cc[0].color = HMAG;
 		_cc[1].str = "ERROR", _cc[1].color = HRED;
@@ -26,9 +24,9 @@ namespace	webserv
 		_cc[4].str = "DEBUG", _cc[4].color = HCYN;
 		if (_ostream & kFile)
 		{
-			_logfile.open(CONF_LOG_FILE);
+			_logfile.open(LOG_FILE);
 			if (!(_logfile.good())) {
-				LOG_WARN("Cannot open \"" << CONF_LOG_FILE << "\", ignored");
+				LOG_WARN("Cannot open \"" << LOG_FILE << "\", ignored");
 				_ostream &= ~kFile;
 			}
 		}
@@ -39,9 +37,9 @@ namespace	webserv
 		if (_logfile.is_open()) {
 			_logfile.close();
 			if (!(_logfile.good())) {
-				LOG_WARN("close(" << _logfile << ") failed");
+				LOG_WARN("close(" << LOG_FILE << ") failed");
 			} else {
-				LOG_INFO("close(" << CONF_LOG_FILE << ")");
+				LOG_INFO("close(" << LOG_FILE << ")");
 			}
 		}
 	}
@@ -50,8 +48,8 @@ namespace	webserv
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 
-	void	Logger::log(const std::string& file, int line,
-						int level, const std::string& msg)
+	void	Logger::log(const std::string& file, unsigned int line,
+						unsigned int level, const std::string& msg)
 	{
 		std::ostringstream	stream;
 		std::string			output;

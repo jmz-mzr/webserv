@@ -44,7 +44,7 @@ namespace	webserv
 		int				_responseCode;
 		// TO DO: Becomes "text/html" when _autoIndex, _specialResponseBody
 		std::string		_contentType;
-		long long		_contentLength;
+		int64_t		_contentLength;
 		bool			_isKeepAlive;
 		// The "Location" header if (201 if created?)/301/302/303/307/308
 		std::string		_location;

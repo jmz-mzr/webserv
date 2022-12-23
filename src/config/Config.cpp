@@ -32,7 +32,7 @@ Config::Config(const Config& src)
 void	Config::addErrorPage(const int status, const std::string& uri)
 { _errorPages.insert(std::make_pair(status, uri)); }
 
-void	Config::setMaxBodySize(const long long size)
+void	Config::setMaxBodySize(const int64_t size)
 { _maxBodySize = size; }
 
 void	Config::addLimitExcept(const std::string& method)

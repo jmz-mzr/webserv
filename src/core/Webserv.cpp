@@ -228,11 +228,11 @@ namespace	webserv
 		size_t	i;
 
 		if (hint < _pollFds.size() && _pollFds[hint].fd == fdToFind)
-			return (_pollFds.begin() + hint);
+			return (_pollFds.begin() + static_cast<long>(hint));
 		i = 0;
 		while (i < _pollFds.size()) {
 			if (_pollFds[i].fd == fdToFind)
-				return (_pollFds.begin() + i);
+				return (_pollFds.begin() + static_cast<long>(i));
 			++i;
 		}
 		LOG_ERROR("Unable to find " << object << " (fd="
@@ -260,7 +260,7 @@ namespace	webserv
 		std::vector<struct pollfd>::iterator	pollFd;
 
 		for (size_t i = 0; i < _servers.size(); ++i) {
-			server = _servers.begin() + i;
+			server = _servers.begin() + static_cast<long>(i);
 			pollFd = _findPollFd(server->getSocket().getFd(), i, SERVER);
 			if (pollFd == _pollFds.end())
 				continue ;
@@ -363,7 +363,7 @@ namespace	webserv
 		for (int retry = 3; retry > 0; --retry) {
 			sent = send(clientFd, buff + totalSent, len - totalSent, _ioFlags);
 			if (sent > 0)
-				totalSent += sent;
+				totalSent += static_cast<size_t>(sent);
 			if (totalSent == len)
 				return (true);
 			if (sent < 0 || totalSent != len) {

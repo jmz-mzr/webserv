@@ -179,7 +179,7 @@ namespace	webserv
 		specialBody = &(Response::_getSpecialResponseBody(_responseCode));
 		if (!specialBody->empty()) {
 			_contentType = "text/html";
-			_contentLength = specialBody->length();
+			_contentLength = static_cast<int64_t>(specialBody->length());
 		}
 		_loadHeaders();
 		_responseBuffer += *specialBody;
