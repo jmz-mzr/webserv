@@ -26,7 +26,7 @@ std::array<std::string, 3>	trimFnNames = {
 	"trim"
 };
 
-class	TrimTest : public testing::TestWithParam<std::tuple<size_t, size_t> > {
+class	TrimFn : public testing::TestWithParam<std::tuple<size_t, size_t> > {
 public:
 	typedef std::string (*trim_fn)(const std::string&);
 
@@ -41,7 +41,7 @@ public:
 
 	static void SetUpTestSuite() {
 
-		TrimTest::strings = {
+		TrimFn::strings = {
 			" \t \n \r \f \v",
 			"   \t \n \r \f \v?<>@#",
 			"test  \r\r\r \f\v",
@@ -50,7 +50,7 @@ public:
 			"\b\x0e\x1f\x7F"
 		};
 
-		TrimTest::results[size_t(Side::left)] = {
+		TrimFn::results[size_t(Side::left)] = {
 			"",
 			"?<>@#",
 			"test  \r\r\r \f\v",
@@ -59,7 +59,7 @@ public:
 			"\b\x0e\x1f\x7F"
 		};
 
-		TrimTest::results[size_t(Side::right)] = {
+		TrimFn::results[size_t(Side::right)] = {
 			"",
 			"   \t \n \r \f \v?<>@#",
 			"test",
@@ -68,7 +68,7 @@ public:
 			"\b\x0e\x1f\x7F"
 		};
 
-		TrimTest::results[size_t(Side::both)] = {
+		TrimFn::results[size_t(Side::both)] = {
 			"",
 			"?<>@#",
 			"test",
@@ -77,9 +77,9 @@ public:
 			"\b\x0e\x1f\x7F"
 		};
 
-		TrimTest::fnData[size_t(Side::left)] = { &trimLeft, "trimLeft()" };
-		TrimTest::fnData[size_t(Side::right)] = { &trimRight, "trimRight()" };
-		TrimTest::fnData[size_t(Side::both)] = { &trim, "trim()" };
+		TrimFn::fnData[size_t(Side::left)] = { &trimLeft, "trimLeft()" };
+		TrimFn::fnData[size_t(Side::right)] = { &trimRight, "trimRight()" };
+		TrimFn::fnData[size_t(Side::both)] = { &trim, "trim()" };
 	}
 
 protected:
@@ -92,36 +92,30 @@ protected:
 		size_t	trimType = std::get<0>(GetParam());
 		size_t	testIndex = std::get<1>(GetParam());
 
-		fn = TrimTest::fnData[trimType].fnPtr;
-		str = TrimTest::strings[testIndex];
-		res = TrimTest::results[trimType][testIndex];
+		fn = TrimFn::fnData[trimType].fnPtr;
+		str = TrimFn::strings[testIndex];
+		res = TrimFn::results[trimType][testIndex];
 	}
 
 };
 
-std::array<TrimTest::Data, 3>				TrimTest::fnData;
-std::array<std::string, 6>					TrimTest::strings;
-std::array<std::array<std::string, 6>, 3>	TrimTest::results;
+std::array<TrimFn::Data, 3>					TrimFn::fnData;
+std::array<std::string, 6>					TrimFn::strings;
+std::array<std::array<std::string, 6>, 3>	TrimFn::results;
 
-TEST_P(TrimTest, )
+TEST_P(TrimFn, test)
 {
 	EXPECT_EQ(fn(str), res);
 }
 
 INSTANTIATE_TEST_SUITE_P(
-	, TrimTest,
+	, TrimFn,
 	testing::Combine(
 		testing::Values(Side::left, Side::right, Side::both),
 		testing::Range(0UL, testNames.size(), 1)
 	),
-	[](const testing::TestParamInfo<TrimTest::ParamType>& inf) {
+	[](const testing::TestParamInfo<TrimFn::ParamType>& inf) {
 		std::string name = trimFnNames[std::get<0>(inf.param)]
 							+ "_" + testNames[std::get<1>(inf.param)];
 		return name;
 });
-
-int main(int argc, char **argv)
-{
-	testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
-}

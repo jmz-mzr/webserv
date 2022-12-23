@@ -33,6 +33,11 @@
 *.app
 webser*
 
+# Makefile tmp
+.title
+.header
+.info
+
 # Temp files
 *.swp
 
@@ -41,7 +46,6 @@ webser*
 
 # Log files
 *.log
-test.cpp
 
 [Bb]uild/*
 [Dd]ocs/*

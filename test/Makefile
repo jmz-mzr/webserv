@@ -4,24 +4,27 @@
 #################
 
 #>	DIRECTORIES
-INCLDIR		:=	$(addprefix $(ROOTDIR)/,$(INCLDIR)) /usr/local/include/gtest
-BUILDIR		:=	$(addprefix $(ROOTDIR)/,$(BUILDIR))
-DEPDIR		:=	$(addprefix $(ROOTDIR)/,$(DEPDIR))
+INCLDIR		:=	$(addprefix $(WORKDIR)/,$(INCLDIR)) /usr/local/include/gtest
+BUILDIR		:=	$(addprefix $(WORKDIR)/,$(BUILDIR))
+DEPDIR		:=	$(addprefix $(WORKDIR)/,$(DEPDIR))
 VPATH		=	src
 
 #>	FILES
-BIN			=	$(NAME).test
-GTEST		=	/usr/local/lib/libgtest_main.a /usr/local/lib/libgtest.a
-SRC			=	trim_test.cpp
+BIN			=	$(WORKDIR)/$(NAME)_test
+SRC			=	trim_test.cpp \
+				Logger_test.cpp
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
-LIB			:=	$(addprefix $(ROOTDIR)/,$(LIB))
+LIB			:=	$(addprefix $(WORKDIR)/,$(LIB))
+GTEST		:=	$(addprefix $(LIBDIR)/, libgtest_main.a libgtest.a)
 
-include $(ROOTDIR)/utils.mk
+include $(WORKDIR)/utils.mk
+
+override BUILD = debug
 
 #>	COMPILATION FLAGS
-CPPFLAGS	+=	$(addprefix -I, $(INCLDIR)) -DCONF_LOG_OUT="Logger::kNone" 
-CXXFLAGS	+=	-fsanitize=address,undefined -fno-omit-frame-pointer
+CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
+CXXFLAGS	+=	-std=c++11 -fsanitize=address,undefined -fno-omit-frame-pointer
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$(*F).d
 LDDFLAGS	=	$(LIB) $(GTEST) -pthread
 
@@ -36,21 +39,23 @@ UNAME		:=	$(shell uname -s)
 ##> Rules <##
 #############
 
-.PHONY:			all clean fclean header
+.PHONY:			all clean fclean
 
 all:			$(BIN)
 
-$(BUILDIR)/%.o:	%.cpp | $(DEPDIR)
+$(BUILDIR)/%.o:	%.cpp
 				@$(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
-				@printf "%4s %-55s$(GRN)$(CHECK)$(RESET)\n" "" "./$<"
+				@printf "%4s%-30s$(GRN)$(CHECK)$(RESET)\n" "" "test/$<"
 
 -include $(wildcard $(DEP))
 
-$(BIN):			$(OBJ)
+$(BIN):			.title $(OBJ)
+				@touch .title
 				@$(call print_title,LINKING)
 				@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^ $(LDDFLAGS)
-				@printf "%3s %-55s$(GRN)$(CHECK)$(RESET)\n" "" "./$(BIN)"
+				@printf "%4s%-30s$(GRN)$(CHECK)$(RESET)\n" "" "$(@F)"
 				@printf "\n\n"
-				@chmod +x $(BIN)
-				@$(call print_title,TESTING)
-				@./$(BIN)
+
+.title:			$(wildcard $(BUILDIR)/*.o)
+				@$(call print_title,COMPILING)
+				@touch $@

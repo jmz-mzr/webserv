@@ -1,18 +1,26 @@
 #>	DISPLAY
-WIDTH		=	48
-PAD1		=	$(shell printf '$(PAD_CHAR3)%.0s' {1..4})
-PAD2		=	$(shell printf '$(PAD_CHAR2)%.0s' {1..9})
-PAD3		=	$(shell printf '$(PAD_CHAR1)%.0s' {1..20})
-PAD			=	$(PAD1)$(PAD2)$(PAD3)
-HLINE		=	$(shell printf '═%.0s' {0..64})
-
-define print_title =
-@printf '\n$(PAD)$(WHTB)$(BBLK)%-*s$(1) $(RESET)╗\n╚$(HLINE)╝\n' $(shell NAME='$(1)'; echo "32 - "$${#NAME}"" | bc)
-endef
+SHADOW		=	$(shell printf '─%.0s' {0..21})
+SEP1		=	$(shell printf '$(PAD_CHAR3)%.0s' {0..41})
+SEP2		=	$(shell printf '⸻%.0s' {1..36})
 
 #>	FUNCTIONS
-rwildcard	=	$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 VARS		=	$(foreach var,$(.VARIABLES),$(info $(var) = $($(var))))
+rwildcard	=	$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+
+define print_title =
+$(eval PAD_LEN = $(shell NAME=$(1) ;  echo "x ="$${#NAME}" ; ((21 - x) / 2)" | bc))
+@printf '\n\n'
+@printf '%*s$(FWHT)╔═════════════════════╗$(RESET)\n' 42 ''
+@printf '$(SEP1)$(FWHT)║%*s$(WHT)$(1)%*s$(FWHT)╟─┐$(RESET)\n' $(PAD_LEN) '' $(shell NAME=$(1) ; echo "if (!("$${#NAME}" % 2)) $(PAD_LEN) + 1 else $(PAD_LEN)" | bc) ''
+@printf '%*s$(FWHT)╚╤════════════════════╝ │$(RESET)\n' 42 ''
+@printf '%*s $(FWHT)└$(SHADOW)┘$(RESET)\n' 42 ''
+endef
+
+define print_str_format_width =
+echo -e '$(shell read -a array <<< "$(1)";curr="";for line in $${array[@]}; do if (( $${#curr} > $(2) )); then echo "\t\t$${curr}\n";curr="";else curr+="$${line} ";fi;done;if [[ -n $${curr} ]]; then echo "\t\t$${curr}\n";fi)'
+endef
+
+#> 🡆🡆⮞⮞
 
 #>	TERMCAPS
 UP			=	\033[1A
@@ -36,6 +44,8 @@ RVERT		=	▐
 LVERT		=	▌
 UHLINE		=	▄
 DHLINE		=	▀
+
+REVERSE		=	\033[7m
 
 #>	Reset
 RESET		=	\033[0m

@@ -1,26 +1,31 @@
 #ifndef WEBSERV_CONFIG_HPP
 # define WEBSERV_CONFIG_HPP
 
-# ifndef CONF_LOG_LVL
-#  define CONF_LOG_LVL		webserv::Logger::kDebug
+//TODO:	use configure and autoheader to populate this file
+
+# ifndef LOG_LEVEL
+#  define LOG_LEVEL			webserv::Logger::kDebug
 # endif
 
-# ifndef CONF_LOG_OUT
-#  define CONF_LOG_OUT		webserv::Logger::kBoth
+# ifndef LOG_OSTREAM
+#  define LOG_OSTREAM		webserv::Logger::kBoth
 # endif
 
-# define CONF_LOG_FILE		"webserv.log"
+//TODO: use /var/log dir for the logfile
+# if defined(LOG_OSTREAM) && !defined(LOG_FILE)
+#  define LOG_FILE			"webserv.log"
+# endif
 
-# define DEFAULT_CONF_FILE	"config/default.conf"
+//! this define doesn't work if package not installed yet
+//! I'm using a temporary value until I fix this
+# ifndef DEFAULT_CONF_FILE
+#  define DEFAULT_CONF_FILE	"conf/test.conf"
+# endif
 
 # define RECV_BUFFER_SIZE	8192
 //# define SEND_BUFFER_SIZE	81920
 # define SEND_BUFFER_SIZE	524288	// 500KB
 //# define SEND_BUFFER_SIZE	1048576	// 1MB
-
-# ifndef WEBSERV_ROOT
-#  define WEBSERV_ROOT		"/usr/local/var/www"
-# endif
 
 # if (defined(__GLIBCXX__) || defined(__GLIBCPP__))
 #  define MACOS
