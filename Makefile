@@ -103,11 +103,13 @@ ifeq (debug,$(BUILD))
 				-Wnull-dereference \
 				-Wdouble-promotion \
 				-Wformat=2 \
-				-Wmisleading-indentation \
-				-Wduplicated-cond \
+				-Wmisleading-indentation
+ifeq (Linux,$(UNAME))
+  CXXFLAGS +=	-Wduplicated-cond \
 				-Wduplicated-branches \
 				-Wlogical-op \
 				-Wuseless-cast
+endif
   CPPFLAGS +=	-DNDEBUG -DLOG_LEVEL=webserv::Logger::kDebug \
   				-DLOG_FILE=webserv.log
 else
