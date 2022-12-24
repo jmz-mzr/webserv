@@ -1,28 +1,29 @@
-FROM	gcc:latest
+FROM		debian:latest
 
-WORKDIR	/usr/src/googletest/
+RUN			apt-get update && apt-get install -y \
+			bc \
+			cmake \
+			coreutils \
+			git \
+			g++ \
+&&			rm -rf /var/lib/apt/lists/*
 
-RUN		apt-get update \
-&&		apt-get install --no-install-recommends cmake \
-&&		apt-get clean \
-&&		rm -rf /var/lib/apt/lists/*
+WORKDIR		/usr/src
 
-RUN		git clone https://github.com/google/googletest.git -b release-1.12.1
-RUN		mkdir googletest/build
+RUN			git clone https://github.com/google/googletest.git -b release-1.12.1
 
-WORKDIR	/usr/src/googletest/build
+WORKDIR		/usr/src/googletest/build
 
-RUN		cmake .. -DBUILD_GMOCK=OFF\
-&&		make \
-&&		make install \
-&&		rm -rf /usr/src/googletest
+RUN			cmake .. -DBUILD_GMOCK=OFF \
+&&			make \
+&&			make install
 
-WORKDIR	/usr/src/webserv
+WORKDIR		/usr/src/webserv
 
-COPY	. .
+COPY		. .
 
-RUN 	mkdir 
-RUN		make test
-RUN		make install
+RUN			make test \
+&&			make fclean \
+&&			make install
 
-CMD		[ "webserv" ]
+ENTRYPOINT [ "webserv" ]

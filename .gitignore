@@ -35,7 +35,6 @@ webser*
 
 # Makefile tmp
 .title
-.header
 .info
 
 # Temp files

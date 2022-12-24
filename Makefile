@@ -17,14 +17,16 @@ TESTDIR		=	test
 WORKDIR		:=	$(realpath .)
 
 ifeq ($(PREFIX),)
-  PREFIX := /usr/local
+  PREFIX	= /usr/local
 endif
+
 EXEC_PREFIX	=	$(PREFIX)
 BINDIR		=	$(PREFIX)/bin
 SYSCONFDIR	=	$(PREFIX)/etc
 LIBDIR		=	$(PREFIX)/lib
 DATAROOTDIR	=	$(PREFIX)/share
 DATADIR		=	$(DATAROOTDIR)
+LOGDIR		=	/var/log
 
 #>	FILES
 VPATH		:=	$(addprefix $(SRCDIR)/,$(SUBDIR)) $(SRCDIR)
@@ -52,10 +54,10 @@ UTILS		=	ft_charcmp_icase.cpp \
 				sockaddr_in.cpp \
 				Logger.cpp \
 				trim.cpp
-SRC			=	$(CORE) $(CONFIG) $(UTILS)
+SRC			=	main.cpp $(CORE) $(CONFIG) $(UTILS)
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
-BIN			:=	$(NAME)_$(BUILD)
+BIN			=	$(NAME)_$(BUILD)
 TESTBIN		=	$(NAME)_test
 LIB			:=	lib$(NAME).a
 
@@ -66,8 +68,8 @@ DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$(*F).d
 
 #>	ENVIRONMENT
 CXX			=	c++
-AR			=	/bin/ar rcs
-RM			=	/bin/rm -rf
+AR			:=	$(shell which ar)
+RM			:=	$(shell which rm)
 SHELL		:=	$(shell which bash)
 UNAME		:=	$(shell uname -s)
 
@@ -79,11 +81,12 @@ ifeq (install,$(strip $(MAKECMDGOALS)))
   override BUILD = release
 endif
 
-ifneq (test,$(strip $(MAKECMDGOALS)))
-  SRC += main.cpp
-  CXXFLAGS += -std=c++98
+ifeq (test,$(strip $(MAKECMDGOALS)))
+  CXXFLAGS +=	-std=c++11
+  CPPFLAGS +=	-DLOG_OSTREAM=webserv::Logger::kNone
 else
-  CPPFLAGS += -DLOG_OSTREAM="webserv::Logger::kNone"
+  CXXFLAGS +=	-std=c++98
+  CPPFLAGS +=	-DLOG_OSTREAM=webserv::Logger::kBoth
 endif
 
 ifeq (debug,$(BUILD))
@@ -105,11 +108,16 @@ ifeq (debug,$(BUILD))
 				-Wduplicated-branches \
 				-Wlogical-op \
 				-Wuseless-cast
+  CPPFLAGS +=	-DNDEBUG -DLOG_LEVEL=webserv::Logger::kDebug \
+  				-DLOG_FILE=webserv.log
 else
-  CPPFLAGS += -DNDEBUG
-  CXXFLAGS += -O3 -march=native
+  CPPFLAGS +=	-DNDEBUG -DLOG_LEVEL=webserv::Logger::kError \
+  				-DLOG_FILE=$(LOGDIR)/webserv.log \
+				-DDEFAULT_CONF=$(SYSCONFDIR)/$(NAME)/conf/test.conf
+  CXXFLAGS +=	-O3
 endif
 
+export NAME
 export DEPDIR
 export BUILDIR
 export INCLDIR
@@ -123,14 +131,12 @@ export LIB
 ##> Rules <##
 #############
 
-.INTERMEDIATE:
-
 .SUFFIXES:
 .SUFFIXES:		.cpp .hpp .o .d
 
-.PHONY:			all check clean fclean test
+.PHONY:			all clean fclean test
 
-all:			$(BIN)
+all:			.info $(BIN)
 
 $(BUILDIR)/%.o:	%.cpp | $(DEPDIR)
 				@$(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
@@ -141,65 +147,62 @@ $(DEPDIR):
 
 -include $(wildcard $(DEP))
 
-.title:			$(wildcard $(BUILDIR)/*.o)
-				@$(call print_title,COMPILE)
-				@touch $@
-
-.header:
-				@head -n8 README.md
-				@touch $@
-
-.info:
+.info:			$(wildcard $(BUILDIR)/*.o)
+ifeq (0,$(MAKELEVEL))
+				@cat .header
+endif
 				@$(call print_title,INFO)
 				@printf "$(UWHT)%s$(RESET)\t$(FBLU)%s$(RESET)\n\n" "Build profile:" "$(BUILD)"
 				@printf "$(UWHT)%s$(RESET)\n" "Preproc opts:"
-				@$(call print_str_format_width,$(sort $(CPPFLAGS)),30)
+				@$(call print_str_format_width,$(CPPFLAGS),30)
 				@printf "$(UWHT)%s$(RESET)\n" "Compiler opts:"
-				@$(call print_str_format_width,$(sort $(CXXFLAGS)),30)
+				@$(call print_str_format_width,$(CXXFLAGS),30)
+				@$(call print_title,COMPILE)
 				@touch $@
 
-$(BIN):			.header .info .title $(OBJ)
-				@touch .title
+$(BIN):			$(OBJ)
+				@touch .info
 				@$(call print_title,LINK)
 				@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^
 				@printf "%4s%-30s$(GRN)$(CHECK)$(RESET)\n" "" "$@"
 				@printf "\n\n"
 
-$(LIB):			.header .info .title $(OBJ)
-				@touch .title
+$(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ))
 				@$(call print_title,ARCHIVE)
-				@$(AR) $@ $?
+				@$(AR) rcs $@ $?
 				@printf "%4s%-30s$(GRN)$(CHECK)$(RESET)\n" "" "$@"
 
-#> WORK IN PROGRESS
-install:		$(BIN) $(LIB)
+install:		.info $(BIN) $(LIB)
 				@$(call print_title,INSTALL)
-				@sudo install -d $(DESTDIR)$(BINDIR)
-				@sudo install -m 644 $(BIN) $(DESTDIR)$(BINDIR)
-				@printf "%4s%s  🡆  %s\n" "./$(BIN)" "" "$(BINDIR)/$(BIN)"
-				@sudo cp -R conf/default.conf $(SYSCONFDIR)/webserv/
-				@printf "%4s%s  🡆  %s\n" "./$(BIN)" "" "$(BINDIR)/$(BIN)"
+				@install -d $(BINDIR)
+				@install -m 755 $(BIN) $(BINDIR)/$(NAME)
+				@printf "%4s%s  🡆  %s\n" "$(BIN)" "" "$(BINDIR)/$(NAME)"
+				@cp -R conf $(SYSCONFDIR)/$(NAME)/
+				@printf "%4s%s  🡆  %s\n" "conf/" "" "$(SYSCONFDIR)/$(NAME)/conf"
 				@printf "\n\n"
 
-test:			$(LIB)
+test:			.info $(LIB)
+				@touch .info
 				@$(MAKE) -sC $(TESTDIR)
 				@chmod +x $(TESTBIN)
 				@$(call print_title,TEST)
 				@./$(TESTBIN)
 
-clean:			.header
+clean:
+				@cat .header
 				@$(call print_title,DELETE)
 				@printf "%4s" ""
-				$(RM) build .title .info .header
+				$(RM) -rf build .info
 ifeq (clean,$(MAKECMDGOALS))
 	@printf "\n\n"
 endif
 
 fclean:			clean
 				@printf "%4s" ""
-				$(RM) lib* webserv*
+				$(RM) -rf lib* webserv*
 ifeq (fclean,$(MAKECMDGOALS))
 	@printf "\n\n"
 endif
 
-re:				fclean all
+re:				fclean
+				@$(MAKE) -s all

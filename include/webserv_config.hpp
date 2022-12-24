@@ -11,15 +11,14 @@
 #  define LOG_OSTREAM		webserv::Logger::kBoth
 # endif
 
-//TODO: use /var/log dir for the logfile
 # if defined(LOG_OSTREAM) && !defined(LOG_FILE)
-#  define LOG_FILE			"webserv.log"
+#  define LOG_FILE			webserv.log
 # endif
 
 //! this define doesn't work if package not installed yet
 //! I'm using a temporary value until I fix this
 # ifndef DEFAULT_CONF_FILE
-#  define DEFAULT_CONF_FILE	"conf/test.conf"
+#  define DEFAULT_CONF_FILE	conf/test.conf
 # endif
 
 # define RECV_BUFFER_SIZE	8192

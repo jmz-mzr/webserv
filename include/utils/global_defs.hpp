@@ -12,5 +12,6 @@
 
 // Creates a string literal, enclosing the argument between quotes
 # define STRINGIZE(name)		#name
+# define XSTR(macro)			STRINGIZE(macro)
 
 #endif // GLOBAL_DEFS_HPP

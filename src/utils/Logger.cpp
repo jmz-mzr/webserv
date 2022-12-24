@@ -5,6 +5,7 @@
 #include "webserv_config.hpp"
 #include "utils/ansi_colors.hpp"
 #include "utils/bitwise_op.hpp"
+#include "utils/global_defs.hpp"
 
 namespace	webserv
 {
@@ -24,9 +25,9 @@ namespace	webserv
 		_cc[4].str = "DEBUG", _cc[4].color = HCYN;
 		if (_ostream & kFile)
 		{
-			_logfile.open(LOG_FILE);
+			_logfile.open(XSTR(LOG_FILE));
 			if (!(_logfile.good())) {
-				LOG_WARN("Cannot open \"" << LOG_FILE << "\", ignored");
+				LOG_WARN("Cannot open \"" << XSTR(LOG_FILE) << "\", ignored");
 				_ostream &= ~kFile;
 			}
 		}
@@ -37,9 +38,9 @@ namespace	webserv
 		if (_logfile.is_open()) {
 			_logfile.close();
 			if (!(_logfile.good())) {
-				LOG_WARN("close(" << LOG_FILE << ") failed");
+				LOG_WARN("close(" << XSTR(LOG_FILE) << ") failed");
 			} else {
-				LOG_INFO("close(" << LOG_FILE << ")");
+				LOG_INFO("close(" << XSTR(LOG_FILE) << ")");
 			}
 		}
 	}

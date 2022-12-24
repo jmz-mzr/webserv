@@ -23,15 +23,14 @@ include $(WORKDIR)/utils.mk
 override BUILD = debug
 
 #>	COMPILATION FLAGS
-CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
-CXXFLAGS	+=	-std=c++11 -fsanitize=address,undefined -fno-omit-frame-pointer
+CPPFLAGS	+=	$(addprefix -I, $(INCLDIR))
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$(*F).d
 LDDFLAGS	=	$(LIB) $(GTEST) -pthread
 
 #>	ENVIRONMENT
 CXX			=	c++
-AR			=	/bin/ar rcs
-RM			=	/bin/rm -rf
+AR			:=	$(shell which ar)
+RM			:=	$(shell which rm)
 SHELL		:=	$(shell which bash)
 UNAME		:=	$(shell uname -s)
 
@@ -49,13 +48,19 @@ $(BUILDIR)/%.o:	%.cpp
 
 -include $(wildcard $(DEP))
 
-$(BIN):			.title $(OBJ)
-				@touch .title
+$(BIN):			.info $(OBJ)
+				@touch .info
 				@$(call print_title,LINKING)
 				@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^ $(LDDFLAGS)
 				@printf "%4s%-30s$(GRN)$(CHECK)$(RESET)\n" "" "$(@F)"
 				@printf "\n\n"
 
-.title:			$(wildcard $(BUILDIR)/*.o)
-				@$(call print_title,COMPILING)
+.info:			$(wildcard $(BUILDIR)/*.o)
+				@$(call print_title,INFO)
+				@printf "$(UWHT)%s$(RESET)\t$(FBLU)%s$(RESET)\n\n" "Build profile:" "$(BUILD)"
+				@printf "$(UWHT)%s$(RESET)\n" "Preproc opts:"
+				@$(call print_str_format_width,$(sort $(CPPFLAGS)),30)
+				@printf "$(UWHT)%s$(RESET)\n" "Compiler opts:"
+				@$(call print_str_format_width,$(sort $(CXXFLAGS)),30)
+				@$(call print_title,COMPILE)
 				@touch $@
