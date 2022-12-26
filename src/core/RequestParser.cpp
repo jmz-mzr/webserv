@@ -1,6 +1,7 @@
 #include "core/Request.hpp"
 #include "utils/utils.hpp"
 #include "utils/Logger.hpp"
+#include <iostream>
 
 namespace webserv
 {
@@ -109,6 +110,7 @@ namespace webserv
 		std::string key;
 		std::string value;
 
+		LOG_DEBUG("Raw buffer before at parsing: " << str);
 		_bufferIndex = 0;
 		_buffer = str;
 		_parseMethod(_readLine());
@@ -120,11 +122,16 @@ namespace webserv
 			value = _getValue(line);
 			if (value == "")
 				break ;
-
 			if (_findHeader(key))
 				_setHeader(key, value);
 		}
 		_body = _buffer.substr(_bufferIndex, std::string::npos);
+		LOG_DEBUG("method : " << _method);
 		LOG_DEBUG("_uri : " << _uri);
+		LOG_DEBUG("parsed headers : ");
+		for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
+		{
+			LOG_DEBUG("[" << it->first << "]: " << it->second);
+		}
 	}
 } //namespace webserv

@@ -418,8 +418,8 @@ namespace	webserv
 				received = _receiveClientRequest(*client, pollFd);
 				if (received > 0) {
 
-					_bufferAndSendMsg(*client);	// tmp exam version
-					// _handleClientRequest(*client);
+					//_bufferAndSendMsg(*client);	// tmp exam version
+					_handleClientRequest(*client);
 				}
 				if (received == 0 || _handleClientResponse(*client, pollFd)) {
 					client = _removeClient(client, pollFd);

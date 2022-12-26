@@ -23,6 +23,7 @@ namespace	webserv
 												_isTerminatedRequest(false),
 												_isInternalRedirect(false)
 	{
+		_initHeaders();
 		LOG_INFO("New Request instance");
 	}
 
@@ -42,7 +43,7 @@ namespace	webserv
 	{
 		// TO DO: handle swap of std::ofstream (or other _chunks object)
 		// 		  or not if Request in only copied at Client creation?
-
+		_initHeaders();
 		LOG_INFO("Request copied");
 	}
 
@@ -314,9 +315,38 @@ namespace	webserv
 		//		    return (_checkHeaders);
 		//		  }
 		// 		  return (0);
+		_buffer = (unprocessedBuffer + recvBuffer);
+		//the "\r\n\r\n" pattern marks the end of the header section
+		size_t i = _buffer.find("\r\n\r\n");
+		if (i != std::string::npos)
+		{
+			if (_buffer.find("Content-Length: ") == std::string::npos)
+			{
+				// TODO : chunked encoding
 
-		(void)recvBuffer;
-		(void)unprocessedBuffer;
+				// add the excess into unprocessedBuffer
+				if (i + 4 < _buffer.size())
+				{
+					unprocessedBuffer = _buffer.substr(i + 4, std::string::npos);
+					_buffer.erase(i + 4, std::string::npos);
+				}
+				_parse(_buffer);
+			}
+			else
+			{
+				//	if Content-Length header is present, we wait to receive
+				//	body datas before processing
+				return (0);
+				// We know we received the entire body when buffer length
+				// is equal to or greater than Content-Length
+				
+				// if body is greater, we add the excess into unprocessedbuffer
+				// for the next message 
+			}
+		}
+		else
+			unprocessedBuffer = _buffer;
+		_buffer.clear();
 		if (_hasReceivedHeaders && (!_serverConfig || !_location)) {
 			if (!_loadServerConfig(serverConfigs))
 				return (500);

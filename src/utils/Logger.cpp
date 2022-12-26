@@ -55,7 +55,7 @@ namespace	webserv
 		std::ostringstream	stream;
 		std::string			output;
 
-		if (_ostream != kNone && level <= _threshold) {
+		if (_ostream != kNone && level <= static_cast<unsigned int>(_threshold)) {
 			stream << "webserv: [" << _cc[level].color << _cc[level].str << RESET
 				<< "] " << BWHT << file << ":" << line << RESET
 				<< ": " << msg;
