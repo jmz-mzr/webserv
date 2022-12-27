@@ -125,7 +125,6 @@ namespace webserv
 			if (_findHeader(key))
 				_setHeader(key, value);
 		}
-		_body = _buffer.substr(_bufferIndex, std::string::npos);
 		LOG_DEBUG("method : " << _method);
 		LOG_DEBUG("_uri : " << _uri);
 		LOG_DEBUG("parsed headers : ");

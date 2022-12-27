@@ -256,6 +256,10 @@ namespace	webserv
 		//		  }
 		// 		  return (0);
 
+
+		// headers are already filled by normal parsing
+		// we only need to parse the body and add/remove the footers
+
 		(void)recvBuffer;
 		(void)unprocessedBuffer;
 		if (_hasReceivedHeaders && (!_serverConfig || !_location)) {
@@ -320,6 +324,8 @@ namespace	webserv
 		size_t i = _buffer.find("\r\n\r\n");
 		if (i != std::string::npos)
 		{
+			//the content-length header is MANDATORY for messages with entity bodies (RFC)
+			//That means that if content length isn't specified, we should start parsing when all the headers are received
 			if (_buffer.find("Content-Length: ") == std::string::npos)
 			{
 				// TODO : chunked encoding
@@ -331,17 +337,27 @@ namespace	webserv
 					_buffer.erase(i + 4, std::string::npos);
 				}
 				_parse(_buffer);
+				// If the encoding is chunked, we parse the body
+				if (_headers["Transfer-Encoding"] == "chunked")
+					_parseChunkedRequest(unprocessedBuffer, recvBuffer, serverConfigs);
 			}
 			else
 			{
+				size_t	msg = std::atoi(_headers["Content-Length"].c_str() + i + 4);
 				//	if Content-Length header is present, we wait to receive
 				//	body datas before processing
-				return (0);
 				// We know we received the entire body when buffer length
 				// is equal to or greater than Content-Length
-				
-				// if body is greater, we add the excess into unprocessedbuffer
-				// for the next message 
+
+				if (_buffer.size() >= msg)
+				{
+					_parse(_buffer);
+					_body = _buffer.substr(_bufferIndex, msg);
+					// if body is greater, we add the excess into unprocessedbuffer
+					// for the next message
+					if (_buffer.size() > msg)
+						unprocessedBuffer = _buffer.substr(msg, std::string::npos);
+				}
 			}
 		}
 		else
