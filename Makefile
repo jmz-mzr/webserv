@@ -90,25 +90,25 @@ else
 endif
 
 ifeq (debug,$(BUILD))
-  CXXFLAGS +=	-fsanitize=address,undefined -Og \
-				-fstack-protector-all \
-				-Wpedantic \
-				-Wshadow \
-				-Wnon-virtual-dtor \
-				-Wold-style-cast \
-				-Wcast-align \
-				-Wunused \
-				-Wconversion \
-				-Wsign-conversion \
-				-Wnull-dereference \
-				-Wdouble-promotion \
-				-Wformat=2 \
-				-Wmisleading-indentation
-ifeq (Linux,$(UNAME))
-  CXXFLAGS +=	-Wduplicated-cond \
-				-Wduplicated-branches \
-				-Wlogical-op \
-				-Wuseless-cast
+  CXXFLAGS +=	-fsanitize=address,undefined -Og
+# 				-fstack-protector-all \
+# 				-Wpedantic \
+# 				-Wshadow \
+# 				-Wnon-virtual-dtor \
+# 				-Wold-style-cast \
+# 				-Wcast-align \
+# 				-Wunused \
+# 				-Wconversion \
+# 				-Wsign-conversion \
+# 				-Wnull-dereference \
+# 				-Wdouble-promotion \
+# 				-Wformat=2 \
+# 				-Wmisleading-indentation
+# ifeq (Linux,$(UNAME))
+#   CXXFLAGS +=	-Wduplicated-cond \
+# 				-Wduplicated-branches \
+# 				-Wlogical-op \
+# 				-Wuseless-cast
 endif
   CPPFLAGS +=	-DNDEBUG -DLOG_LEVEL=webserv::Logger::kDebug \
   				-DLOG_FILE=webserv.log

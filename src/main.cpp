@@ -16,7 +16,6 @@ static void	handleSigInt(int signum)
 	LOG_INFO("SIGINT received");
 }
 
-#include <iostream>
 int	main(int argc, char** argv) try
 {
 	webserv::Webserv	webserv;
@@ -28,6 +27,5 @@ int	main(int argc, char** argv) try
 	webserv.run();
 	return (EXIT_SUCCESS);
 } catch (const std::exception& e) {
-	std::cout << e.what() << std::endl;
 	return (EXIT_FAILURE);
 }
