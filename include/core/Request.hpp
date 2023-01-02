@@ -53,6 +53,7 @@ namespace	webserv
 		void			_parse(std::string str);
 		void        	_parseMethod(std::string line);
 		void        	_parsePath(std::string line);
+		void			_checkVersion(std::string line);
 		std::string		_readLine();
 		std::string		_getKey(std::string line);
 		std::string		_getValue(std::string line);
@@ -79,6 +80,8 @@ namespace	webserv
 		const AcceptSocket&					_clientSocket;
 		const ServerConfig*					_serverConfig;
 		const Location*						_location;
+		int									_code;
+		std::string							_version;
 
 		// TO DO: 1) If the request line is invalid, immediately return 400
 		// 2) If the request line is > 8192, immediately return 414

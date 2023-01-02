@@ -104,6 +104,23 @@ namespace webserv
 		_parsePath(line);
 	}
 
+	//Check Request HTTP Version (accept 1.0 and 1.1)
+	void		Request::_checkVersion(std::string line)
+	{
+		size_t 		j;
+		std::string	str;
+
+		j = line.find_last_of(' ');
+		str = line.substr(j + 1, line.size() - j + 1);
+		if (str.find("HTTP/") != 0)
+		{
+			_code = 400;
+			LOG_DEBUG("HTTP BAD VERSION" << std::endl);
+			return ;
+		}
+		this->_version = str.substr(str.find_first_of('/') + 1, 3);
+	}
+
 	void        Request::_parse(std::string str)
 	{
 		std::string line;
