@@ -373,6 +373,19 @@ namespace	webserv
 		return (0);
 	}
 
+	//set the accepted languages in a vector of strings
+	void	Request::_setLanguage()
+	{
+		std::string	raw = this->_headers["Accept-Language"];
+		std::vector<std::string> languages;
+
+		if (raw != "")
+		{
+			languages = webserv::ft_string_split(raw, ",");
+			//TODO : Read documentation about accept language
+		}
+	}
+
 	void	Request::setRequestMethod(const std::string& method)
 	{
 		_requestMethod = method;
