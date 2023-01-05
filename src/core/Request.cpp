@@ -259,6 +259,7 @@ namespace	webserv
 
 		// headers are already filled by normal parsing
 		// we only need to parse the body and add/remove the footers
+		// TODO : chunked encoding
 
 		(void)recvBuffer;
 		(void)unprocessedBuffer;
@@ -300,36 +301,17 @@ namespace	webserv
 								const char* recvBuffer,
 								const server_configs& serverConfigs)
 	{
-		// TO DO: if (_isChunkedRequest)
-		// 		    return (_parseChunkedRequest(...));
-		// 		  parse: [=> use unprocessedBuff first, then recvBuff]
-		// 		  		 check and set Headers, returning 400 error if an
-		// 		  		 existing header has an incorrect value;
-		//				 save what is not read in unprocessedBuff;
-		// 		  		 set _isChunked/_hasReceived/_isTerminated if needed;
-		// 		  		 and only read the Content-Length amount to prevent
-		// 		  		 incomplete messages or reading the next request?;
-		// 		  if (error) {
-		// 		    log error;
-		// 		    clearRequest(); // only if closing connection error?
-		// 		    return (errorCode 4xx or 5xx);
-		// 		  }
-		//		  if (!_hasReceivedHeaders && not loaded config) {
-		//		    _loadServerConfig(serverConfigs);
-		//		    return (_checkHeaders);
-		//		  }
-		// 		  return (0);
 		_buffer = (unprocessedBuffer + recvBuffer);
 		//the "\r\n\r\n" pattern marks the end of the header section
 		size_t i = _buffer.find("\r\n\r\n");
 		if (i != std::string::npos)
 		{
-			//the content-length header is MANDATORY for messages with entity bodies (RFC)
-			//That means that if content length isn't specified, we should start parsing when all the headers are received
+			//the content-length header is MANDATORY for messages with
+			// entity bodies (RFC)
+			//That means that if content length isn't specified, we should start
+			// parsing when all the headers are received
 			if (_buffer.find("Content-Length: ") == std::string::npos)
 			{
-				// TODO : chunked encoding
-
 				// add the excess into unprocessedBuffer
 				if (i + 4 < _buffer.size())
 				{
@@ -343,20 +325,21 @@ namespace	webserv
 			}
 			else
 			{
-				size_t	msg = std::atoi(_headers["Content-Length"].c_str() + i + 4);
+				size_t len = static_cast<size_t>(
+					std::atoi(_headers["Content-Length"].c_str() + i + 4));
 				//	if Content-Length header is present, we wait to receive
 				//	body datas before processing
 				// We know we received the entire body when buffer length
 				// is equal to or greater than Content-Length
-
-				if (_buffer.size() >= msg)
+				if (len > 0 && _buffer.size() >= len)
 				{
 					_parse(_buffer);
-					_body = _buffer.substr(_bufferIndex, msg);
+					_body = _buffer.substr(_bufferIndex, len);
 					// if body is greater, we add the excess into unprocessedbuffer
 					// for the next message
-					if (_buffer.size() > msg)
-						unprocessedBuffer = _buffer.substr(msg, std::string::npos);
+					//TODO[ISSUES] : The logic is wrong
+					if (_buffer.size() > len)
+						unprocessedBuffer = _buffer.substr(len, std::string::npos);
 				}
 			}
 		}
@@ -373,16 +356,35 @@ namespace	webserv
 		return (0);
 	}
 
-	//set the accepted languages in a vector of strings
+	//set the accepted languages values in a map sorted by quality value
 	void	Request::_setLanguage()
 	{
-		std::string	raw = this->_headers["Accept-Language"];
-		std::vector<std::string> languages;
+		std::string	header = this->_headers["Accept-Language"];
+		std::vector<std::string> language_values;
 
-		if (raw != "")
+		if (header != "")
 		{
-			languages = webserv::ft_string_split(raw, ",");
-			//TODO : Read documentation about accept language
+			//Trim all spaces and separate the languages, the separator is ","
+			header = ft_string_remove(header, ' ');
+			language_values = ft_string_split(header, ",");
+			//insert the languages with their quality value
+			for (std::vector<std::string>::iterator it = language_values.begin();
+			it != language_values.end(); it++)
+			{
+				std::vector<std::string> values;
+				values = ft_string_split(*it, ";");
+				// when no quality value is specified, the default value is 1.0
+				if (values.size() == 1)
+					_languages.insert(std::make_pair(1.0, values[0]));
+				else
+				{
+					//the quality value starts with "q=" example : "q=0.8"
+					//we need to remove the 2 first characters before conversion
+					double weight = static_cast<double>(
+						atof(values[1].c_str() + 2));
+					_languages.insert(std::make_pair(weight, values[0]));
+				}
+			}
 		}
 	}
 

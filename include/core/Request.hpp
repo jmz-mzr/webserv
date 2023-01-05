@@ -3,10 +3,12 @@
 
 # include <vector>
 # include <string>
+# include <map>
 
 # include "config/ServerConfig.hpp"
 # include "core/AcceptSocket.hpp"
 # include "config/Location.hpp"
+# include "utils/utils.hpp"
 
 namespace	webserv
 {
@@ -71,6 +73,7 @@ namespace	webserv
 		int				_checkHost() const;
 		int				_checkMaxBodySize() const;
 		int				_checkMethod() const;
+		void			_setLanguage();
 
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
@@ -82,6 +85,7 @@ namespace	webserv
 		const Location*						_location;
 		int									_code;
 		std::string							_version;
+		std::map<double, std::string>		_languages;
 
 		// TO DO: 1) If the request line is invalid, immediately return 400
 		// 2) If the request line is > 8192, immediately return 414

@@ -318,7 +318,7 @@ void	Parser::_setMaxBodySize(Directive& currDirective)
 		default:
 			_errorHandler("\"client_max_body_size\" directive invalid value");
 	}
-	if (size > (LLONG_MAX >> shift))
+	if (size > (LONG_MAX >> shift))
 		_errorHandler("\"client_max_body_size\" directive invalid value");
 	size <<= shift;
 	_currConfig->setMaxBodySize(size);

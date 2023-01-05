@@ -53,7 +53,8 @@ UTILS		=	ft_charcmp_icase.cpp \
 				ft_strcmp_icase.cpp \
 				sockaddr_in.cpp \
 				Logger.cpp \
-				trim.cpp
+				trim.cpp \
+				string_utils.cpp
 SRC			=	main.cpp $(CORE) $(CONFIG) $(UTILS)
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
@@ -104,12 +105,12 @@ ifeq (debug,$(BUILD))
 				-Wdouble-promotion \
 				-Wformat=2 \
 				-Wmisleading-indentation
-ifeq (Linux,$(UNAME))
-  CXXFLAGS +=	-Wduplicated-cond \
-				-Wduplicated-branches \
-				-Wlogical-op \
-				-Wuseless-cast
-endif
+#ifeq (Linux,$(UNAME))
+#  CXXFLAGS +=	-Wduplicated-cond \
+#				-Wduplicated-branches \
+#				-Wlogical-op \
+#				-Wuseless-cast
+#endif
   CPPFLAGS +=	-DNDEBUG -DLOG_LEVEL=webserv::Logger::kDebug \
   				-DLOG_FILE=webserv.log
 else
