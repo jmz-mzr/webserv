@@ -227,42 +227,28 @@ namespace	webserv
 										const char* recvBuffer,
 										const server_configs& serverConfigs)
 	{
-		// TO DO: parse: [=> use unprocessedBuff first, then recvBuff]
-		// 		  		 if (!_hasReceivedHeaders)
-		// 		  		   check and set Headers, returning 400 error if an
-		// 		  		   existing header has an incorrect value, or if a
-		// 		  		   request header field is too long (> 8192);
-		// 		  		   and only read the Content-Length amount to prevent
-		// 		  		   incomplete messages or reading the next request?;
-		//				 save what is not read in unprocessedBuff;
-		// 		  		 set _isChunkedRequest/_isTerminatedRequest if needed;
-		// 		  if (error) {
-		// 		    log error;
-		// 		    clearRequest(); // only if closing connection error?
-		// 		    return (errorCode 4xx or 5xx);
-		// 		  }
-		// 		  try {	// or try-catch in client?
-		// 		    save chunk;
-		// 		  } catch (const std::exception& e) {
-		// 		    log error;
-		// 		    clearRequest(); // only if closing connection error?
-		// 		    return (errorCode 4xx or 5xx);
-		// 		  }
-		// 		  if (last chunk) {
-		// 		    set _isTerminatedRequest;
-		//		  if (!_hasReceivedHeaders && not loaded config) {
-		//		    _loadServerConfig(serverConfigs);
-		//		    return (_checkHeaders);
-		//		  }
-		// 		  return (0);
-
-
 		// headers are already filled by normal parsing
 		// we only need to parse the body and add/remove the footers
-		// TODO : chunked encoding
-
 		(void)recvBuffer;
 		(void)unprocessedBuffer;
+		
+		std::string processedBody;
+		std::string	chunkedBody = _buffer.substr(_bufferIndex, std::string::npos);
+		long		chunkSize;
+		size_t		i = 0;
+
+		chunkSize = strtol(chunkedBody.c_str(), NULL, 16);
+		
+		//Documentation : www.jmarshall.com/easy/http
+		while (chunkSize)
+		{
+			i = chunkedBody.find("\r\n", i) + 2;
+			processedBody += chunkedBody.substr(i, chunkSize);
+			i += chunkSize + 2; 
+			chunkSize = strtol(chunkedBody.c_str() + i, NULL, 16);
+		}
+		_body = processedBody;
+		
 		if (_hasReceivedHeaders && (!_serverConfig || !_location)) {
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
@@ -302,17 +288,16 @@ namespace	webserv
 								const server_configs& serverConfigs)
 	{
 		_buffer = (unprocessedBuffer + recvBuffer);
-		//the "\r\n\r\n" pattern marks the end of the header section
+		//"CRLFCRLF" or "\r\n\r\n" pattern marks the end of the header section
 		size_t i = _buffer.find("\r\n\r\n");
 		if (i != std::string::npos)
 		{
-			//the content-length header is MANDATORY for messages with
-			// entity bodies (RFC)
-			//That means that if content length isn't specified, we should start
-			// parsing when all the headers are received
+			//If content length isn't specified, we should start
+			//parsing when all the headers are received (RFC)
 			if (_buffer.find("Content-Length: ") == std::string::npos)
 			{
 				// add the excess into unprocessedBuffer
+				// for the next request
 				if (i + 4 < _buffer.size())
 				{
 					unprocessedBuffer = _buffer.substr(i + 4, std::string::npos);
@@ -325,24 +310,25 @@ namespace	webserv
 			}
 			else
 			{
-				size_t len = static_cast<size_t>(
-					std::atoi(_headers["Content-Length"].c_str() + i + 4));
+				std::string body_size = _buffer.substr(
+					_buffer.find("Content-Length: ") + strlen("Content-Length: ") , 10);
+				//HTTP Request body size
+				size_t 		len = static_cast<size_t>(std::atoi(body_size.c_str()));
 				//	if Content-Length header is present, we wait to receive
-				//	body datas before processing
-				// We know we received the entire body when buffer length
-				// is equal to or greater than Content-Length
+				//	the entire request body before processing
 				if (len > 0 && _buffer.size() >= len)
 				{
 					_parse(_buffer);
 					_body = _buffer.substr(_bufferIndex, len);
 					// if body is greater, we add the excess into unprocessedbuffer
 					// for the next message
-					//TODO[ISSUES] : The logic is wrong
 					if (_buffer.size() > len)
-						unprocessedBuffer = _buffer.substr(len, std::string::npos);
+						unprocessedBuffer = _buffer.substr(_bufferIndex + len, std::string::npos);
 				}
 			}
 		}
+		// if we don't have received all the headers yet
+		// we save the request in unprocessedBuffer
 		else
 			unprocessedBuffer = _buffer;
 		_buffer.clear();

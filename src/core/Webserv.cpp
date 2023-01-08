@@ -287,6 +287,8 @@ namespace	webserv
 		ssize_t		received;
 
 		_buffer[0] = '\0';
+
+		// TODO : Recv before returning 1
 		if (client.hasUnprocessedBuffer())
 		   return (1);
 		if (!(pollFd->revents & POLLIN))
@@ -296,6 +298,7 @@ namespace	webserv
 					<< " this new client request (fd=" << clientFd << ")");
 			return (-1);	// see "TO DO" for other options
 		}
+		// >>> should be higher
 		received = recv(clientFd, _buffer, RECV_BUFFER_SIZE - 1, _ioFlags);
 		if (received > 0) {
 			_buffer[received] = '\0';

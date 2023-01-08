@@ -45,6 +45,7 @@ namespace	webserv
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 
+	// If 
 	void	Client::parseRequest(const char* recvBuffer)
 	{
 		int		responseCode;

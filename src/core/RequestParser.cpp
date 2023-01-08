@@ -102,6 +102,7 @@ namespace webserv
 		i = line.find_first_of(' ');
 		_method.assign(line, 0, i);
 		_parsePath(line);
+		_checkVersion(line);
 	}
 
 	//Check Request HTTP Version (accept 1.0 and 1.1)
@@ -112,7 +113,8 @@ namespace webserv
 
 		j = line.find_last_of(' ');
 		str = line.substr(j + 1, line.size() - j + 1);
-		if (str.find("HTTP/") != 0)
+		size_t i = str.find("HTTP/");
+		if (i != 0 || i == std::string::npos)
 		{
 			_code = 400;
 			LOG_DEBUG("HTTP BAD VERSION" << std::endl);
