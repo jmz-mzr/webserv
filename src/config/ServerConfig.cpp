@@ -29,7 +29,8 @@ namespace	webserv
 			map_it configIt2 = configIt->second.getConfigs().begin();
 			while (configIt2 != configIt->second.getConfigs().end()) {
 				_locations.insert(std::make_pair(configIt2->first,
-								Location(*this, configIt2->second)));
+							Location(*this, configIt2->second,
+								configIt2->first)));
 				configIt2++;
 			}
 			configIt++;
