@@ -32,6 +32,7 @@ namespace webserv {
 		void		addLimitExcept(const std::string& method);
 		void		setReturnPair(const return_pair& returnPair);
 		void		setRoot(const std::string& path);
+		void		setAlias(const std::string& path);
 		void		setAutoIndex(bool b);
 		void		setIndex(const std::string& path);
 		void		setFastCgiPass(const std::string& path);
@@ -47,6 +48,7 @@ namespace webserv {
 		const limit_except_set&	getLimitExcept() const { return (_limitExcept);}
 		const return_pair&		getReturnPair() const { return (_return); }
 		const std::string&		getRoot() const { return (_root); }
+		const std::string&		getAlias() const { return (_alias); }
 		bool					isAutoIndex() const { return (_autoIndex); }
 		const std::string&		getIndex() const { return (_index); }
 		const std::string&		getFastCgiPass() const { return (_fastCgiPass);}
@@ -56,6 +58,9 @@ namespace webserv {
 		friend std::ostream&	operator<<(std::ostream&, const Config&);
 
 	private:
+		// TO DO: In order, first check the _maxBodySize, then _limitExcept,
+		// then _return, _fastCgiPass, _index, _autoIndex when building Response
+
 		// 1) We must resolve the eventual localhost address
 		// (case-insensitively: it must work with "LOCalhOST:80")
 		// with /etc/host and "*" (or no address) with "0.0.0.0"
@@ -147,7 +152,20 @@ namespace webserv {
 		// duplicate in /usr/local/etc/nginx/nginx.conf:117')
 		// 2) If it was not defined it must not stay empty, and like NGINX
 		// it must be set to the default _root: "html"
+		// 3) Cannot be defined if "alias" was already specified in a location,
+		// otherwise it must throw an exception (like '"root" directive is
+		// duplicate, "alias" directive was specified earlier in
+		// /usr/local/etc/nginx/nginx.conf:68)
 		std::string					_root;
+
+		// 1) Can only be defined once, and if another definition line
+		// appears, it must throw an exception (like '"alias" directive is
+		// duplicate in /usr/local/etc/nginx/nginx.conf:68')
+		// 2) Cannot be defined if "root" was already specified in a location,
+		// otherwise it must throw an exception (like '"alias" directive is
+		// duplicate, "root" directive was specified earlier in
+		// /usr/local/etc/nginx/nginx.conf:68)
+		std::string					_alias;
 
 		// 1) For the sake of simplicity, accept only one default file
 		// to answer if the request is a directory (unlike NGINX's index)
@@ -196,7 +214,6 @@ namespace webserv {
 		config_map					_configs;
 
 		Config&						operator=(const Config& rhs);
-
 	};
 
 }	// namespace webserv

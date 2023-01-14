@@ -12,6 +12,7 @@ Config::Config()
 		: _maxBodySize(0)
 		, _return(-1, "")
 		, _root("html")
+		, _alias("")
 		, _index("index.html")
 		, _autoIndex(false)
 { }
@@ -24,6 +25,7 @@ Config::Config(const Config& src)
 		, _limitExcept(src._limitExcept)
 		, _return(src._return)
 		, _root(src._root)
+		, _alias(src._alias)
 		, _index(src._index)
 		, _autoIndex(src._autoIndex)
 		, _fastCgiPass(src._fastCgiPass)
@@ -44,6 +46,9 @@ void	Config::setReturnPair(const return_pair& returnPair)
 
 void	Config::setRoot(const std::string& path)
 { _root = path; }
+
+void	Config::setAlias(const std::string& path)
+{ _alias = path; }
 
 void	Config::setAutoIndex(bool b)
 { _autoIndex = b; }
@@ -80,6 +85,7 @@ std::ostream&	operator<<(std::ostream& os, const Config& conf)
 		<< "return:" << conf.getReturnPair().first << "/"
 					<< conf.getReturnPair().second << " "
 		<< "root:" << conf.getRoot() << " "
+		<< "alias:" << conf.getAlias() << " "
 		<< "autoindex:" << (conf.isAutoIndex() ? "true" : "false") << " "
 		<< "index:" << conf.getIndex() << " "
 		<< "fastcgi:" << conf.getFastCgiPass() << " "
