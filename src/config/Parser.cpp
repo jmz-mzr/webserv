@@ -18,12 +18,22 @@
 
 #include "core/Socket.hpp"
 #include "utils/exceptions.hpp"
+#include "utils/global_defs.hpp"
 #include "utils/Logger.hpp"
 #include "utils/utils.hpp"
 
 namespace	webserv {
 
 namespace	config {
+
+static void	_errorHandler(const std::string& error_msg)
+{ throw SyntaxErrorException(error_msg); }
+
+static void	_listenError(const std::string& err, const std::string& arg)
+{ _errorHandler(err + " in \"" + arg + "\" of the \"listen\" directive"); }
+
+static bool isnotdigit(char c)
+{ return (!bool(std::isdigit(c))); }
 
 /******************************************************************************/
 /*                         CONSTRUCTORS / DESTRUCTORS                         */
@@ -66,6 +76,13 @@ Parser::Parser()
 			1,
 			"root",
 			&Parser::_setRoot
+		},
+		{
+			kAlias,
+			kDirective | kForbiddenDup | kArgcStrict | kLocCtx,
+			1,
+			"alias",
+			&Parser::_setAlias
 		},
 		{
 			kAutoindex,
@@ -142,15 +159,6 @@ Parser::ConfigData::ConfigData(Type t, Config& conf) : type(t), config(conf)
 /******************************************************************************/
 /*                              MEMBER FUNCTIONS                              */
 /******************************************************************************/
-
-void	Parser::_errorHandler(const std::string& error_msg)
-{ throw SyntaxErrorException(error_msg); }
-
-void	Parser::_listenError(const std::string& err)
-{
-	_errorHandler(err + " in \"" + _currDirectivePtr->argv[0]
-										+ "\" of the \"listen\" directive");
-}
 
 /**
  * @brief Check ending char
@@ -276,9 +284,6 @@ void	Parser::operator()(Lexer::token_queue& tokens)
 	}
 }
 
-static bool isnotdigit(char c)
-{ return (!bool(std::isdigit(c))); }
-
 void	Parser::_addErrorPage(Directive& currDirective)
 {
 	const std::string&	uri = currDirective.argv.back();
@@ -345,9 +350,30 @@ void	Parser::_setReturnPair(Directive& currDirective)
 	(void)currDirective;
 }
 
+/**
+ * @brief Check for duplicate alias/root directive (mutually exclusive)
+ * 
+ * @param argType type of tested directive
+ */
+void	Parser::_duplicateCheck(const std::string& currDirStr,
+								const size_t otherDirType,
+								const std::string& otherDirStr)
+{
+	if (_configStack.top().isDefined[otherDirType])
+		_errorHandler(otherDirStr + " directive is duplicate, " +
+					currDirStr + " directive was specified earlier.");
+}
+
 void	Parser::_setRoot(Directive& currDirective)
 {
+	_duplicateCheck("root", kAlias, "alias");
 	_currConfig->setRoot(currDirective.argv[0]);
+}
+
+void	Parser::_setAlias(Directive& currDirective)
+{
+	_duplicateCheck("alias", kRoot, "root");
+	_currConfig->setAlias(currDirective.argv[0]);
 }
 
 void	Parser::_setAutoIndex(Directive& currDirective)
@@ -386,7 +412,7 @@ void	Parser::_parseHost(const std::string& str,
 	in_port_t			port;
 
 	if (hent == NULL)
-		_listenError("host not found");
+		_listenError("host not found", _currDirectivePtr->argv[0]);
 	hostList = reinterpret_cast<struct in_addr**>(hent->h_addr_list);
 	port = addrList.back().sin_port;
 	addrList.pop_back();
@@ -404,7 +430,7 @@ void	Parser::_parseAddress(const std::string& str,
 										std::list<sockaddr_in>& addrList)
 {
 	if (str.empty())
-		_listenError("no host");
+		_listenError("no host", _currDirectivePtr->argv[0]);
 	if (str == "*") {
 		addrList.back().sin_addr.s_addr = INADDR_ANY;
 	} else {
@@ -431,7 +457,7 @@ int		Parser::_parsePort(const std::string& str,
 	} else {
 		port = static_cast<uint16_t>(strtoul(str.c_str(), NULL, 10));
 		if ((port == 0) || (port > portMax))
-			_listenError("invalid port");
+			_listenError("invalid port", _currDirectivePtr->argv[0]);
 		setSockAddr(addr, INADDR_ANY, port);
 		addrList.push_back(addr);
 		return (0);

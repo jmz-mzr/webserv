@@ -22,21 +22,22 @@ namespace	config {
 	public:
 		typedef Lexer::token_queue::iterator			it_t;
 
-		static const size_t		kDirectiveNb = 12;
+		static const size_t		kDirectiveNb = 13;
 
 		enum Type {
-			kErrorPage = 0,
-			kMaxBodySize = 1,
-			kLimitExcept = 2,
-			kReturn = 3,
-			kRoot = 4,
-			kAutoindex = 5,
-			kIndex = 6,
-			kFastCgiPass = 7,
-			kServerName = 8,
-			kListen = 9,
-			kServer = 10,
-			kLocation = 11
+			kErrorPage,
+			kMaxBodySize,
+			kLimitExcept,
+			kReturn,
+			kRoot,
+			kAlias,
+			kAutoindex,
+			kIndex,
+			kFastCgiPass,
+			kServerName,
+			kListen,
+			kServer,
+			kLocation
 		};
 
 		enum Rule {
@@ -76,13 +77,12 @@ namespace	config {
 		};
 
 		struct ConfigData {
-			Type			type;	
+			enum Type		type;	
 			Config&			config;
 			bool			isDefined[Parser::kDirectiveNb];
 
 			ConfigData(Type t, Config& conf);
 		};
-
 
 		Parser();
 		~Parser() { };
@@ -105,18 +105,19 @@ namespace	config {
 		void	_parseDup(const Directive& directive);
 		void	_parseArgc(const Directive& directive);
 
-		void	_errorHandler(const std::string& error_msg);
-		void	_listenError(const std::string& err);
-
 		void	_parseHost(const std::string&, std::list<sockaddr_in>& );
 		void	_parseAddress(const std::string&, std::list<sockaddr_in>& );
 		int		_parsePort(const std::string&, std::list<sockaddr_in>& );
+		void	_duplicateCheck(const std::string& currDirStr,
+								const size_t otherDirType,
+								const std::string& otherDirStr);
 
 		void	_addErrorPage(Directive& currDirective);
 		void	_setMaxBodySize(Directive& currDirective);
 		void	_setLimitExcept(Directive& currDirective);
 		void	_setReturnPair(Directive& currDirective);
 		void	_setRoot(Directive& currDirective);
+		void	_setAlias(Directive& currDirective);
 		void	_setAutoIndex(Directive& currDirective);
 		void	_setIndex(Directive& currDirective);
 		void	_setFastCgiPass(Directive& currDirective);

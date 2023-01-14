@@ -62,7 +62,7 @@ TESTBIN		=	$(NAME)_test
 LIB			:=	lib$(NAME).a
 
 #>	COMPILATION FLAGS
-CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
+CPPFLAGS	=	$(addprefix -I, $(INCLDIR)) -DLOG_LEVEL=webserv::Logger::kDebug
 CXXFLAGS	=	-Wall -Wextra -Werror
 DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$(*F).d
 
@@ -109,11 +109,10 @@ ifeq (debug,$(BUILD))
 # 				-Wduplicated-branches \
 # 				-Wlogical-op \
 # 				-Wuseless-cast
-endif
-  CPPFLAGS +=	-DNDEBUG -DLOG_LEVEL=webserv::Logger::kDebug \
-  				-DLOG_FILE=webserv.log
+# endif
+  CPPFLAGS +=	-DLOG_FILE=webserv.log
 else
-  CPPFLAGS +=	-DNDEBUG -DLOG_LEVEL=webserv::Logger::kError \
+  CPPFLAGS +=	-DNDEBUG \
   				-DLOG_FILE=$(LOGDIR)/webserv.log \
 				-DDEFAULT_CONF=$(SYSCONFDIR)/$(NAME)/conf/test.conf
   CXXFLAGS +=	-O3

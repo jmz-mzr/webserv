@@ -43,8 +43,7 @@ namespace webserv {
 		const listen_set&		getListens() const { return (_listens); }
 		const hostname_set&		getServerNames() const { return (_serverNames);}
 		const error_page_map&	getErrorPages() const { return (_errorPages); }
-		const int64_t&		getMaxBodySize() const { return (_maxBodySize);}
-
+		const int64_t&			getMaxBodySize() const { return (_maxBodySize);}
 		const limit_except_set&	getLimitExcept() const { return (_limitExcept);}
 		const return_pair&		getReturnPair() const { return (_return); }
 		const std::string&		getRoot() const { return (_root); }
