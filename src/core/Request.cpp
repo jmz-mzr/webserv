@@ -27,48 +27,55 @@ namespace	webserv
 	}
 
 	Request::Request(const Request& src): _clientSocket(src._clientSocket),
-								_serverConfig(src._serverConfig),
-								_location(src._location),
-								_requestLine(src._requestLine),
-								_requestMethod(src._requestMethod),
-								_uri(src._uri),
-								_host(src._host),
-								_isKeepAlive(src._isKeepAlive),
-								_hasReceivedHeaders(src._hasReceivedHeaders),
-								_bodySize(src._bodySize),
-								_isChunkedRequest(src._isChunkedRequest),
-								_isTerminatedRequest(src._isTerminatedRequest),
-								_isInternalRedirect(src._isInternalRedirect)
+											_serverConfig(0),
+											_location(0),
+											_isKeepAlive(true),
+											_hasReceivedHeaders(false),
+											_bodySize(-1),
+											_isChunkedRequest(false),
+											_isTerminatedRequest(false),
+											_isInternalRedirect(false)
 	{
-		// TO DO: handle swap of std::ofstream (or other _chunks object)
-		// 		  or not if Request in only copied at Client creation?
+		// NOTE: Except at Client creation (inserted in the client list),
+		// the Request should not be copied
 
 		LOG_INFO("Request copied");
+	}
+
+	Request::~Request()
+	{
+		// TO DO: clear _chunks & everything necessary, cf. clearRequest()
 	}
 
 	/**************************************************************************/
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 
-	std::string	Request::_getServerName() const
+	const std::string&	Request::getServerName() const
 	{
-		if (_serverConfig->getServerNames().begin()
-				== _serverConfig->getServerNames().end())
+		static const std::string	emptyString("");
+
+		if (_serverConfig && _serverConfig->getServerNames().begin()
+				!= _serverConfig->getServerNames().end())
 			return (*_serverConfig->getServerNames().begin());
-		return ("");
+		return (emptyString);
+	}
+
+	void	Request::_logError(const std::string& errorAt) const
+	{
+		LOG_ERROR(errorAt << ", client: " << _clientSocket.getIpAddr()
+				<< ":" << _clientSocket.getPort() << ", server: "
+				<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
+				<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
+				<< " (\"" << getServerName() << "\"), request: \""
+				<< _requestLine << "\", host: \"" << _host << "\""
+				<< ", body size: " << _bodySize);
 	}
 
 	int	Request::_checkHost() const
 	{
 		if (_host.empty()) {
-			LOG_INFO("Client sent HTTP/1.1 request without \"Host\" header"
-					<< " while reading client request headers, client: "
-					<< _clientSocket.getIpAddr() << ":"
-					<< _clientSocket.getPort() << ", server: "
-					<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
-					<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
-					<< " (\"" << _getServerName() << "\"), request: \""
-					<< _requestLine << "\"");
+			_logError("Client sent HTTP/1.1 request without \"Host\" header");
 			return (400);
 		}
 		return (0);
@@ -79,13 +86,7 @@ namespace	webserv
 		LOG_DEBUG("Content-Length: " << _bodySize << ", max: "
 				<< _location->getMaxBodySize());
 		if (_bodySize > 0 && _bodySize > _location->getMaxBodySize()) {
-			LOG_ERROR("Client intended to send too large body: " << _bodySize
-					<< " bytes, client: " << _clientSocket.getIpAddr() << ":"
-					<< _clientSocket.getPort() << ", server: "
-					<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
-					<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
-					<< " (\"" << _getServerName() << "\"), request: \""
-					<< _requestLine << "\", host: \"" << _host << "\"");
+			_logError("Client intended to send too large body");
 			return (413);
 		}
 		return (0);
@@ -97,13 +98,7 @@ namespace	webserv
 			return (405);
 		if (!_location->getLimitExcept().empty()
 				&& !_location->getLimitExcept().count(_requestMethod)) {
-			LOG_ERROR("Access forbidden by rule, client: "
-					<< _clientSocket.getIpAddr() << ":"
-					<< _clientSocket.getPort() << ", server: "
-					<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
-					<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
-					<< " (\"" << _getServerName() << "\"), request: \""
-					<< _requestLine << "\", host: \"" << _host << "\"");
+			_logError("Access forbidden by rule");
 			return (403);
 		}
 		return (0);
@@ -148,8 +143,8 @@ namespace	webserv
 	{
 		locations_map::const_iterator		extLocation;
 
-		extLocation = location.getLocations().lower_bound("*.~");
-		while (extLocation != location.getLocations().end()
+		extLocation = location.getNestedLocations().lower_bound("*.~");
+		while (extLocation != location.getNestedLocations().end()
 				&& extLocation->first[0] == '*'
 				&& extLocation->first.size() > 2) {
 			if (std::search(_uri.rbegin(), _uri.rend(),
@@ -202,14 +197,13 @@ namespace	webserv
 		while (config != serverConfigs.end()) {
 			name = config->getServerNames().begin();
 			while (name != config->getServerNames().end()) {
-				if (ft_strcmp_icase(_host, *name) == 0) {
+				if (ft_strcmp_icase(_host, *name) == true) {
 					_serverConfig = &(*config);
 					LOG_DEBUG("Using server: \"" << *name << "\" (on \""
-							<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
-							<< ":"
-							<< ntohs(_serverConfig->getListenPair().sin_port)
-							<< "\")");
-					return (true);
+						<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
+						<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
+						<< "\")");
+					return (_loadLocation(*_serverConfig));
 				}
 				++name;
 			}
@@ -261,7 +255,7 @@ namespace	webserv
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
 			// After header sent, check content length header, etc
-			// Or/And check them when _isTerminatedRequest?
+			// And check them when _isTerminatedRequest?
 			return (_checkHeaders());
 		}
 		return (0);
@@ -279,13 +273,7 @@ namespace	webserv
 
 		_uri = requestTarget;
 		if (error) {
-			LOG_INFO("Client sent invalid request while reading client request"
-					<< " line, client: " << _clientSocket.getIpAddr() << ":"
-					<< _clientSocket.getPort() << ", server: "
-					<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
-					<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
-					<< " (\"" << _getServerName() << "\"), request: \""
-					<< _requestLine << "\"");
+			_logError("Client sent invalid request line");
 			return (false);
 		}
 		return (true);
@@ -321,7 +309,7 @@ namespace	webserv
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
 			// After header sent, check content length header, etc
-			// Or/And check them when _isTerminatedRequest?
+			// And check them when _isTerminatedRequest?
 			return (_checkHeaders());
 		}
 		return (0);
@@ -334,18 +322,18 @@ namespace	webserv
 
 	void	Request::_parseInternalTarget(const std::string& redirectTo)
 	{
-		size_t	args = redirectTo.find('?');
+		size_t	query = redirectTo.find('?');
 
-		_uri = redirectTo.substr(0, args);
-		if (args != std::string::npos)
-			_args = redirectTo.substr(args + 1);
+		_uri = redirectTo.substr(0, query);
+		if (query != std::string::npos)
+			_query = redirectTo.substr(query + 1);
 		else
-			_args.clear();
+			_query.clear();
 	}
 
 	int	Request::loadInternalRedirect(const std::string& redirectTo)
 	{
-		// TO DO: During internal redirections, NGINX does not check the URI
+		// NOTE: During internal redirections, NGINX does not check the URI
 		// validity (!!!) and allows it to go up like "/../../../[file]"
 
 		_isInternalRedirect = true;
@@ -354,7 +342,7 @@ namespace	webserv
 			return (500);
 		}
 		_parseInternalTarget(redirectTo);
-		LOG_DEBUG("Internal redirect: \"" << _uri << "?" << _args << "\"");
+		LOG_DEBUG("Internal redirect: \"" << _uri << "?" << _query << "\"");
 		if (!_loadLocation(*_serverConfig))
 			return (500);
 		return (_checkHeaders());
@@ -362,7 +350,7 @@ namespace	webserv
 
 	void	Request::clearRequest()
 	{
-		// TO DO: clear saved chunks;	// with try-catch if necessary
+		// TO DO: clear potentially saved chunks, with try-catch if necessary
 
 		_serverConfig = 0;
 		_location = 0;

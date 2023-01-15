@@ -134,7 +134,7 @@ Parser::Parser()
 			&Parser::_addServer
 		}
 	};
-	
+
 	for (size_t i = 0; i < Parser::kDirectiveNb; i++) {
 		_grammar.insert(std::make_pair(directives[i].str, directives[i]));
 	}
@@ -162,7 +162,7 @@ Parser::ConfigData::ConfigData(Type t, Config& conf) : type(t), config(conf)
 
 /**
  * @brief Check ending char
- * @param directive 
+ * @param directive
  */
 void	Parser::_parseType(const Directive& directive)
 {
@@ -184,8 +184,8 @@ void	Parser::_parseType(const Directive& directive)
 
 /**
  * @brief Check the containing block
- * 
- * @param directive 
+ *
+ * @param directive
  */
 void	Parser::_parseContext(const Directive& directive)
 {
@@ -204,8 +204,8 @@ void	Parser::_parseContext(const Directive& directive)
 
 /**
  * @brief Check if duplicate
- * 
- * @param directive 
+ *
+ * @param directive
  */
 void	Parser::_parseDup(const Directive& directive)
 {
@@ -222,8 +222,8 @@ void	Parser::_parseDup(const Directive& directive)
 
 /**
  * @brief Check the argument count
- * 
- * @param directive 
+ *
+ * @param directive
  */
 void	Parser::_parseArgc(const Directive& directive)
 {
@@ -237,7 +237,7 @@ void	Parser::_parseArgc(const Directive& directive)
 void	Parser::_parseDirective(it_t nameToken, it_t ctrlToken)
 {
 	std::map<std::string, DirectiveSyntax>::iterator syntaxIter;
-	
+
 	if ((syntaxIter = _grammar.find(nameToken->value)) == _grammar.end()) {
 		_errorHandler("unknown directive \"" + nameToken->value + "\"");
 	} else {
@@ -268,7 +268,7 @@ void	Parser::operator()(Lexer::token_queue& tokens)
 				&& (ctrlToken == tokens.begin())) {
 			if ((_configStack.top().type == kServer)
 					&& (_currConfig->getListens().empty())) {
-				sockaddr_in	defaultAddr; 
+				sockaddr_in	defaultAddr;
 				setSockAddr(defaultAddr, INADDR_ANY, 8000);
 				_currConfig->addListenPair(defaultAddr);
 			}
@@ -323,7 +323,7 @@ void	Parser::_setMaxBodySize(Directive& currDirective)
 		default:
 			_errorHandler("\"client_max_body_size\" directive invalid value");
 	}
-	if (size > (LLONG_MAX >> shift))
+	if (size > (std::numeric_limits<int64_t>::max() >> shift))
 		_errorHandler("\"client_max_body_size\" directive invalid value");
 	size <<= shift;
 	_currConfig->setMaxBodySize(size);
@@ -352,7 +352,7 @@ void	Parser::_setReturnPair(Directive& currDirective)
 
 /**
  * @brief Check for duplicate alias/root directive (mutually exclusive)
- * 
+ *
  * @param argType type of tested directive
  */
 void	Parser::_duplicateCheck(const std::string& currDirStr,

@@ -10,8 +10,7 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Client::Client(const int id, const int serverFd,
-					const server_configs& serverConfigs): _id(id),
+	Client::Client(const int serverFd, const server_configs& serverConfigs):
 												_serverFd(serverFd),
 												_serverConfigs(serverConfigs),
 												_socket(serverFd),
@@ -19,13 +18,13 @@ namespace	webserv
 												_request(_socket)
 	{
 		LOG_INFO("New Client instance");
-		LOG_DEBUG("id=" << _id << " ; " << "serverFd=" << _serverFd << " ; "
+		LOG_DEBUG("serverFd=" << _serverFd << " ; "
 				<< "fd=" << _socket.getFd() << " ; "
 				<< "addr=" << _socket.getIpAddr() << " ; "
 				<< "port=" << _socket.getPort());
 	}
 
-	Client::Client(const Client& src): _id(src._id), _serverFd(src._serverFd),
+	Client::Client(const Client& src): _serverFd(src._serverFd),
 										_serverConfigs(src._serverConfigs),
 										_socket(src._socket),
 //										_isKeepAlive(src._isKeepAlive),
@@ -33,7 +32,7 @@ namespace	webserv
 										_response(src._response)
 	{
 		LOG_INFO("Client copied");
-		LOG_DEBUG("id=" << _id << " ; " << "serverFd=" << _serverFd << " ; "
+		LOG_DEBUG("serverFd=" << _serverFd << " ; "
 				<< "fd=" << _socket.getFd() << " ; "
 				<< "addr=" << _socket.getIpAddr() << " ; "
 				<< "port=" << _socket.getPort());
@@ -43,32 +42,36 @@ namespace	webserv
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 
-	void	Client::parseRequest(const char* recvBuffer)
+	void	Client::_logError(const std::string& errorAt,
+								const std::string& errorType) const
 	{
-		int		responseCode;
-
-		try {
-			responseCode = _request.parseRequest(_unprocessedBuffer, recvBuffer,
-													_serverConfigs);
-		} catch (const std::exception& e) {
-			LOG_ERROR("Unable to handle the client request: " << e.what());
-			LOG_DEBUG("serverFd=" << _serverFd << " ; "
-					<< "fd=" << _socket.getFd() << " ; "
-					<< "addr=" << _socket.getIpAddr() << " ; "
-					<< "port=" << _socket.getPort());
-			responseCode = 500;
-		}
-		if (responseCode >= 300 && responseCode <= 599)
-			_response.setResponseCode(responseCode);
+		LOG_ERROR(errorAt << ": " << errorType);
+		if (_request.getLocation()) {
+			LOG_DEBUG("client: " << _socket.getIpAddr()
+					<< ", client fd: " << _socket.getFd()
+					<< ", server: " << _request.getServerName()
+					<< ", server fd: " << _serverFd
+					<< ", request: \"" << _request.getRequestLine() << "\""
+					<< ", host: \"" << _request.getHost() << "\"");
+		} else
+			LOG_DEBUG("client: " << _socket.getIpAddr()
+					<< ", client fd: " << _socket.getFd()
+					<< ", server fd: " << _serverFd
+					<< ", request: \"" << _request.getRequestLine() << "\"");
 	}
 
-	bool	Client::hasError() const
+	int	Client::parseRequest(const char* recvBuffer)
 	{
-		int		responseCode = _response.getResponseCode();
+		int		errorCode;
 
-		if (responseCode >= 300 && responseCode <= 599)
-			return (true);
-		return (false);
+		try {
+			errorCode = _request.parseRequest(_unprocessedBuffer, recvBuffer,
+													_serverConfigs);
+		} catch (const std::exception& e) {
+			_logError("Unable to parse the client request", e.what());
+			errorCode = 500;
+		}
+		return (errorCode);
 	}
 
 	bool	Client::hasUnprocessedBuffer() const
@@ -98,21 +101,41 @@ namespace	webserv
 		// TO DO: Implement a timeout: setResponseCode(408) and return (false)
 		// si timeout pour ne pas clutter le server?
 		// If so, either implement a timeout directive, or a default timeout
+		// and update it when sending parts of a partial response
 
 		return (true);
 	}
 
-	void	Client::prepareResponse()
+	bool	Client::prepareResponse()
 	{
-		_response.prepareResponse(_request);	// try-catch
-		if (!_response.isChunkedResponse())
-			_request.clearRequest();
+		try {
+			_response.prepareResponse(_request);
+//			if (!_response.isPartialResponse())
+//				_request.clearRequest();	// not here?
+		} catch (const std::exception& e) {
+			_logError("Unable to prepare the request's response", e.what());
+			return (false);
+		}
+		return (true);
 	}
 
-	void	Client::prepareErrorResponse(int errorCode)
+	bool	Client::prepareErrorResponse(int errorCode)
 	{
-		_response.prepareErrorResponse(_request, errorCode);	// add try-catch
-		_request.clearRequest();
+		try {
+			_response.prepareErrorResponse(_request, errorCode);
+//			_request.clearRequest();	// not here?
+		} catch (const std::exception& e) {
+			_logError("Unable to prepare the error response", e.what());
+			return (false);
+		}
+		return (true);
+	}
+
+	bool	Client::sendResponse(int ioFlags)
+	{
+		int		clientFd = getSocket().getFd();
+
+		return (_response.sendResponse(_request, clientFd, ioFlags));
 	}
 
 }	// namespace webserv

@@ -77,7 +77,7 @@ namespace	config {
 		};
 
 		struct ConfigData {
-			enum Type		type;	
+			enum Type		type;
 			Config&			config;
 			bool			isDefined[Parser::kDirectiveNb];
 

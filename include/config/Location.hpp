@@ -27,19 +27,28 @@ namespace	webserv
 		Location(const Location& src);
 		~Location() { }
 
-		const std::string&		getLocationName() const { return (_locationName); }
-		const int64_t&			getMaxBodySize() const { return (_maxBodySize);}
-		const limit_except_set&	getLimitExcept() const { return (_limitExcept);}
-		const return_pair&		getReturnPair() const { return (_return); }
-		const error_page_map&	getErrorPages() const { return (_errorPages); }
-		const std::string&		getRoot() const { return (_root); }
-		const std::string&		getAlias() const { return (_alias); }
-		const std::string&		getIndex() const { return (_index); }
-		bool					isAutoIndex() const { return (_autoIndex); }
-		const std::string&		getFastCgiPass() const { return (_fastCgiPass);}
-
-		const locations_map&	getLocations() const
-												{ return (_locations); }
+		const std::string&		getLocationName() const
+											{ return (_locationName); }
+		const int64_t&			getMaxBodySize() const
+											{ return (_maxBodySize); }
+		const limit_except_set&	getLimitExcept() const
+											{ return (_limitExcept); }
+		const return_pair&		getReturnPair() const
+											{ return (_return); }
+		const error_page_map&	getErrorPages() const
+											{ return (_errorPages); }
+		const std::string&		getRoot() const
+											{ return (_root); }
+		const std::string&		getAlias() const
+											{ return (_alias); }
+		const std::string&		getIndex() const
+											{ return (_index); }
+		bool					isAutoIndex() const
+											{ return (_autoIndex); }
+		const std::string&		getFastCgiPass() const
+											{ return (_fastCgiPass); }
+		const locations_map&	getNestedLocations() const
+											{ return (_locations); }
 	private:
 		Location();
 

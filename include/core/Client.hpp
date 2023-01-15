@@ -16,39 +16,38 @@ namespace	webserv
 	public:
 		typedef std::vector<ServerConfig>	server_configs;
 
-		Client(const int id, const int serverFd,
-				const server_configs& serverConfigs);	// tmp exam version
+		Client(const int serverFd, const server_configs& serverConfigs);
 		Client(const Client& src);
 		~Client() { }
 
-		const int&				getId() const { return (_id); }	// tmp exam version
 		const AcceptSocket&		getSocket() const { return (_socket); }
 
-		void	parseRequest(const char* recvBuffer);
+		int		parseRequest(const char* recvBuffer);
 
 		const Request&		getRequest() const { return (_request); }
 		const Response&		getResponse() const { return (_response); }
 
-		bool	hasError() const;
 		bool	hasUnprocessedBuffer() const;
 		bool	isProcessingRequest() const;
 		bool	hasRequestTerminated() const;
 		bool	hasResponseReady() const;
 		bool	isKeepAlive() const;
 
-		void	prepareResponse();
-		void	prepareErrorResponse(int errorCode = 0);
+		bool	prepareResponse();
+		bool	prepareErrorResponse(int errorCode = 0);
+
+		bool	sendResponse(int ioFlags);
 
 		void	clearRequest() { _request.clearRequest(); }
 		void	clearResponse() { _response.clearResponse(_request); }
 
 		void	closeSocket() { _socket.closeFd(); }
-
-		std::string		buffer;	// tmp exam version
 	private:
 		Client&	operator=(const Client& rhs);
 
-		int						_id;	// tmp exam version
+		void	_logError(const std::string& errorAt,
+							const std::string& errorType) const;
+
 		int						_serverFd;
 		const server_configs&	_serverConfigs;
 		AcceptSocket			_socket;

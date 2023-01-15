@@ -60,7 +60,7 @@ void	Config::setFastCgiPass(const std::string& path)
 { _fastCgiPass = path; }
 
 bool	Config::addListenPair(const sockaddr_in& addr)
-{ 
+{
 	LOG_DEBUG(ft_inet_ntoa(addr.sin_addr) << ":" << ntohs(addr.sin_port));
 	return (_listens.insert(addr).second);
 }

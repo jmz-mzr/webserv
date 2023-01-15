@@ -17,12 +17,23 @@ namespace	webserv
 
 		Request(const AcceptSocket& clientSocket);
 		Request(const Request& src);
-		~Request() { }	// clear _chunks if not automatic
+		~Request();
 
+		const AcceptSocket&		getClientSocket () const
+										{ return (_clientSocket); }
+		const std::string&		getRequestLine() const
+										{ return (_requestLine); }
 		const std::string&		getRequestMethod() const
 										{ return (_requestMethod); }
+		const std::string&		getUri() const
+										{ return (_uri); }
+		const std::string&		getQuery() const
+										{ return (_query); }
+		const std::string&		getExtension() const
+										{ return (_extension); }
 		const std::string&		getHost() const
 										{ return (_host); }
+		const std::string&		getServerName() const;
 		const ServerConfig*		getServerConfig() const
 										{ return (_serverConfig); }
 		const Location*			getLocation() const
@@ -61,15 +72,17 @@ namespace	webserv
 		int				_parseChunkedRequest(std::string& unprocessedBuffer,
 										const char* buffer,
 										const server_configs& serverConfigs);
-		bool			_loadServerConfig(const server_configs& serverConfigs);
-		bool			_loadLocation(const ServerConfig& serverConfig);
-		bool			_loadExtensionLocation(const ServerConfig& serverConfig);
-		bool			_loadExtensionLocation(const Location& location);
-		int				_checkHeaders() const;
-		std::string		_getServerName() const;
-		int				_checkHost() const;
-		int				_checkMaxBodySize() const;
-		int				_checkMethod() const;
+
+		bool		_loadServerConfig(const server_configs& serverConfigs);
+		bool		_loadLocation(const ServerConfig& serverConfig);
+		bool		_loadExtensionLocation(const ServerConfig& serverConf);
+		bool		_loadExtensionLocation(const Location& location);
+		int			_checkHeaders() const;
+		int			_checkHost() const;
+		int			_checkMaxBodySize() const;
+		int			_checkMethod() const;
+
+		void	_logError(const std::string& errorAt) const;
 
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
@@ -81,6 +94,7 @@ namespace	webserv
 		const Location*						_location;
 
 		// TO DO: 1) If the request line is invalid, immediately return 400
+		// but record it here anyway for the debug messages
 		// 2) If the request line is > 8192, immediately return 414
 		std::string			_requestLine;
 
@@ -90,7 +104,7 @@ namespace	webserv
 		// 2) If invalid return 400, if not allowed _checkHeaders will return 405
 		std::string			_requestMethod;
 
-		// TO DO: 1) It is what comes before '#', or the first '?' starting the args,
+		// TO DO: 1) It is what comes before '#', or the first '?' starting the query,
 		// and after the potential valid full scheme, domain name and port
 		// 2) If the requested origin-form URI has no '/' prefix, or if it goes up
 		// in directories (with "/..") such that it would go above "/"
@@ -102,13 +116,13 @@ namespace	webserv
 		std::string			_uri;
 
 		// TO DO: It is what comes after the first '?' in the URI
-		std::string			_args;
+		std::string			_query;
 
 		// TO DO: It is what comes after the last '.' in the URI part, but only
 		// if it is not part of "/.." that goes up in a directory, if it is
 		// preceded and follwed by a valid usual character
 		// It is used to set the Response's "Content-Type"
-		std::string			_ext;
+		std::string			_extension;
 
 		std::string			_host;
 
@@ -120,7 +134,7 @@ namespace	webserv
 
 		// TO DO: The Content-Length also limits the size of what is actually
 		// going to be processed from the body (even if it is longer)
-		int64_t			_bodySize;
+		int64_t				_bodySize;
 
 		bool				_isChunkedRequest;
 
