@@ -41,7 +41,7 @@ namespace	webserv
 		void		_addServer(const Config& serverConfig);
 		server_iter	_findSameSocket(const sockaddr_in& listenPair);
 		bool		_sameSocket(const sockaddr_in& listenPair,
-											const sockaddr_in& serverAddr) const;
+										const sockaddr_in& serverAddr) const;
 		void		_deleteRedundantNames(ServerConfig& serverConfig,
 											const Server& server) const;
 		void		_loadServers(const std::list<Config>& config);
@@ -52,13 +52,9 @@ namespace	webserv
 										const std::string& object) const;
 		void		_addClient(const int serverFd, const Server& server);
 		client_iter	_removeClient(client_iter client, pollFd_iter pollFd);
-		void		_broadcastMsg(const std::string& msg,
-									const int senderId) const;	// tmp exam version
 		void		_handleClients();
 		ssize_t		_receiveClientRequest(Client& client, pollFd_iter pollFd);
-		void		_bufferAndSendMsg(Client& client);	// tmp exam version
-		int			_extractMsg(std::string& buffer, std::string& msg);	// tmp exam version
-		void		_handleClientRequest(Client& client);
+		bool		_handleClientRequest(Client& client);
 		bool		_handleClientResponse(Client& client, pollFd_iter pollFd);
 		bool		_sendResponse(Client& client, int clientFd);
 		void		_usageHelper();
