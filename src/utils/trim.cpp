@@ -4,7 +4,7 @@ namespace	webserv
 {
 
 static const std::string kWhitespaces = " \n\r\t\f\v";
- 
+
 std::string	trimLeft(const std::string &s)
 {
 	size_t start = s.find_first_not_of(kWhitespaces);

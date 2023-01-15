@@ -5,6 +5,7 @@
 
 #include "utils/exceptions.hpp"
 #include "utils/Logger.hpp"
+#include "utils/utils.hpp"
 
 namespace	webserv
 {
@@ -32,7 +33,7 @@ namespace	webserv
 
 		struct addrinfo		addrHints;
 		struct addrinfo*	addrList;
-		const char*			portStr = STRINGIZE(port);
+		std::string			portStr = to_string(port);
 		int					error;
 
 		memset(&addrHints, 0, sizeof(struct addrinfo));
@@ -40,7 +41,7 @@ namespace	webserv
 		addrHints.ai_socktype = SOCK_STREAM;
 		addrHints.ai_protocol = IPPROTO_TCP;
 		addrHints.ai_flags = AI_NUMERICSERV | AI_CANONNAME;
-		error = getaddrinfo(ipAddr.c_str(), portStr, &addrHints, &addrList);
+		error = getaddrinfo(ipAddr.data(), portStr.data(), &addrHints, &addrList);
 		if (error) {
 			if (error == EAI_SYSTEM) {
 				LOG_DEBUG("getaddrinfo() error: " << strerror(errno));

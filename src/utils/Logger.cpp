@@ -61,9 +61,9 @@ namespace	webserv
 				<< ": " << msg;
 			output = stream.str();
 			if (_ostream & kConsole)
-				_logfile << output << std::endl;
-			if (_ostream & kFile)
 				std::cerr << output << std::endl;
+			if (_ostream & kFile)
+				_logfile << output << std::endl;
 		}
 	}
 

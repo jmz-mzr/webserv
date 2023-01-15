@@ -21,10 +21,22 @@
 #  define DEFAULT_CONF_FILE	conf/test.conf
 # endif
 
-# define RECV_BUFFER_SIZE	8192
-//# define SEND_BUFFER_SIZE	81920
+# ifndef WEBSERV_ROOT
+#  define WEBSERV_ROOT		/usr/local/var/www
+# endif
+
+# define RECV_BUFFER_SIZE	8192	// 8KB
+//# define RECV_BUFFER_SIZE	16384	// 16KB
+//# define RECV_BUFFER_SIZE	32768	// 32KB
+
 # define SEND_BUFFER_SIZE	524288	// 500KB
 //# define SEND_BUFFER_SIZE	1048576	// 1MB
+//# define SEND_BUFFER_SIZE	2097152 // 2MB
+
+# define READ_BUFFER_SIZE	65536	// 64KB
+//# define READ_BUFFER_SIZE	131072	// 128KB
+
+# define AUTOINDEX_NAME_LEN	50
 
 # if (defined(__GLIBCXX__) || defined(__GLIBCPP__))
 #  define MACOS

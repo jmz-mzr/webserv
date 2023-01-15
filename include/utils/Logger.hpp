@@ -7,10 +7,24 @@
 
 # include "webserv_config.hpp"
 
-# define LOG(level, msg)	{													 \
-	std::ostringstream stream;													 \
-	stream << msg;																 \
-	webserv::Logger::getInstance().log(__FILE__, __LINE__, level, stream.str()); \
+# include <exception>
+# include <iostream>
+
+# define LOG(level, msg)	{												\
+	try {																	\
+		std::ostringstream	stream;											\
+		stream << msg;														\
+		webserv::Logger::getInstance().log(__FILE__, __LINE__,				\
+											level, stream.str());			\
+	} catch (const std::exception& e) {										\
+		if (webserv::Logger::getInstance().getOutputStream()				\
+				& webserv::Logger::kConsole)								\
+			std::cerr << "Logging error: " << e.what() << std::endl;		\
+		if (webserv::Logger::getInstance().getOutputStream()				\
+				& webserv::Logger::kFile)									\
+			webserv::Logger::getInstance().getLogfile()						\
+				<< "Logging error: " << e.what() << std::endl;				\
+	}																		\
 }
 
 # define LOG_EMERG(msg)		LOG(webserv::Logger::kEmerg, msg)
@@ -30,11 +44,11 @@ namespace	webserv
 	class	Logger {
 	public:
 		enum	LogLevel {
-			kEmerg,		// The system is in an unusable state and requires immediate attention
+			kEmerg,		// System in an unusable state, need immediate attention
 			kError, 	// Something was unsuccessful
-			kWarn,		// Something unexpected happened, however is not a cause for concern
-			kInfo,		// Informational messages that aren't necessary to read but may be good to know
-			kDebug		// Useful debugging information to help determine where the problem lies
+			kWarn,		// Something unexpected but not concerning happened
+			kInfo,		// Info messages, not necessary but good to know
+			kDebug		// Useful debugging info to help locate the problem
 		};
 
 		enum	OutputStream {
@@ -53,7 +67,7 @@ namespace	webserv
 		void	log(const std::string& file, unsigned int line,
 						unsigned int level, const std::string& msg);
 
-		const std::ofstream&	getLogfile() const { return (_logfile); }
+		std::ofstream&			getLogfile() { return (_logfile); }
 		const OutputStream&		getOutputStream() const { return (_ostream); }
 
 	private:
