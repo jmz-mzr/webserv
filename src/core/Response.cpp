@@ -664,7 +664,7 @@ namespace	webserv
 		if (aliasUri[0] == '/')
 			_requestedFileName = aliasUri;
 		else {
-			if (_requestedFileName.back() != '/')
+			if (*(_requestedFileName.end() - 1) != '/')
 				_requestedFileName += '/';
 			_requestedFileName += aliasUri;
 		}
@@ -677,15 +677,15 @@ namespace	webserv
 			if (request.getLocation()->getRoot()[0] == '/')
 				_requestedFileName = request.getLocation()->getRoot();
 			else {
-				if (_requestedFileName.back() != '/')
+				if (*(_requestedFileName.end() - 1) != '/')
 					_requestedFileName += '/';
 				_requestedFileName += request.getLocation()->getRoot();
 			}
-			if (_requestedFileName.back() == '/')
-				_requestedFileName.pop_back();
+			if (*(_requestedFileName.end() - 1) == '/')
+				_requestedFileName.erase(_requestedFileName.size() - 1, 1);
 			_requestedFileName += request.getUri();
 		}
-		if (_requestedFileName.back() == '/')
+		if (*(_requestedFileName.end() - 1) == '/')
 			return (_loadIndex(request));
 		return (_openRequestedFile(request));
 	}

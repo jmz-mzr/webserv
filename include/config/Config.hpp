@@ -40,29 +40,17 @@ namespace webserv {
 		void		addServerName(const std::string& name);
 		Config&		addConfig(const std::string& path, const Config& config);
 
-		const listen_set&		getListens() const
-												{ return (_listens); }
-		const hostname_set&		getServerNames() const
-												{ return (_serverNames); }
-		const error_page_map&	getErrorPages() const
-												{ return (_errorPages); }
-		const int64_t&			getMaxBodySize() const
-												{ return (_maxBodySize); }
-
-		const limit_except_set&	getLimitExcept() const
-											{ return (_limitExcept); }
-		const return_pair&		getReturnPair() const
-											{ return (_return); }
-		const std::string&		getRoot() const
-											{ return (_root); }
-		const std::string&		getAlias() const
-											{ return (_alias); }
-		bool					isAutoIndex() const
-											{ return (_autoIndex); }
-		const std::string&		getIndex() const
-											{ return (_index); }
-		const std::string&		getFastCgiPass() const
-											{ return (_fastCgiPass); }
+		const listen_set&		getListens() const { return (_listens); }
+		const hostname_set&		getServerNames() const { return (_serverNames);}
+		const error_page_map&	getErrorPages() const { return (_errorPages); }
+		const int64_t&			getMaxBodySize() const { return (_maxBodySize);}
+		const limit_except_set&	getLimitExcept() const { return (_limitExcept);}
+		const return_pair&			getReturnPair() const { return (_return); }
+		const std::string&		getRoot() const { return (_root); }
+		const std::string&		getAlias() const { return (_alias); }
+		bool					isAutoIndex() const { return (_autoIndex); }
+		const std::string&		getIndex() const { return (_index); }
+		const std::string&		getFastCgiPass() const { return (_fastCgiPass);}
 
 		const config_map&		getConfigs() const { return (_configs); }
 
@@ -126,7 +114,7 @@ namespace webserv {
 		// in /usr/local/etc/nginx/nginx.conf:114')
 		// 5) If the definition was inherited from the Config, the first
 		// definition line replaces it
-		int64_t					_maxBodySize;
+		int64_t						_maxBodySize;
 
 		// Same as with NGINX -> if the set is not empty, and the
 		// method is not in the set, we deny the access and return a 403

@@ -293,12 +293,12 @@ void	Parser::_addErrorPage(Directive& currDirective)
 			it != currDirective.argv.end() - 1;
 			it++) {
 		if (std::find_if(it->begin(), it->end(), &isnotdigit) != it->end())
-			_errorHandler("invalid value \"" + (*it) + "\"");
+			_errorHandler("invalid value \"" + *it + "\"");
 		errorCode = strtol(it->c_str(), NULL, 10);
 		if (errno)
 			THROW_LOGIC("strtol(): " << strerror(errno));
 		if ((errorCode < 300) || (errorCode > 599)) {
-			_errorHandler("value \"" + (*it) + "\" must be between 300 and 599");
+			_errorHandler("value \"" + *it + "\" must be between 300 and 599");
 		}
 		_currConfig->addErrorPage(static_cast<int>(errorCode), uri);
 	}
@@ -344,10 +344,35 @@ void	Parser::_setLimitExcept(Directive& currDirective)
 	}
 }
 
-//TODO: URL parser
 void	Parser::_setReturnPair(Directive& currDirective)
 {
-	(void)currDirective;
+	std::string		arg1(currDirective.argv[0]);
+	size_t			pos = arg1.find(':');
+
+	if (pos != std::string::npos) {
+		std::string	scheme = arg1.substr(0, pos);
+
+		if ((scheme == "http" || scheme == "https")
+				&& (arg1.compare(pos + 1, 2, "//") == 0))
+			_currConfig->setReturnPair(std::make_pair(302, arg1));
+		else
+			_errorHandler("invalid return code \"" + arg1 + "\"");
+	} else {
+		long	errorCode;
+
+		if (std::find_if(arg1.begin(), arg1.end(), &isnotdigit) != arg1.end())
+			_errorHandler("invalid return code \"" + arg1 + "\"");
+		errorCode = strtol(arg1.c_str(), NULL, 10);
+		if (errno)
+			THROW_LOGIC("strtol(): " << strerror(errno));
+		if ((errorCode < 0) || (errorCode > 999))
+			_errorHandler("invalid return code \"" + arg1 + "\"");
+		if (currDirective.argv.size() > 1)
+			_currConfig->setReturnPair(
+							std::make_pair(errorCode, currDirective.argv[1]));
+		else
+			_currConfig->setReturnPair(std::make_pair(errorCode, ""));
+	}
 }
 
 /**
@@ -392,10 +417,9 @@ void	Parser::_setIndex(Directive& currDirective)
 	_currConfig->setIndex(currDirective.argv[0]);
 }
 
-// TODO
 void	Parser::_setFastCgiPass(Directive& currDirective)
 {
-	(void)currDirective;
+	_currConfig->setFastCgiPass(currDirective.argv[0]);
 }
 
 // Each element of the hostname must be from 1 to 63 characters long
