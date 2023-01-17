@@ -35,6 +35,9 @@ static void	_listenError(const std::string& err, const std::string& arg)
 static bool isnotdigit(char c)
 { return (!bool(std::isdigit(c))); }
 
+static bool isnothostnamevalid(char c)
+{ return (!(bool(std::isdigit(c)) || bool(std::isalpha(c)) || (c == '-'))); }
+
 /******************************************************************************/
 /*                         CONSTRUCTORS / DESTRUCTORS                         */
 /******************************************************************************/
@@ -422,19 +425,18 @@ void	Parser::_setFastCgiPass(Directive& currDirective)
 	_currConfig->setFastCgiPass(currDirective.argv[0]);
 }
 
-// Each element of the hostname must be from 1 to 63 characters long
-// and the entire hostname, including the dots, can be at most 253
-// characters long. Valid characters for hostnames are ASCII(7)
-// letters from a to z, the digits from 0 to 9, and the hyphen (-).
-// A hostname may not start with a hyphen. A bad host name should throw
-// "invalid host in "+=*&^%$!?<>" of the "listen" directive"
 void	Parser::_parseHost(const std::string& str,
 										std::list<sockaddr_in>& addrList)
 {
 	struct in_addr**	hostList;
-	struct hostent*		hent = gethostbyname(str.c_str());
+	struct hostent*		hent;
 	in_port_t			port;
 
+	if (std::find_if(str.begin(), str.end(), &isnothostnamevalid) != str.end()
+			|| (str.size() < 1 || str.size() > 63)
+			|| str[0] == '-')
+		_errorHandler("invalid host in \"" + str + "\" of the listen directive");
+	hent = gethostbyname(str.c_str());
 	if (hent == NULL)
 		_listenError("host not found", _currDirectivePtr->argv[0]);
 	hostList = reinterpret_cast<struct in_addr**>(hent->h_addr_list);
