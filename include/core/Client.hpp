@@ -45,8 +45,7 @@ namespace	webserv
 	private:
 		Client&	operator=(const Client& rhs);
 
-		void	_logError(const std::string& errorAt,
-							const std::string& errorType) const;
+		void	_logError(const char* errorAt, const char* errorType) const;
 
 		int						_serverFd;
 		const server_configs&	_serverConfigs;

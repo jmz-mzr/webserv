@@ -82,7 +82,7 @@ namespace	webserv
 		int			_checkMaxBodySize() const;
 		int			_checkMethod() const;
 
-		void	_logError(const std::string& errorAt) const;
+		void	_logError(const char* errorAt) const;
 
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
@@ -132,8 +132,11 @@ namespace	webserv
 		bool				_isKeepAlive;
 		bool				_hasReceivedHeaders;
 
-		// TO DO: The Content-Length also limits the size of what is actually
+		// TO DO: 1) The Content-Length also limits the size of what is actually
 		// going to be processed from the body (even if it is longer)
+		// 2) If the request method is DELETE and the request has a body, or
+		// if it has a Content-Length header with a positive value, immediately
+		// return 415 and LOG_ERROR("DELETE with body is unsupported")
 		int64_t				_bodySize;
 
 		bool				_isChunkedRequest;

@@ -42,8 +42,8 @@ namespace	webserv
 	/*                            MEMBER FUNCTIONS                            */
 	/**************************************************************************/
 
-	void	Client::_logError(const std::string& errorAt,
-								const std::string& errorType) const
+	void	Client::_logError(const char* errorAt,
+								const char* errorType) const
 	{
 		LOG_ERROR(errorAt << ": " << errorType);
 		if (_request.getLocation()) {

@@ -61,7 +61,7 @@ namespace	webserv
 		return (emptyString);
 	}
 
-	void	Request::_logError(const std::string& errorAt) const
+	void	Request::_logError(const char* errorAt) const
 	{
 		LOG_ERROR(errorAt << ", client: " << _clientSocket.getIpAddr()
 				<< ":" << _clientSocket.getPort() << ", server: "
