@@ -26,6 +26,7 @@ int	main(int argc, char** argv) try
 	std::signal(SIGINT, handleSigInt);
 	webserv.run();
 	return (EXIT_SUCCESS);
-} catch (const std::exception& e) {
+}
+catch (const std::exception& e) {
 	return (EXIT_FAILURE);
 }

@@ -153,6 +153,8 @@ namespace	webserv
 
 	void	Webserv::init(int argc, char** argv)
 	{
+		std::string		webservRoot(XSTR(WEBSERV_ROOT));
+
 		if (argc > 2 || argc < 1) {
 			_usageHelper();
 			LOG_DEBUG("argc=" << argc);
@@ -162,6 +164,11 @@ namespace	webserv
 				(argc == 2) ? argv[1] : XSTR(CONF_FILE) );
 			_loadServers(config.parseFile());
 		}
+		if (webservRoot.size() == 0)
+			THROW_FATAL("WEBSERV_ROOT cannot be an empty path");
+		if (webservRoot[0] != '/')
+			THROW_FATAL("WEBSERV_ROOT must start at root ('/')");
+		(void)Logger::getInstance();
 		Response::initResponseMaps();
 	}
 
