@@ -35,7 +35,7 @@ namespace	webserv
 													{ return (_serverNames); }
 		const error_page_map&			getErrorPages() const
 													{ return (_errorPages); }
-		const int64_t&				getMaxBodySize() const
+		const int64_t&					getMaxBodySize() const
 													{ return (_maxBodySize); }
 		const location_map&				getLocations() const
 													{ return (_locations); }

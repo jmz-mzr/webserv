@@ -159,7 +159,7 @@ namespace	webserv
 			THROW_LOGIC("Bad number of arguments");
 		} else {
 			ConfigParser config(
-				(argc == 2) ? argv[1] : XSTR(DEFAULT_CONF_FILE) );
+				(argc == 2) ? argv[1] : XSTR(CONF_FILE) );
 			_loadServers(config.parseFile());
 		}
 		Response::initResponseMaps();

@@ -518,7 +518,6 @@ void	Parser::_addServerName(Directive& currDirective)
 	_currConfig->addServerName(ft_str_tolower(currDirective.argv[0]));
 }
 
-// TODO: limit nested locations
 void	Parser::_addLocation(Directive& currDirective)
 {
 	Config& locConf = _currConfig->addConfig(currDirective.argv[0], Config());
