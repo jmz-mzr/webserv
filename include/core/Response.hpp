@@ -50,6 +50,18 @@ namespace	webserv
 		bool				_loadErrorPage(Request& request);
 		int					_loadRequestedFile(Request& request);
 		bool				_loadFileWithAlias(Request& request);
+		int					_removeRequestedFile(const Request& request);
+		int					_removeRequestedDirectory(const Request& request);
+		bool				_removeDirectoryTree(const Request& request,
+													const char* path);
+		bool				_removeDirEntry(const Request& request,
+											const char* dirPath,
+											const char* entryName,
+											bool* hasError);
+		void				_deleteFile(const Request& request,
+										const char* filename);
+		void				_deleteDirectory(const Request& request,
+												const char* dirname);
 		int					_openRequestedFile(const Request& request);
 		bool				_openAndStatFile(const Request& request,
 												struct stat* fileInfos);
@@ -68,7 +80,7 @@ namespace	webserv
 		void				_clearBuffer();
 		int					_loadDirEntries(const Request& request);
 		int					_loadDirEntry(const Request& request,
-											struct dirent* dirEntry);
+											const char* entryName);
 		void				_closeIndexDirectory();
 		int					_loadAutoindexHtml(const Request& request);
 		void				_loadAutoindexEntry(const _dir_entry_pair& entry);
@@ -82,8 +94,8 @@ namespace	webserv
 		void				_loadHeaders();
 		const std::string	_getETag() const;
 
-		void	_logError(const Request& request, const std::string& errorAt,
-							const std::string& errorType) const;
+		void	_logError(const Request& request, const char* errorAt,
+						const char* errorType, const char* filename = "") const;
 
 		static const std::string&	_getDate(time_t lastModifiedTime = -1);
 		static const std::string&	_getResponseStatus(int responseCode);

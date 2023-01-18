@@ -133,6 +133,8 @@ namespace	webserv
 
 	void	Response::_loadHeaders()
 	{
+		// TO DO: Add "Allow" header when response is 405 with supported methods
+
 		const char*			connection = _isKeepAlive ? "keep-alive" : "close";
 		std::ostringstream	headers;
 
@@ -140,7 +142,7 @@ namespace	webserv
 			<< Response::_getResponseStatus(_responseCode) << CRLF
 			<< "Server: webserv" << CRLF
 			<< "Date: " << Response::_getDate() << CRLF
-			<< "Content-Type: " << _contentType << CRLF;
+			<< "Content-Type: " << _contentType << CRLF;	// only if content?
 		if (_contentLength != -1)
 			headers << "Content-Length: " << _contentLength << CRLF;
 		if (_lastModifiedTime != -1)
@@ -157,34 +159,38 @@ namespace	webserv
 	}
 
 	void	Response::_logError(const Request& request,
-								const std::string& errorAt,
-								const std::string& errorType) const try
+								const char* errorAt,
+								const char* errorType,
+								const char* filename) const try
 	{
 		std::ostringstream	debugInfos;
-		std::string			space1((errorAt.size() != 0), ' ');
-		std::string			space2((errorType.size() != 0), ' ');
+		std::string			space1((errorAt[0] != '\0'), ' ');
+		std::string			space2((errorType[0] != '\0'), ' ');
 
 		debugInfos << "client: " << request.getClientSocket().getIpAddr()
 			<< ", server: " << request.getServerName()
 			<< ", request: \"" << request.getRequestLine()
 			<< "\", host: \"" << request.getHost() << "\"";
-		if (!errorAt.empty() && !errorType.empty()) {
-			LOG_ERROR(errorAt << space1 << "\"" << _requestedFileName << "\" "
+		if (filename[0] == '\0')
+			filename = _requestedFileName.c_str();
+		if (errorAt[0] != '\0' && errorType[0] != '\0') {
+			LOG_ERROR(errorAt << space1 << "\"" << filename << "\" "
 					<< errorType << " (" << errno << ": " << strerror(errno)
 					<< "), " << debugInfos.str());
 		} else
-			LOG_ERROR(errorAt << space1 << "\"" << _requestedFileName << "\""
+			LOG_ERROR(errorAt << space1 << "\"" << filename << "\""
 					<< space2 << errorType << ", " << debugInfos.str());
-	} catch (const std::exception& e) {
+	}
+	catch (const std::exception& e) {
 		LOG_ERROR("Logging error: " << e.what());
 	}
 
-	int	Response::_loadDirEntry(const Request& request, struct dirent* dirEntry)
+	int	Response::_loadDirEntry(const Request& request, const char* entryName)
 	{
 		struct stat		fileInfos;
 
-		LOG_DEBUG("http autoindex file: " << dirEntry->d_name);
-		if (dirEntry->d_name[0] == '.')
+		LOG_DEBUG("http autoindex file: " << entryName);
+		if (entryName[0] == '.')
 			return (0);
 		memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFileName.c_str(), &fileInfos) < 0) {
@@ -199,14 +205,14 @@ namespace	webserv
 				return (500);
 			}
 		}
-		_dirEntrySet.insert(std::make_pair(dirEntry->d_name, fileInfos));
+		_dirEntrySet.insert(std::make_pair(entryName, fileInfos));
 		return (0);
 	}
 
 	void	Response::_closeIndexDirectory()
 	{
 		if (closedir(_indexDirectory) < 0)
-			LOG_WARN("Bad closedir() on \"" << _requestedFileName << "\"");
+			LOG_ERROR("Bad closedir() on \"" << _requestedFileName << "\"");
 		_indexDirectory = 0;
 	}
 
@@ -228,7 +234,7 @@ namespace	webserv
 			}
 			_requestedFileName += '/';
 			_requestedFileName += dirEntry->d_name;
-			errorCode = _loadDirEntry(request, dirEntry);
+			errorCode = _loadDirEntry(request, dirEntry->d_name);
 			_requestedFileName[pathLen] = '\0';
 			if (errorCode != 0)
 				return (errorCode);
@@ -491,7 +497,7 @@ namespace	webserv
 	{
 		if (request.getRequestMethod() != "GET"
 				|| !request.getLocation()->isAutoIndex()) {
-			_logError(request, "directory index of", "is forbidden");
+			_logError(request, "", "directory index is forbidden");
 			return (403);
 		}
 		LOG_DEBUG("http autoindex: \"" << _requestedFileName << "\"");
@@ -570,12 +576,12 @@ namespace	webserv
 	void	Response::_closeRequestedFile()
 	{
 //		if (close(_requestedFileFd) < 0)
-//			LOG_WARN("Bad close() on fd=" << _requestedFileFd);
+//			LOG_ERROR("Bad close() on fd=" << _requestedFileFd);
 //		_requestedFileFd = -1;
 		_requestedFile.clear();
 		_requestedFile.close();
 		if (_requestedFile.fail()) {
-			LOG_WARN("Bad close() on file " << _requestedFileName);
+			LOG_ERROR("Bad close() on file " << _requestedFileName);
 			_requestedFile.clear();
 		}
 	}
@@ -644,11 +650,147 @@ namespace	webserv
 			return (404);
 		} else if (request.getRequestMethod() == "POST") {
 			_closeRequestedFile();
-			return (405);
+			return (405);	// Content of Allow header? GET if no limit_except?
 		}
 		_loadFileHeaders(request, &fileInfos);
 		if (_contentLength > 0)
 			_isFileResponse = true;
+		return (0);
+	}
+
+	void	Response::_deleteDirectory(const Request& request,
+										const char* dirname)
+	{
+		LOG_DEBUG("http delete dir: \"" << dirname << "\"");
+		if (rmdir(dirname) < 0)
+			_logError(request, "rmdir()", "failed", dirname);
+	}
+
+	void	Response::_deleteFile(const Request& request,
+									const char* filename)
+	{
+		LOG_DEBUG("http delete file: \"" << filename << "\"");
+		if (unlink(filename) < 0)
+			_logError(request, "unlink()", "failed", filename);
+	}
+
+	bool	Response::_removeDirEntry(const Request& request,
+										const char* dirPath,
+										const char* entryName,
+										bool* hasError) try
+	{
+		std::string		filepath;
+		struct stat		fileInfos;
+
+		LOG_DEBUG("Tree element name: \"" << entryName << "\"");
+		if (std::string(entryName) == "." || std::string(entryName) == "..")
+			return (true);
+		filepath = std::string(dirPath) + "/" + entryName;
+		LOG_DEBUG("Tree element path: \"" << filepath << "\"");
+		memset(&fileInfos, 0, sizeof(fileInfos));
+		if (stat(filepath.c_str(), &fileInfos) < 0) {
+			_logError(request, "stat()", "failed", filepath.c_str());
+			return (true);
+		} else if (!S_ISDIR(fileInfos.st_mode)) {
+			if (S_ISREG(fileInfos.st_mode)) {
+				LOG_DEBUG("Tree file: \"" << filepath << "\"");
+			} else
+				LOG_DEBUG("Tree special: \"" << filepath << "\"");
+			_deleteFile(request, filepath.c_str());
+		} else {
+			LOG_DEBUG("Tree directory: \"" << filepath << "\"");
+			if (!_removeDirectoryTree(request, filepath.c_str()))
+				return (false);
+			_deleteDirectory(request, filepath.c_str());
+		}
+		return (true);
+	}
+	catch (const std::exception& e) {
+		LOG_ERROR("Error while removing directory entry: " << e.what());
+		*hasError = true;
+		return (false);
+	}
+
+	bool	Response::_removeDirectoryTree(const Request& request,
+											const char* dirPath)
+	{
+		DIR*			directory;
+		struct dirent*	dirEntry;
+		bool			hasError = false;
+
+		LOG_DEBUG("Traverse directory tree: \"" << dirPath << "\"");
+		directory = opendir(dirPath);
+		if (!directory) {
+			_logError(request, "opendir()", "failed", dirPath);
+			return (false);
+		}
+		while (1) {
+			errno = 0;
+			dirEntry = readdir(directory);
+			if (!dirEntry && errno != 0) {
+				_logError(request, "readdir()", "failed", dirPath);
+				hasError = true;
+			}
+			if (!dirEntry)
+				break ;
+			if (!_removeDirEntry(request, dirPath, dirEntry->d_name, &hasError))
+				break ;
+		}
+		if (closedir(directory) < 0)
+			LOG_ERROR("Bad closedir() on \"" << dirPath << "\"");
+		return (!hasError);
+	}
+
+	int	Response::_removeRequestedDirectory(const Request& request)
+	{
+		std::string		filepath = _requestedFileName;
+
+		if (*request.getUri().rbegin() != '/') {
+			_logError(request, "DELETE", "failed");
+			return (409);
+		}
+		if (*filepath.rbegin() == '/')
+			filepath.erase(filepath.end() - 1);
+		if (!_removeDirectoryTree(request, filepath.c_str()))
+			return (500);
+		if (rmdir(_requestedFileName.c_str()) < 0) {
+			_logError(request, "rmdir()", "failed");
+			if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG)
+				return (404);
+			if (errno == EACCES || errno == EPERM)
+				return (403);
+			return (500);
+		}
+		_responseCode = 204;
+		return (0);
+	}
+
+	int	Response::_removeRequestedFile(const Request& request)
+	{
+		struct stat		fileInfos;
+
+		LOG_DEBUG("http delete filename: \"" << _requestedFileName << "\"");
+		if (lstat(_requestedFileName.c_str(), &fileInfos) < 0) {
+			_logError(request, "lstat()", "failed");
+			if (errno == ENOTDIR)
+				return (409);
+			if (errno == ENOENT || errno == ENAMETOOLONG)
+				return (404);
+			if (errno == EACCES)
+				return (403);
+			return (500);
+		}
+		if (S_ISDIR(fileInfos.st_mode))
+			return (_removeRequestedDirectory(request));
+		else if (unlink(_requestedFileName.c_str()) < 0) {
+			_logError(request, "unlink()", "failed");
+			if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG)
+				return (404);
+			if (errno == EACCES || errno == EPERM || errno == EISDIR)
+				return (403);
+			return (500);
+		}
+		_responseCode = 204;
 		return (0);
 	}
 
@@ -664,7 +806,7 @@ namespace	webserv
 		if (aliasUri[0] == '/')
 			_requestedFileName = aliasUri;
 		else {
-			if (*(_requestedFileName.end() - 1) != '/')
+			if (*_requestedFileName.rbegin() != '/')
 				_requestedFileName += '/';
 			_requestedFileName += aliasUri;
 		}
@@ -677,14 +819,16 @@ namespace	webserv
 			if (request.getLocation()->getRoot()[0] == '/')
 				_requestedFileName = request.getLocation()->getRoot();
 			else {
-				if (*(_requestedFileName.end() - 1) != '/')
+				if (*_requestedFileName.rbegin() != '/')
 					_requestedFileName += '/';
 				_requestedFileName += request.getLocation()->getRoot();
 			}
-			if (*(_requestedFileName.end() - 1) == '/')
-				_requestedFileName.erase(_requestedFileName.size() - 1, 1);
+			if (*_requestedFileName.rbegin() == '/')
+				_requestedFileName.erase(_requestedFileName.end() - 1);
 			_requestedFileName += request.getUri();
 		}
+		if (request.getRequestMethod() == "DELETE")
+			return (_removeRequestedFile(request));
 		if (*(_requestedFileName.end() - 1) == '/')
 			return (_loadIndex(request));
 		return (_openRequestedFile(request));
