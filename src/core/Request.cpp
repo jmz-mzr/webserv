@@ -18,6 +18,8 @@ namespace	webserv
 												_location(0),
 												_isKeepAlive(true),
 												_hasReceivedHeaders(false),
+												_hasReceivedBody(false),
+												_bodyfile(),
 												_bodySize(-1),
 												_isChunkedRequest(false),
 												_isTerminatedRequest(false),
@@ -247,7 +249,9 @@ namespace	webserv
 			i += chunkSize + 2; 
 			chunkSize = strtol(chunkedBody.c_str() + i, NULL, 16);
 		}
-		_body = processedBody;
+		if (chunkedBody.find("\r\n0\r\n") == chunkedBody.size() - 5)
+			_hasReceivedBody = true;
+		_body += processedBody;
 		
 		if (_hasReceivedHeaders && (!_serverConfig || !_location)) {
 			if (!_loadServerConfig(serverConfigs))
@@ -258,7 +262,7 @@ namespace	webserv
 		}
 		return (0);
 	}
-
+		
 	bool	Request::_parseRequestTarget(const std::string& requestTarget)
 	{
 		// TO DO: This is a temp version of the function, used for the internal
@@ -304,6 +308,8 @@ namespace	webserv
 					_buffer.erase(i + 4, std::string::npos);
 				}
 				_parse(_buffer);
+				if (_code != 0)
+					return (_code);
 				// If the encoding is chunked, we parse the body
 				if (_headers["Transfer-Encoding"] == "chunked")
 					_parseChunkedRequest(unprocessedBuffer, recvBuffer, serverConfigs);
@@ -313,17 +319,20 @@ namespace	webserv
 				std::string body_size = _buffer.substr(
 					_buffer.find("Content-Length: ") + strlen("Content-Length: ") , 10);
 				//HTTP Request body size
-				size_t 		len = static_cast<size_t>(std::atoi(body_size.c_str()));
+				_bodySize = static_cast<size_t>(std::atoi(body_size.c_str()));
 				//	if Content-Length header is present, we wait to receive
 				//	the entire request body before processing
-				if (len > 0 && _buffer.size() >= len)
+				if (_bodySize > 0 && _buffer.size() >= _bodySize)
 				{
 					_parse(_buffer);
-					_body = _buffer.substr(_bufferIndex, len);
+					if (_code != 0)
+						return (_code);
+					_body = _buffer.substr(_bufferIndex, _bodySize);
+					_hasReceivedBody = true;
 					// if body is greater, we add the excess into unprocessedbuffer
 					// for the next message
-					if (_buffer.size() > len)
-						unprocessedBuffer = _buffer.substr(_bufferIndex + len, std::string::npos);
+					if (_buffer.size() > _bodySize)
+						unprocessedBuffer = _buffer.substr(_bufferIndex + _bodySize, std::string::npos);
 				}
 			}
 		}

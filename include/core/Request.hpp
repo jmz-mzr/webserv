@@ -4,6 +4,7 @@
 # include <vector>
 # include <string>
 # include <map>
+# include <fstream>
 
 # include "config/ServerConfig.hpp"
 # include "core/AcceptSocket.hpp"
@@ -124,10 +125,12 @@ namespace	webserv
 		// 2) Only set it to false if 'Connection' Header is set to "close"
 		bool				_isKeepAlive;
 		bool				_hasReceivedHeaders;
+		bool				_hasReceivedBody;
 
+		std::ofstream		_bodyfile;
 		// TO DO: The Content-Length also limits the size of what is actually
 		// going to be processed from the body (even if it is longer)
-		int64_t			_bodySize;
+		int64_t				_bodySize;
 
 		bool				_isChunkedRequest;
 
