@@ -130,7 +130,7 @@ namespace	webserv
 		std::ofstream		_bodyfile;
 		// TO DO: The Content-Length also limits the size of what is actually
 		// going to be processed from the body (even if it is longer)
-		int64_t				_bodySize;
+		int64_t			_bodySize;
 
 		bool				_isChunkedRequest;
 
@@ -144,3 +144,4 @@ namespace	webserv
 }	// namespace webserv
 
 #endif	// REQUEST_HPP
+

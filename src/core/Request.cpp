@@ -245,8 +245,8 @@ namespace	webserv
 		while (chunkSize)
 		{
 			i = chunkedBody.find("\r\n", i) + 2;
-			processedBody += chunkedBody.substr(i, chunkSize);
-			i += chunkSize + 2; 
+			processedBody += chunkedBody.substr(i, static_cast<unsigned long>(chunkSize));
+			i += static_cast<unsigned long>(chunkSize + 2); 
 			chunkSize = strtol(chunkedBody.c_str() + i, NULL, 16);
 		}
 		if (chunkedBody.find("\r\n0\r\n") == chunkedBody.size() - 5)
@@ -319,20 +319,24 @@ namespace	webserv
 				std::string body_size = _buffer.substr(
 					_buffer.find("Content-Length: ") + strlen("Content-Length: ") , 10);
 				//HTTP Request body size
-				_bodySize = static_cast<size_t>(std::atoi(body_size.c_str()));
+				_bodySize = static_cast<int64_t>(std::atoi(body_size.c_str()));
 				//	if Content-Length header is present, we wait to receive
 				//	the entire request body before processing
-				if (_bodySize > 0 && _buffer.size() >= _bodySize)
+				if (_bodySize > 0 && _buffer.size() >=
+				static_cast<unsigned long>(_bodySize))
 				{
 					_parse(_buffer);
 					if (_code != 0)
 						return (_code);
-					_body = _buffer.substr(_bufferIndex, _bodySize);
+					_body = _buffer.substr(_bufferIndex, 
+					static_cast<unsigned long> (_bodySize));
 					_hasReceivedBody = true;
 					// if body is greater, we add the excess into unprocessedbuffer
 					// for the next message
-					if (_buffer.size() > _bodySize)
-						unprocessedBuffer = _buffer.substr(_bufferIndex + _bodySize, std::string::npos);
+					if (_buffer.size() > static_cast<unsigned long>(_bodySize))
+						unprocessedBuffer = _buffer.substr(
+						_bufferIndex + static_cast<unsigned long>(_bodySize),
+						 std::string::npos);
 				}
 			}
 		}
