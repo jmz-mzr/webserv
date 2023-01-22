@@ -126,7 +126,8 @@ namespace	webserv
 		bool				_isKeepAlive;
 		bool				_hasReceivedHeaders;
 		bool				_hasReceivedBody;
-
+		bool				_hasBody;
+		
 		std::ofstream		_bodyfile;
 		// TO DO: The Content-Length also limits the size of what is actually
 		// going to be processed from the body (even if it is longer)

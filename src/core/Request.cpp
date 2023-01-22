@@ -19,6 +19,7 @@ namespace	webserv
 												_isKeepAlive(true),
 												_hasReceivedHeaders(false),
 												_hasReceivedBody(false),
+												_hasBody(false),
 												_bodyfile(),
 												_bodySize(-1),
 												_isChunkedRequest(false),
@@ -253,7 +254,8 @@ namespace	webserv
 			_hasReceivedBody = true;
 		_body += processedBody;
 		
-		if (_hasReceivedHeaders && (!_serverConfig || !_location)) {
+		if (_hasReceivedBody && _hasReceivedHeaders 
+		&& (!_serverConfig || !_location)) {
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
 			// After header sent, check content length header, etc
@@ -300,30 +302,31 @@ namespace	webserv
 			//parsing when all the headers are received (RFC)
 			if (_buffer.find("Content-Length: ") == std::string::npos)
 			{
-				// add the excess into unprocessedBuffer
-				// for the next request
-				if (i + 4 < _buffer.size())
-				{
-					unprocessedBuffer = _buffer.substr(i + 4, std::string::npos);
-					_buffer.erase(i + 4, std::string::npos);
-				}
+				//we discard excess buffer
+				_buffer = _buffer.substr(0, i + 4);
 				_parse(_buffer);
 				if (_code != 0)
 					return (_code);
 				// If the encoding is chunked, we parse the body
 				if (_headers["Transfer-Encoding"] == "chunked")
+				{
+					_hasBody = true;
 					_parseChunkedRequest(unprocessedBuffer, recvBuffer, serverConfigs);
+				}
 			}
 			else
 			{
+				//the request has a body because Content Length header exists
+				_hasBody = true;
 				std::string body_size = _buffer.substr(
 					_buffer.find("Content-Length: ") + strlen("Content-Length: ") , 10);
+				
 				//HTTP Request body size
 				_bodySize = static_cast<int64_t>(std::atoi(body_size.c_str()));
 				//	if Content-Length header is present, we wait to receive
 				//	the entire request body before processing
 				if (_bodySize > 0 && _buffer.size() >=
-				static_cast<unsigned long>(_bodySize))
+				static_cast<unsigned long>(_bodySize) + i + 4)
 				{
 					_parse(_buffer);
 					if (_code != 0)
@@ -331,21 +334,19 @@ namespace	webserv
 					_body = _buffer.substr(_bufferIndex, 
 					static_cast<unsigned long> (_bodySize));
 					_hasReceivedBody = true;
-					// if body is greater, we add the excess into unprocessedbuffer
-					// for the next message
-					if (_buffer.size() > static_cast<unsigned long>(_bodySize))
-						unprocessedBuffer = _buffer.substr(
-						_bufferIndex + static_cast<unsigned long>(_bodySize),
-						 std::string::npos);
 				}
+				else
+					unprocessedBuffer += _buffer;
 			}
 		}
 		// if we don't have received all the headers yet
 		// we save the request in unprocessedBuffer
 		else
-			unprocessedBuffer = _buffer;
+			unprocessedBuffer += _buffer;
 		_buffer.clear();
-		if (_hasReceivedHeaders && (!_serverConfig || !_location)) {
+		if (( (_hasBody && _hasReceivedBody && _hasReceivedHeaders)
+		|| (!_hasBody && _hasReceivedHeaders) )
+		&& (!_serverConfig || !_location)) {
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
 			// After header sent, check content length header, etc
