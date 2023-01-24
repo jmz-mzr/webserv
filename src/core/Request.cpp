@@ -20,7 +20,8 @@ namespace	webserv
 												_hasReceivedHeaders(false),
 												_hasReceivedBody(false),
 												_hasBody(false),
-												_bodyfile(),
+												_tempfilestream(),
+												_tempfilename(),
 												_bodySize(-1),
 												_isChunkedRequest(false),
 												_isTerminatedRequest(false),
@@ -236,7 +237,8 @@ namespace	webserv
 		(void)unprocessedBuffer;
 		
 		std::string processedBody;
-		std::string	chunkedBody = _buffer.substr(_bufferIndex, std::string::npos);
+		std::string	chunkedBody = 
+		_buffer.substr(_bufferIndex, std::string::npos);
 		long		chunkSize;
 		size_t		i = 0;
 
@@ -246,7 +248,8 @@ namespace	webserv
 		while (chunkSize)
 		{
 			i = chunkedBody.find("\r\n", i) + 2;
-			processedBody += chunkedBody.substr(i, static_cast<unsigned long>(chunkSize));
+			processedBody += chunkedBody.substr(i, 
+			static_cast<unsigned long>(chunkSize));
 			i += static_cast<unsigned long>(chunkSize + 2); 
 			chunkSize = strtol(chunkedBody.c_str() + i, NULL, 16);
 		}
@@ -294,10 +297,21 @@ namespace	webserv
 								const server_configs& serverConfigs)
 	{
 		_buffer = (unprocessedBuffer + recvBuffer);
+		
 		//"CRLFCRLF" or "\r\n\r\n" pattern marks the end of the header section
 		size_t i = _buffer.find("\r\n\r\n");
+	
 		if (i != std::string::npos)
 		{
+			if (_tempfilename.empty())
+			{
+				std::stringstream ss;
+				struct timeval	time_now;
+
+				ss << gettimeofday(&time_now, NULL);
+				_tempfilename = "body_" + ss.str();
+				//todo : ecrire dans le fichier tempfilestream le body
+			}
 			//If content length isn't specified, we should start
 			//parsing when all the headers are received (RFC)
 			if (_buffer.find("Content-Length: ") == std::string::npos)
@@ -311,7 +325,8 @@ namespace	webserv
 				if (_headers["Transfer-Encoding"] == "chunked")
 				{
 					_hasBody = true;
-					_parseChunkedRequest(unprocessedBuffer, recvBuffer, serverConfigs);
+					_parseChunkedRequest(unprocessedBuffer, recvBuffer,
+					 serverConfigs);
 				}
 			}
 			else
@@ -319,7 +334,8 @@ namespace	webserv
 				//the request has a body because Content Length header exists
 				_hasBody = true;
 				std::string body_size = _buffer.substr(
-					_buffer.find("Content-Length: ") + strlen("Content-Length: ") , 10);
+					_buffer.find("Content-Length: ") 
+					+ strlen("Content-Length: ") , 10);
 				
 				//HTTP Request body size
 				_bodySize = static_cast<int64_t>(std::atoi(body_size.c_str()));

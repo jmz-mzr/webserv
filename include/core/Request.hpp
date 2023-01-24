@@ -5,6 +5,9 @@
 # include <string>
 # include <map>
 # include <fstream>
+# include <sys/time.h>
+# include <sstream>
+# include <iostream>
 
 # include "config/ServerConfig.hpp"
 # include "core/AcceptSocket.hpp"
@@ -128,7 +131,8 @@ namespace	webserv
 		bool				_hasReceivedBody;
 		bool				_hasBody;
 		
-		std::ofstream		_bodyfile;
+		std::ofstream		_tempfilestream;
+		std::string			_tempfilename;
 		// TO DO: The Content-Length also limits the size of what is actually
 		// going to be processed from the body (even if it is longer)
 		int64_t			_bodySize;

@@ -1,6 +1,5 @@
 #include "core/Server.hpp"
 #include "utils/Logger.hpp"
-#include "http/HttpRequestHeader.hpp"
 
 namespace	webserv
 {
