@@ -7,11 +7,12 @@
 INCLDIR		:=	$(addprefix $(WORKDIR)/,$(INCLDIR)) /usr/local/include/gtest
 BUILDIR		:=	$(addprefix $(WORKDIR)/,$(BUILDIR))
 DEPDIR		:=	$(addprefix $(WORKDIR)/,$(DEPDIR))
-VPATH		=	src
+VPATH		=	src/unit_tests
 
 #>	FILES
 BIN			=	$(WORKDIR)/$(NAME)_test
-SRC			=	trim_test.cpp \
+SRC			=	ConfigParser_test.cpp \
+				trim_test.cpp \
 				Logger_test.cpp
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)

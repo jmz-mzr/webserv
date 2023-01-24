@@ -110,12 +110,12 @@ ifeq (debug,$(BUILD))
 # endif
   CPPFLAGS +=	-DLOG_FILE=/tmp/webserv.log \
 				-DLOG_LEVEL=webserv::Logger::kDebug \
-				-DCONF_FILE=conf/test.conf
+				-DCONF_FILE=conf/default.conf
 else
   CPPFLAGS +=	-DNDEBUG \
 				-DLOG_FILE=$(LOGDIR)/webserv.log \
 				-DLOG_LEVEL=webserv::Logger::kError \
-				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/test.conf
+				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf
   CXXFLAGS +=	-O3
 endif
 
