@@ -310,6 +310,7 @@ namespace	webserv
 
 				ss << gettimeofday(&time_now, NULL);
 				_tempfilename = "body_" + ss.str();
+				_tempfilestream = std::ofstream(_tempfilename);
 				//todo : ecrire dans le fichier tempfilestream le body
 			}
 			//If content length isn't specified, we should start
