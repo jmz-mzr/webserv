@@ -1,4 +1,8 @@
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
+
+#include <unistd.h>
 
 #include "core/Request.hpp"
 #include "webserv_config.hpp"
@@ -44,7 +48,10 @@ namespace	webserv
 
 	Request::~Request()
 	{
-		// TO DO: clear _chunks & everything necessary, cf. clearRequest()
+		if (_tmpFile.is_open())
+			_closeTmpFile();
+		if (!_tmpFileName.empty())
+			_deleteTmpFile();
 	}
 
 	/**************************************************************************/
@@ -348,10 +355,26 @@ namespace	webserv
 		return (_checkHeaders());
 	}
 
+	void	Request::_closeTmpFile()
+	{
+		_tmpFile.clear();
+		_tmpFile.close();
+		if (_tmpFile.fail()) {
+			LOG_ERROR("Bad close() on \"" << _tmpFileName << "\"");
+			_tmpFile.clear();
+		}
+	}
+
+	void	Request::_deleteTmpFile()
+	{
+		if (unlink(_tmpFileName.c_str()) < 0) {
+			_logError(std::string(std::string("unlink(") + _tmpFileName
+					   + ") failed: " + strerror(errno)).c_str());
+		}
+	}
+
 	void	Request::clearRequest()
 	{
-		// TO DO: clear potentially saved chunks, with try-catch if necessary
-
 		_serverConfig = 0;
 		_location = 0;
 		_requestMethod.clear();
@@ -360,6 +383,14 @@ namespace	webserv
 		_hasReceivedHeaders = false;
 		_bodySize = -1;
 		_isChunkedRequest = false;
+		_tmpString.clear();
+		if (_tmpFile.is_open())
+			_closeTmpFile();
+		if (!_tmpFileName.empty()) {
+			_deleteTmpFile();
+			_tmpFileName.clear();
+		}
+		_tmpFileName.clear();
 		_isTerminatedRequest = false;
 		_isInternalRedirect = false;
 	}

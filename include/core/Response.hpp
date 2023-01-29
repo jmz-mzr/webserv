@@ -8,6 +8,7 @@
 # include <string>
 # include <utility>
 # include <set>
+# include <fstream>
 # include <ctime>
 
 # include "core/Request.hpp"
@@ -62,6 +63,12 @@ namespace	webserv
 										const char* filename);
 		void				_deleteDirectory(const Request& request,
 												const char* dirname);
+		int					_postRequestBody(const Request& request);
+		int					_moveRequestTmpFile(const Request& request);
+		int					_handleRequestAlreadyExistingFile(const Request&
+										request, const struct stat* fileInfos);
+		void				_setPostHeaders(const Request& request);
+		const std::string	_getPostResponseBody(const Request& request);
 		int					_openRequestedFile(const Request& request);
 		bool				_openAndStatFile(const Request& request,
 												struct stat* fileInfos);
@@ -91,7 +98,8 @@ namespace	webserv
 		const std::string	_getFileDate(const struct stat& fileInfos) const;
 		const std::string	_getFileSize(const struct stat& fileInfos) const;
 		void				_loadChunkHeaderAndTrailer(bool isLastChunk);
-		void				_loadHeaders();
+		void				_loadHeaders(const Request& request);
+		const std::string	_getAllowedMethods(const Request& request) const;
 		const std::string	_getETag() const;
 
 		void	_logError(const Request& request, const char* errorAt,
@@ -106,7 +114,7 @@ namespace	webserv
 		std::string		_responseBuffer;
 		std::string		_requestedFileName;
 //		int				_requestedFileFd;
-		std::ifstream	_requestedFile;
+		std::fstream	_requestedFile;
 		char*			_fileBuffer;
 		size_t			_fileBufferSize;
 		size_t			_bufferPos;
