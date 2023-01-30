@@ -9,6 +9,7 @@
 #include <sstream>
 #include <utility>
 #include <cctype>
+#include <cstdio>
 
 #include "webserv_config.hpp"
 #include "utils/global_defs.hpp"
@@ -131,10 +132,30 @@ namespace	webserv
 		return (eTag.str());
 	}
 
-	void	Response::_loadHeaders()
+	const std::string
+		Response::_getAllowedMethods(const Request& request) const
 	{
-		// TO DO: Add "Allow" header when response is 405 with supported methods
+		typedef Location::limit_except_set	limit_set;
 
+		const limit_set&			allowedMethods = request.getLocation()->
+															getLimitExcept();
+		limit_set::const_iterator	it = allowedMethods.begin();
+		std::ostringstream			allowStr;
+
+		allowStr << std::uppercase;
+		if (!allowedMethods.empty()) {
+			while (it != allowedMethods.end()) {
+				allowStr << *it;
+				if (++it != allowedMethods.end())
+					allowStr << ", ";
+			}
+		} else
+			allowStr << "GET, POST, DELETE";
+		return (allowStr.str());
+	}
+
+	void	Response::_loadHeaders(const Request& request)
+	{
 		const char*			connection = _isKeepAlive ? "keep-alive" : "close";
 		std::ostringstream	headers;
 
@@ -143,6 +164,8 @@ namespace	webserv
 			<< "Server: webserv" << CRLF
 			<< "Date: " << Response::_getDate() << CRLF
 			<< "Content-Type: " << _contentType << CRLF;	// only if content?
+		if (_responseCode == 405)
+			headers << "Allow: " << _getAllowedMethods(request) << CRLF;
 		if (_contentLength != -1)
 			headers << "Content-Length: " << _contentLength << CRLF;
 		if (_lastModifiedTime != -1)
@@ -581,7 +604,7 @@ namespace	webserv
 		_requestedFile.clear();
 		_requestedFile.close();
 		if (_requestedFile.fail()) {
-			LOG_ERROR("Bad close() on file " << _requestedFileName);
+			LOG_ERROR("Bad close() on \"" << _requestedFileName << "\"");
 			_requestedFile.clear();
 		}
 	}
@@ -592,7 +615,8 @@ namespace	webserv
 		LOG_DEBUG("http filename: \"" << _requestedFileName << "\"");
 //		_requestedFileFd = open(_requestedFileName.c_str(),
 //				O_RDONLY | O_NONBLOCK);
-		_requestedFile.open(_requestedFileName.c_str(), std::ifstream::binary);
+		_requestedFile.open(_requestedFileName.c_str(), std::ios::in
+				| std::ios::binary);
 //		if (_requestedFileFd < 0) {
 		if (_requestedFile.fail()) {
 			_logError(request, "open()", "failed");
@@ -614,7 +638,7 @@ namespace	webserv
 	void	Response::_loadDirLocation(const Request& request)
 	{
 		_loadRelativeLocationPrefix(request);
-		_location += std::string("/") + _escapeUri(request.getUri());
+		_location += _escapeUri(request.getUri());
 		if (!request.getQuery().empty())
 			_location += std::string("?") + request.getQuery();
 	}
@@ -648,9 +672,9 @@ namespace	webserv
 			_logError(request, "", "is not a regular file");
 			_closeRequestedFile();
 			return (404);
-		} else if (request.getRequestMethod() == "POST") {
+		} else if (request.getRequestMethod() == "POST") { // shouldn't get here??
 			_closeRequestedFile();
-			return (405);	// Content of Allow header? GET if no limit_except?
+			return (405);
 		}
 		_loadFileHeaders(request, &fileInfos);
 		if (_contentLength > 0)
@@ -794,6 +818,105 @@ namespace	webserv
 		return (0);
 	}
 
+	void	Response::_setPostHeaders(const Request& request)
+	{
+		struct stat		fileInfos;
+
+		_contentType = "text/html";
+		_contentLength = _getPostResponseBody(request).size();
+		memset(&fileInfos, 0, sizeof(fileInfos));
+		if (stat(_requestedFileName.c_str(), &fileInfos) < 0)
+			_logError(request, "stat()", "failed");
+		else
+			_lastModifiedTime = fileInfos.st_mtime;
+		_loadRelativeLocationPrefix(request);
+		_location += _escapeUri(request.getUri());
+	}
+
+	int	Response::_moveRequestTmpFile(const Request& request)
+	{
+		// TO DO: Add an option to create the full path if it doesn't exist ?
+
+		if (rename(request.getTmpFileName().c_str(),
+					_requestedFileName.c_str()) < 0) {
+			_logError(request, "rename()", "failed");
+			return (500);
+		}
+		_responseCode = 201;
+		_setPostHeaders(request);
+		return (0);
+	}
+
+/*	int	Response::_appendRequestTmpFile(const Request& request)
+	{
+		request.getTmpFile().open(request.getTmpFileName().c_str(), std::ios::in
+				| std::ios::binary);
+		if (request.getTmpFile().fail()) {
+			_logError(request, "open()", "failed",
+					request.getTmpFileName().c_str());
+			return (500);	// tmpFile deleted in clear request
+		}
+		_requestedFile.open(_requestedFileName.c_str(), std::ios::out
+				| std::ios::app | std::ios::binary);
+		if (_requestedFile.fail()) {
+			_logError(request, "open()", "failed");
+			return (500);	// tmpFile closed & deleted in clear request
+		}
+		_requestedFile << request.getTmpFile().rdbuf();
+		if (_requestedFile.fail()) {
+			_logError(request, "Error while appending request tmp file to", "");
+			return (500);	// files closed & deleted in clear req/resp
+		}
+		request.closeTmpFile();
+		_closeRequestedFile();
+		return (0);
+	}
+*/
+	int	Response::_handleRequestAlreadyExistingFile(const Request& request,
+												const struct stat* fileInfos)
+	{
+		if (fileInfos->st_size == 0) {
+			_loadRelativeLocationPrefix(request);
+			_location += _escapeUri(request.getUri());
+			return (303);
+		}
+		errno = EEXIST;
+		_logError(request, "The file", "could not be created");
+		return (409);
+	}
+
+	int	Response::_postRequestBody(const Request& request)
+	{
+		// TO DO: Before loading the request body, check in request after having
+		// received the headers if there the POST request will be processed ?
+		// (i.e. there is no return directive, there is a CGI, or after the
+		// root/alias translation, there is a filename that is not a directory,
+		// and that doesn't already exist)
+		// If so, just run this function with a dryRun parameter ?
+
+		struct stat		fileInfos;
+
+		if (*_requestedFileName.rbegin() == '/') {
+			_logError(request, "Cannot POST to a directory:", "");
+			return (409);
+		}
+		LOG_DEBUG("http post filename: \"" << _requestedFileName << "\"");
+		memset(&fileInfos, 0, sizeof(fileInfos));
+		if (stat(_requestedFileName.c_str(), &fileInfos) < 0)
+			return (_moveRequestTmpFile(request));
+		if (S_ISDIR(fileInfos.st_mode)) {
+			errno = EISDIR;
+			_logError(request, "The file", "could not be created");
+			return (409);
+		}
+		memset(&fileInfos, 0, sizeof(fileInfos));
+		if (stat(request.getTmpFileName().c_str(), &fileInfos) < 0) {
+			_logError(request, "stat()", "failed");
+			return (500);
+		}
+		return (_handleRequestAlreadyExistingFile(request, &fileInfos));
+	}
+
 	bool	Response::_loadFileWithAlias(Request& request)
 	{
 		const Location*		location = request.getLocation();
@@ -827,11 +950,32 @@ namespace	webserv
 				_requestedFileName.erase(_requestedFileName.end() - 1);
 			_requestedFileName += request.getUri();
 		}
+		//if (!request.getLocation().getFastCgiPass().empty())
+		//	return (_loadCgiPass(request));
+		if (request.getRequestMethod() == "POST")
+			return (_postRequestBody(request));
 		if (request.getRequestMethod() == "DELETE")
 			return (_removeRequestedFile(request));
-		if (*(_requestedFileName.end() - 1) == '/')
+		if (*_requestedFileName.rbegin() == '/')
 			return (_loadIndex(request));
 		return (_openRequestedFile(request));
+	}
+
+	const std::string	Response::_getPostResponseBody(const Request& request)
+	{
+		std::ostringstream		postResponseBody;
+
+		if (_responseCode == 201) // not if coming from CGI ?
+			postResponseBody << "<html>" CRLF
+				"<head><title>Your file has been saved!</title></head>" CRLF
+				"<body>" CRLF
+				"<center><h1>Click <A href=\""
+				<< _escapeUriComponent(request.getUri())
+				<< "\">here</A> to view it.</h1></center>" CRLF
+				"<hr><center>webserv</center>" CRLF
+				"</body>" CRLF
+				"</html>" CRLF;
+		return (postResponseBody.str());
 	}
 
 	void	Response::prepareResponse(Request& request)
@@ -852,7 +996,9 @@ namespace	webserv
 			return ;
 		if (responseCode != 0)
 			return (prepareErrorResponse(request, responseCode));
-		_loadHeaders();
+		_loadHeaders(request);
+		if (request.getRequestMethod() == "POST") // not if coming from CGI ?
+			_responseBuffer += _getPostResponseBody(request);
 		_isResponseReady = true;
 	}
 
@@ -912,7 +1058,7 @@ namespace	webserv
 			return (false);
 		} else if (returnCode < 0 || returnText.empty())
 			return (false);
-		_loadHeaders();
+		_loadHeaders(request);
 		_responseBuffer += returnText;
 		_isResponseReady = true;
 		return (true);
@@ -937,7 +1083,7 @@ namespace	webserv
 			_contentType = "text/html";
 			_contentLength = static_cast<int64_t>(specialBody->length());
 		}
-		_loadHeaders();
+		_loadHeaders(request);
 		_responseBuffer += *specialBody;
 		_isResponseReady = true;
 	}

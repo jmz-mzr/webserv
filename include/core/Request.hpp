@@ -3,6 +3,7 @@
 
 # include <vector>
 # include <string>
+# include <fstream>
 
 # include "config/ServerConfig.hpp"
 # include "core/AcceptSocket.hpp"
@@ -33,6 +34,11 @@ namespace	webserv
 										{ return (_extension); }
 		const std::string&		getHost() const
 										{ return (_host); }
+		std::fstream&			getTmpFile()
+										{ return (_tmpFile); }
+		const std::string&		getTmpFileName() const
+										{ return (_tmpFileName); }
+
 		const std::string&		getServerName() const;
 		const ServerConfig*		getServerConfig() const
 										{ return (_serverConfig); }
@@ -81,6 +87,9 @@ namespace	webserv
 		int			_checkHost() const;
 		int			_checkMaxBodySize() const;
 		int			_checkMethod() const;
+
+		void	_closeTmpFile();
+		void	_deleteTmpFile();
 
 		void	_logError(const char* errorAt) const;
 
@@ -141,8 +150,19 @@ namespace	webserv
 
 		bool				_isChunkedRequest;
 
-		// TO DO: For upload with CGI
-//		std::ofstream		_chunks;	// or with a swap space?
+		// TO DO: 1) For POST requests, if the size is known in advance, we must
+		// reserve the size in "_tmpString" (with a try-catch). If it fails, we
+		// directly save the body in the "_tmpFile". If it succeeds, we first
+		// save it in the "_tmpString", and if no errors, we then write it in
+		// one single operation in the "_tmpFile".
+		// If the size is not known in advance (or if the reserve failed), we
+		// save the body in the "_tmpFile"
+		// 2) The "_tmpFile" must be open in "std::ios::out | std::ios::binary"
+		// mode, closed when the writing is finished, AND if the body is empty
+		// (without error), there must be an empty tmp file on the disk!
+		std::string			_tmpString;
+		std::fstream		_tmpFile;
+		std::string			_tmpFileName;
 
 		bool				_isTerminatedRequest;
 		bool				_isInternalRedirect;
