@@ -63,6 +63,7 @@ namespace	webserv
 		std::string		_readLine();
 		std::string		_getKey(std::string line);
 		std::string		_getValue(std::string line);
+		std::string		_decodeUri(std::string uri);
 		bool			_parseRequestTarget(const std::string& requestTarget);
 		void			_parseInternalTarget(const std::string& redirectTo);
 		int				_parseChunkedRequest(std::string& unprocessedBuffer,
@@ -72,6 +73,7 @@ namespace	webserv
 		bool			_loadLocation(const ServerConfig& serverConfig);
 		bool			_loadExtensionLocation(const ServerConfig& serverConfig);
 		bool			_loadExtensionLocation(const Location& location);
+		bool			_isChunkEnd();
 		int				_checkHeaders() const;
 		std::string		_getServerName() const;
 		int				_checkHost() const;
@@ -132,6 +134,7 @@ namespace	webserv
 		bool				_hasBody;
 		
 		std::ofstream		_tempfilestream;
+		std::ifstream		_requestFileStream;
 		std::string			_tempfilename;
 		// TO DO: The Content-Length also limits the size of what is actually
 		// going to be processed from the body (even if it is longer)

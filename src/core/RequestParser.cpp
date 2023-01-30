@@ -82,6 +82,30 @@ namespace webserv
 		return ret;
 	}
 
+	std::string		Request::_decodeUri(std::string uri)
+	{
+		size_t i = 0;
+		std::string hexcode;
+		std::string tmp_uri;
+		char	v;
+
+		tmp_uri = uri;
+		//sanitize le path
+
+		//convertir les %hex en ascii
+		while ((i = tmp_uri.find("%")) != std::string::npos)
+		{
+			hexcode = tmp_uri.substr(i, i + 2);
+			//replace '%' by hexcode
+			uri[i] = v;
+			//todo: remove the hex value
+			
+			//remove the processed part to prevent infinite loop
+			tmp_uri = tmp_uri.substr(i + 1, std::string::npos);
+		}
+		//mettre la string en lowercase
+	}
+
 	void        Request::_parsePath(std::string line)
 	{
 		size_t j ;
@@ -92,6 +116,7 @@ namespace webserv
 		j = str.find_first_of(' ');
 		str = str.substr(0, j);
 		_uri = str;
+		_uri = _decodeUri(_uri);
 	}
 
 	void        Request::_parseMethod(std::string line)

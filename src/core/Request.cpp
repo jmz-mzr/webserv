@@ -292,6 +292,16 @@ namespace	webserv
 		return (true);
 	}
 
+	bool	Request::_isChunkEnd()
+	{
+		std::string	chunkedBody = 
+		_buffer.substr(_bufferIndex, std::string::npos);
+
+		if (chunkedBody.find("\r\n0\r\n") == chunkedBody.size() - 5)
+			return true;
+		return false;
+	}
+
 	int	Request::parseRequest(std::string& unprocessedBuffer,
 								const char* recvBuffer,
 								const server_configs& serverConfigs)
@@ -311,11 +321,16 @@ namespace	webserv
 				ss << gettimeofday(&time_now, NULL);
 				_tempfilename = "body_" + ss.str();
 				_tempfilestream = std::ofstream(_tempfilename);
+				if (!_tempfilestream.is_open())
+					return (500);
+				_requestFileStream = std::ifstream(_tempfilename);
+				if (!_requestFileStream.is_open())
+					return (500);
 				//todo : ecrire dans le fichier tempfilestream le body
 			}
 			//If content length isn't specified, we should start
 			//parsing when all the headers are received (RFC)
-			if (_buffer.find("Content-Length: ") == std::string::npos)
+			if (_buffer.find("Content-Length: ") == std::string::npos && !_hasBody)
 			{
 				//we discard excess buffer
 				_buffer = _buffer.substr(0, i + 4);
@@ -323,12 +338,15 @@ namespace	webserv
 				if (_code != 0)
 					return (_code);
 				// If the encoding is chunked, we parse the body
-				if (_headers["Transfer-Encoding"] == "chunked")
+				if (_headers["Transfer-Encoding"] == "chunked" && _isChunkEnd())
 				{
 					_hasBody = true;
 					_parseChunkedRequest(unprocessedBuffer, recvBuffer,
 					 serverConfigs);
+					_tempfilestream << _body;
 				}
+				else
+					unprocessedBuffer = _buffer;
 			}
 			else
 			{
@@ -350,6 +368,7 @@ namespace	webserv
 						return (_code);
 					_body = _buffer.substr(_bufferIndex, 
 					static_cast<unsigned long> (_bodySize));
+					_tempfilestream << _body;
 					_hasReceivedBody = true;
 				}
 				else
