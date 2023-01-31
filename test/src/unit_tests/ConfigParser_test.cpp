@@ -34,7 +34,27 @@ std::string files[] = {
 	"lexer03",
 	"lexer04",
 	"lexer05",
-	"lexer06"
+	"lexer06",
+	"errorpage00",
+	"errorpage01",
+	"errorpage02",
+	"errorpage03",
+	"errorpage04",
+	"maxbodysize00",
+	"maxbodysize01",
+	"maxbodysize02",
+	"maxbodysize03",
+	"maxbodysize04",
+	"maxbodysize05",
+	"limitexcept00",
+	"limitexcept01",
+	"limitexcept02",
+	"return00",
+	"return01",
+	"return02",
+	"return03",
+	"return04",
+	"return05"
 };
 
 TEST_P(ConfigParsing, SyntaxErrorTest) {
