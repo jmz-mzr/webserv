@@ -82,28 +82,52 @@ namespace webserv
 		return ret;
 	}
 
+	std::string		Request::_sanitizeUri(std::string uri)
+	{
+		size_t		i = 0;
+		size_t		j = 0;
+		std::string	tmp_uri(uri);
+		std::string	res_uri;
+
+		while ((i = tmp_uri.find("/", i)) != std::string::npos)
+		{
+			j = tmp_uri.find_first_not_of("/", i);
+			res_uri = tmp_uri.substr(0, i) + tmp_uri.substr(j, std::string::npos);
+			i += j - i;
+		}
+		return	res_uri;
+	}
+
 	std::string		Request::_decodeUri(std::string uri)
 	{
 		size_t i = 0;
+		size_t j = 0;
 		std::string hexcode;
-		std::string tmp_uri;
-		char	v;
+		std::string tmp_uri(uri);
+		int 	ascii;
 
-		tmp_uri = uri;
 		//sanitize le path
-
+		tmp_uri = _sanitizeUri(tmp_uri);
 		//convertir les %hex en ascii
-		while ((i = tmp_uri.find("%")) != std::string::npos)
+		while ((i = tmp_uri.find("%", i)) != std::string::npos)
 		{
 			hexcode = tmp_uri.substr(i, i + 2);
+			ascii = static_cast<int>(std::strtol(hexcode.c_str(), NULL, 16));
 			//replace '%' by hexcode
-			uri[i] = v;
+			tmp_uri[i] = static_cast<char>(ascii);
+			j = i + 1;
 			//todo: remove the hex value
-			
+			while (j + 2 < tmp_uri.length())
+			{	
+				tmp_uri[j] = tmp_uri[j + 2];
+				j++;
+			}
+			tmp_uri[j] = '\0';
 			//remove the processed part to prevent infinite loop
-			tmp_uri = tmp_uri.substr(i + 1, std::string::npos);
+			i++;
 		}
 		//mettre la string en lowercase
+		return tmp_uri;	
 	}
 
 	void        Request::_parsePath(std::string line)

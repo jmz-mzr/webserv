@@ -320,10 +320,11 @@ namespace	webserv
 
 				ss << gettimeofday(&time_now, NULL);
 				_tempfilename = "body_" + ss.str();
-				_tempfilestream = std::ofstream(_tempfilename);
+				//TOOD : figure out where to close the streams
+				_tempfilestream.open(_tempfilename.c_str());
 				if (!_tempfilestream.is_open())
 					return (500);
-				_requestFileStream = std::ifstream(_tempfilename);
+				_requestFileStream.open(_tempfilename.c_str());
 				if (!_requestFileStream.is_open())
 					return (500);
 				//todo : ecrire dans le fichier tempfilestream le body

@@ -64,6 +64,7 @@ namespace	webserv
 		std::string		_getKey(std::string line);
 		std::string		_getValue(std::string line);
 		std::string		_decodeUri(std::string uri);
+		std::string		_sanitizeUri(std::string uri);
 		bool			_parseRequestTarget(const std::string& requestTarget);
 		void			_parseInternalTarget(const std::string& redirectTo);
 		int				_parseChunkedRequest(std::string& unprocessedBuffer,
