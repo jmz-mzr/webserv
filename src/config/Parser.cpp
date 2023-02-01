@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cerrno>
 #include <climits>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
 #include <map>
 #include <set>
@@ -11,10 +13,13 @@
 #include <string>
 #include <vector>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "core/Socket.hpp"
 #include "utils/exceptions.hpp"
@@ -102,11 +107,11 @@ Parser::Parser()
 			&Parser::_setIndex
 		},
 		{
-			kFastCgiPass,
+			kCgiPass,
 			kDirective | kForbiddenDup | kArgcStrict | kLocCtx,
 			1,
-			"fastcgi_pass",
-			&Parser::_setFastCgiPass
+			"cgi_pass",
+			&Parser::_setCgiPass
 		},
 		{
 			kListen,
@@ -420,9 +425,24 @@ void	Parser::_setIndex(Directive& currDirective)
 	_currConfig->setIndex(currDirective.argv[0]);
 }
 
-void	Parser::_setFastCgiPass(Directive& currDirective)
+void	Parser::_setCgiPass(Directive& currDirective)
 {
-	_currConfig->setFastCgiPass(currDirective.argv[0]);
+	std::string	path;
+	struct stat	fileInfos;
+
+	if (currDirective.argv[0][0] != '/') {
+		path = XSTR(WEBSERV_ROOT);
+		if (*(--(path.end())) != '/')
+			path += "/";
+	}
+	path += currDirective.argv[0];
+	errno = 0;
+	if (stat(path.c_str(), &fileInfos) < 0) {
+		THROW_FATAL("stat() error:" << strerror(errno));
+	} else if (!S_ISREG(fileInfos.st_mode)/* || !(sb.st_mode & S_IXUSR)*/) {
+		return (_errorHandler("\"" + path + "\" is not a regular file"));
+	}
+	_currConfig->setCgiPass(path);
 }
 
 void	Parser::_parseHost(const std::string& str,

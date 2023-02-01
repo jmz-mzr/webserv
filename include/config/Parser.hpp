@@ -33,7 +33,7 @@ namespace	config {
 			kAlias,
 			kAutoindex,
 			kIndex,
-			kFastCgiPass,
+			kCgiPass,
 			kServerName,
 			kListen,
 			kServer,
@@ -120,7 +120,7 @@ namespace	config {
 		void	_setAlias(Directive& currDirective);
 		void	_setAutoIndex(Directive& currDirective);
 		void	_setIndex(Directive& currDirective);
-		void	_setFastCgiPass(Directive& currDirective);
+		void	_setCgiPass(Directive& currDirective);
 		void	_addListen(Directive& currDirective);
 		void	_addServerName(Directive& currDirective);
 		void	_addLocation(Directive& currDirective);

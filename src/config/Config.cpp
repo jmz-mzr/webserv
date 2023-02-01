@@ -28,7 +28,7 @@ Config::Config(const Config& src)
 		, _alias(src._alias)
 		, _index(src._index)
 		, _autoIndex(src._autoIndex)
-		, _fastCgiPass(src._fastCgiPass)
+		, _cgiPass(src._cgiPass)
 		, _configs(src._configs)
 { }
 
@@ -56,8 +56,8 @@ void	Config::setAutoIndex(bool b)
 void	Config::setIndex(const std::string& path)
 { _index = path; }
 
-void	Config::setFastCgiPass(const std::string& path)
-{ _fastCgiPass = path; }
+void	Config::setCgiPass(const std::string& path)
+{ _cgiPass = path; }
 
 bool	Config::addListenPair(const sockaddr_in& addr)
 {
@@ -88,7 +88,7 @@ std::ostream&	operator<<(std::ostream& os, const Config& conf)
 		<< "alias:" << conf.getAlias() << " "
 		<< "autoindex:" << (conf.isAutoIndex() ? "true" : "false") << " "
 		<< "index:" << conf.getIndex() << " "
-		<< "fastcgi:" << conf.getFastCgiPass() << " "
+		<< "cgi:" << conf.getCgiPass() << " "
 		<< "locations:" << conf.getConfigs().size() << std::endl;
 	return (os);
 }

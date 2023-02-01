@@ -19,7 +19,7 @@ namespace	webserv
 			, _alias(src._alias)
 			, _index(src._index)
 			, _autoIndex(src._autoIndex)
-			, _fastCgiPass(src._fastCgiPass)
+			, _cgiPass(src._cgiPass)
 			, _locations(src._locations)
 	{ }
 
@@ -34,7 +34,7 @@ namespace	webserv
 			, _alias(src2.getAlias())
 			, _index(src2.getIndex())
 			, _autoIndex(src2.isAutoIndex())
-			, _fastCgiPass(src2.getFastCgiPass())
+			, _cgiPass(src2.getCgiPass())
 	{ }
 
 	/**************************************************************************/

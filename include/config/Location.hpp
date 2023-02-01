@@ -45,8 +45,8 @@ namespace	webserv
 											{ return (_index); }
 		bool					isAutoIndex() const
 											{ return (_autoIndex); }
-		const std::string&		getFastCgiPass() const
-											{ return (_fastCgiPass); }
+		const std::string&		getCgiPass() const
+											{ return (_cgiPass); }
 		const locations_map&	getNestedLocations() const
 											{ return (_locations); }
 	private:
@@ -63,7 +63,7 @@ namespace	webserv
 		std::string				_alias;
 		std::string				_index;
 		bool					_autoIndex;
-		std::string				_fastCgiPass;
+		std::string				_cgiPass;
 
 		locations_map			_locations;
 	};

@@ -1,5 +1,5 @@
-#ifndef CONFIG_HPP
-#define CONFIG_HPP
+#ifndef CONFIG_CONFIG_HPP
+#define CONFIG_CONFIG_HPP
 
 #include <map>
 #include <set>
@@ -35,7 +35,7 @@ namespace webserv {
 		void		setAlias(const std::string& path);
 		void		setAutoIndex(bool b);
 		void		setIndex(const std::string& path);
-		void		setFastCgiPass(const std::string& path);
+		void		setCgiPass(const std::string& path);
 		bool		addListenPair(const sockaddr_in& addr);
 		void		addServerName(const std::string& name);
 		Config&		addConfig(const std::string& path, const Config& config);
@@ -50,14 +50,14 @@ namespace webserv {
 		const std::string&		getAlias() const { return (_alias); }
 		bool					isAutoIndex() const { return (_autoIndex); }
 		const std::string&		getIndex() const { return (_index); }
-		const std::string&		getFastCgiPass() const { return (_fastCgiPass);}
+		const std::string&		getCgiPass() const { return (_cgiPass);}
 
 		const config_map&		getConfigs() const { return (_configs); }
 
 		friend std::ostream&	operator<<(std::ostream&, const Config&);
 	private:
 		// TO DO: In order, first check the _maxBodySize, then _limitExcept,
-		// then _return, _fastCgiPass, _index, _autoIndex when building Response
+		// then _return, _cgiPass, _index, _autoIndex when building Response
 
 		// 1) We must resolve the eventual localhost address
 		// (case-insensitively: it must work with "LOCalhOST:80")
@@ -182,7 +182,7 @@ namespace webserv {
 		bool						_autoIndex;
 
 		// 1) Can only be defined once, and if another definition line
-		// appears, it must throw an exception (like '"fastcgi_pass" directive
+		// appears, it must throw an exception (like '"cgi_pass" directive
 		// is duplicate in /usr/local/etc/nginx/nginx.conf:109')
 		// 2) It must be either a valid IP address, or a valid hostname (no special
 		// characters, and can be translated, case-insensitively to an IP address
@@ -192,7 +192,7 @@ namespace webserv {
 		// 'invalid port in upstream "loCalhOst:80000" in /usr/.../nginx.conf:133',
 		// 'host not found in upstream "127.0.0.1000" in /usr/.../nginx.conf:133',
 		// 'host not found in upstream "localhosttt" in /usr/.../nginx.conf:133')
-		std::string					_fastCgiPass;
+		std::string					_cgiPass;
 
 		// TO DO: 1) The locations are case-insensitive, so they must
 		// be recorded in lowercase with str_tolower
@@ -216,4 +216,4 @@ namespace webserv {
 
 }	// namespace webserv
 
-#endif // CONFIG_HPP
+#endif // CONFIG_CONFIG_HPP

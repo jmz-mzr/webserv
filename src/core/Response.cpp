@@ -950,7 +950,7 @@ namespace	webserv
 				_requestedFileName.erase(_requestedFileName.end() - 1);
 			_requestedFileName += request.getUri();
 		}
-		//if (!request.getLocation().getFastCgiPass().empty())
+		//if (!request.getLocation().getCgiPass().empty())
 		//	return (_loadCgiPass(request));
 		if (request.getRequestMethod() == "POST")
 			return (_postRequestBody(request));
