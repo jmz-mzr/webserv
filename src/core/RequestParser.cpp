@@ -54,6 +54,32 @@ namespace webserv
 		return line;
 	}
 
+	bool	Request::_checkHeader(std::string str)
+	{
+		/*
+		The value of the HTTP request header you want to set can only contain:
+		Alphanumeric characters: a-z, A-Z, and 0-9
+		The following special characters: _ :;.,\/"'?!(){}[]@<>=-+*#$&`|~^% 
+		*/
+
+		std::string	format = "0123456789_ :;.,\\/\"\'?!(){}[]@<>=-+*#$&`|~^%";
+		size_t		i = 0;
+		size_t		len = str.length();
+
+		if (str[str.size() - 1] == ' ')
+			return false;
+		while (i < len)
+		{
+			if (format.find(str[i]) != std::string::npos
+			|| (str[i] >= 'a' && str[i] <= 'z')
+			|| (str[i] >= 'A' && str[i <= 'Z']))
+				i++;
+			else
+				return false;
+		}
+		return	true;
+	}
+
 	std::string        Request::_getKey(std::string line)
 	{
 		size_t i;
@@ -63,6 +89,7 @@ namespace webserv
 		if (i == std::string::npos)
 			return "";
 		ret = line.substr(0, i);
+		_checkHeader(ret);
 		return ret;
 	}
 
@@ -75,10 +102,10 @@ namespace webserv
 		if (i == std::string::npos)
 			return "";
 		ret = line.substr(i + 1, line.size() - i + 1);
-		i = ret.find_first_of(' ');
+		i = ret.find_first_not_of(' ') - 1;
 		if (i == std::string::npos)
 			return "";
-		ret = ret.substr(i + 1, ret.size() - i + 1);
+		ret = ret.substr(i, ret.size() - i);
 		return ret;
 	}
 

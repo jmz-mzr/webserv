@@ -75,6 +75,8 @@ namespace	webserv
 		bool			_loadExtensionLocation(const ServerConfig& serverConfig);
 		bool			_loadExtensionLocation(const Location& location);
 		bool			_isChunkEnd();
+		bool			_checkHeader(std::string str);
+		std::string		_formatValue(std::string str);
 		int				_checkHeaders() const;
 		std::string		_getServerName() const;
 		int				_checkHost() const;
