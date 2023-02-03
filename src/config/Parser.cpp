@@ -540,8 +540,21 @@ void	Parser::_addServerName(Directive& currDirective)
 
 void	Parser::_addLocation(Directive& currDirective)
 {
-	Config& locConf = _currConfig->addConfig(currDirective.argv[0], Config());
+	Config::LocationType	type;
 
+	if (currDirective.argv[0].find('*') != std::string::npos) {
+		type = Config::kFile;
+	} else {
+		type = Config::kPath;
+	}
+
+	if ( ((_currConfig->getType() == Config::kPath) && (type == Config::kPath))
+			|| (_currConfig->getType() == Config::kFile)
+			|| (_configStack.size() > 2) )
+		_errorHandler("Location too deeply nested");
+	
+	Config& locConf = _currConfig->addConfig(currDirective.argv[0], Config());
+	locConf.setType(type);
 	_configStack.push(ConfigData(kLocation, locConf));
 	_currConfig = &locConf;
 }

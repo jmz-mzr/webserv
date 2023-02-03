@@ -45,7 +45,7 @@ namespace	webserv
 	public:
 		enum	LogLevel {
 			kEmerg,		// System in an unusable state, need immediate attention
-			kError, 	// Something was unsuccessful
+			kError,		// Something was unsuccessful
 			kWarn,		// Something unexpected but not concerning happened
 			kInfo,		// Info messages, not necessary but good to know
 			kDebug		// Useful debugging info to help locate the problem

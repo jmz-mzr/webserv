@@ -23,10 +23,13 @@ namespace webserv {
 		typedef std::set<std::string, strcmp_icase>			hostname_set;
 		typedef std::set<sockaddr_in, listen_compare>		listen_set;
 
+		enum LocationType { kNone, kPath, kFile };
+
 		Config();
 		Config(const Config& src);
 		~Config() {}
 
+		void		setType(const LocationType type);
 		void		addErrorPage(const int status, const std::string& uri);
 		void		setMaxBodySize(const int64_t size);
 		void		addLimitExcept(const std::string& method);
@@ -40,6 +43,7 @@ namespace webserv {
 		void		addServerName(const std::string& name);
 		Config&		addConfig(const std::string& path, const Config& config);
 
+		const LocationType&		getType() const { return (_lType); }
 		const listen_set&		getListens() const { return (_listens); }
 		const hostname_set&		getServerNames() const { return (_serverNames);}
 		const error_page_map&	getErrorPages() const { return (_errorPages); }
@@ -56,6 +60,7 @@ namespace webserv {
 
 		friend std::ostream&	operator<<(std::ostream&, const Config&);
 	private:
+		LocationType				_lType;
 		// TO DO: In order, first check the _maxBodySize, then _limitExcept,
 		// then _return, _cgiPass, _index, _autoIndex when building Response
 

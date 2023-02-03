@@ -9,7 +9,8 @@
 namespace webserv {
 
 Config::Config()
-		: _maxBodySize(0)
+		: _lType(Config::kNone)
+		, _maxBodySize(0)
 		, _return(-1, "")
 		, _root("html")
 		, _alias("")
@@ -18,7 +19,8 @@ Config::Config()
 { }
 
 Config::Config(const Config& src)
-		: _listens(src._listens)
+		: _lType(src._lType)
+		, _listens(src._listens)
 		, _serverNames(src._serverNames)
 		, _errorPages(src._errorPages)
 		, _maxBodySize(src._maxBodySize)
@@ -31,6 +33,9 @@ Config::Config(const Config& src)
 		, _cgiPass(src._cgiPass)
 		, _configs(src._configs)
 { }
+
+void	Config::setType(const LocationType type)
+{ _lType = type; }
 
 void	Config::addErrorPage(const int status, const std::string& uri)
 { _errorPages.insert(std::make_pair(status, uri)); }
