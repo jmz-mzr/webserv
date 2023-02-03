@@ -492,8 +492,8 @@ int		Parser::_parsePort(const std::string& str,
 									std::list<sockaddr_in>& addrList)
 {
 	sockaddr_in		addr;
-	uint16_t		port;
-	uint16_t		portMax = ((2 << 15) - 1);
+	unsigned long	port;
+	unsigned long	portMax = ((2 << 15) - 1);
 
 	if (std::find_if(str.begin(), str.end(), &isnotdigit) != str.end())
 	{
@@ -501,10 +501,13 @@ int		Parser::_parsePort(const std::string& str,
 		addrList.push_back(addr);
 		return (-1);
 	} else {
-		port = static_cast<uint16_t>(strtoul(str.c_str(), NULL, 10));
+		errno = 0;
+		port = strtoul(str.c_str(), NULL, 10);
+		if (errno == ERANGE)
+			return (-1);
 		if ((port == 0) || (port > portMax))
 			_listenError("invalid port", _currDirectivePtr->argv[0]);
-		setSockAddr(addr, INADDR_ANY, port);
+		setSockAddr(addr, INADDR_ANY, static_cast<uint16_t>(port));
 		addrList.push_back(addr);
 		return (0);
 	}
@@ -517,7 +520,8 @@ void	Parser::_addListen(Directive& currDirective)
 	size_t					pos = input.find(':');
 
 	if (pos != std::string::npos) {
-		_parsePort(input.substr(pos + 1, input.size() - pos), addrList);
+		if (_parsePort(input.substr(pos + 1, input.size() - pos), addrList) < 0)
+			_listenError("invalid port", &currDirective.argv[0][pos + 1]);
 		_parseAddress(input.substr(0, pos), addrList);
 	} else if (_parsePort(input, addrList) < 0)
 		_parseAddress(input, addrList);

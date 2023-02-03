@@ -54,7 +54,24 @@ std::string files[] = {
 	"return02",
 	"return03",
 	"return04",
-	"return05"
+	"return05",
+	"cgipass00",
+	"cgipass01",
+	"cgipass02",
+	"listen00",
+	"listen01",
+	"listen02",
+	"listen03",
+	"listen04",
+	"listen05",
+	"listen06",
+	"listen07",
+	"location00",
+	"location01",
+	"location02",
+	"location03",
+	"location04",
+	"location05"
 };
 
 TEST_P(ConfigParsing, SyntaxErrorTest) {
