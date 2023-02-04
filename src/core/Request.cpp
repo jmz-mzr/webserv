@@ -321,13 +321,12 @@ namespace	webserv
 				ss << gettimeofday(&time_now, NULL);
 				_tempfilename = "body_" + ss.str();
 				//TOOD : figure out where to close the streams
-				_tempfilestream.open(_tempfilename.c_str());
+				_tempfilestream.open(_tempfilename.c_str(), std::ofstream::binary);
 				if (!_tempfilestream.is_open())
 					return (500);
-				_requestFileStream.open(_tempfilename.c_str());
+				_requestFileStream.open(_tempfilename.c_str(), std::ifstream::binary);
 				if (!_requestFileStream.is_open())
 					return (500);
-				//todo : ecrire dans le fichier tempfilestream le body
 			}
 			//If content length isn't specified, we should start
 			//parsing when all the headers are received (RFC)
