@@ -116,6 +116,7 @@ namespace	webserv
 		// All the many other rules are in the RFCs (9112 et 3986) and in the
 		// NGINX implementation (https://bit.ly/3XEvVs1)
 		std::string			_uri;
+		std::string			_raw_uri;
 
 		// TO DO: It is what comes after the first '?' in the URI
 		std::string			_args;

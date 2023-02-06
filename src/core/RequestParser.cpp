@@ -54,6 +54,151 @@ namespace webserv
 		return line;
 	}
 
+	// bool	Request::_checkHeader(std::string str)
+	// {
+	// 	/*
+	// 	The value of the HTTP request header you want to set can only contain:
+	// 	Alphanumeric characters: a-z, A-Z, and 0-9
+	// 	The following special characters: _ :;.,\/"'?!(){}[]@<>=-+*#$&`|~^% 
+	// 	*/
+
+	// 	std::string	format = "0123456789_ :;.,\\/\"\'?!(){}[]@<>=-+*#$&`|~^%";
+	// 	size_t		i = 0;
+	// 	size_t		len = str.length();
+
+	// 	if (str[str.size() - 1] == ' ')
+	// 		return false;
+	// 	while (i < len)
+	// 	{
+	// 		if (format.find(str[i]) != std::string::npos
+	// 		|| (str[i] >= 'a' && str[i] <= 'z')
+	// 		|| (str[i] >= 'A' && str[i <= 'Z']))
+	// 			i++;
+	// 		else
+	// 			return false;
+	// 	}
+	// 	return	true;
+	// }
+
+	// std::string        Request::_getKey(std::string line)
+	// {
+	// 	size_t i;
+	// 	std::string ret;
+
+	// 	i = line.find_first_of(':');
+	// 	if (i == std::string::npos)
+	// 		return "";
+	// 	ret = line.substr(0, i);
+	// 	_checkHeader(ret);
+	// 	return ret;
+	// }
+
+	// std::string        Request::_getValue(std::string line)
+	// {
+	// 	size_t i;
+	// 	std::string ret;
+
+	// 	i = line.find_first_of(':');
+	// 	if (i == std::string::npos)
+	// 		return "";
+	// 	ret = line.substr(i + 1, line.size() - i + 1);
+	// 	i = ret.find_first_not_of(' ') - 1;
+	// 	if (i == std::string::npos)
+	// 		return "";
+	// 	ret = ret.substr(i, ret.size() - i);
+	// 	return ret;
+	// }
+
+	// std::string		Request::_sanitizeUri(std::string uri)
+	// {
+	// 	size_t		i = 0;
+	// 	size_t		j = 0;
+	// 	std::string	tmp_uri(uri);
+	// 	std::string	res_uri;
+
+	// 	while ((i = tmp_uri.find("/", i)) != std::string::npos)
+	// 	{
+	// 		j = tmp_uri.find_first_not_of("/", i);
+	// 		res_uri = tmp_uri.substr(0, i) + tmp_uri.substr(j, std::string::npos);
+	// 		i += j - i;
+	// 	}
+	// 	return	res_uri;
+	// }
+
+	// std::string		Request::_decodeUri(std::string uri)
+	// {
+	// 	size_t i = 0;
+	// 	size_t j = 0;
+	// 	std::string hexcode;
+	// 	std::string tmp_uri(uri);
+	// 	int 	ascii;
+
+	// 	//sanitize le path
+	// 	tmp_uri = _sanitizeUri(tmp_uri);
+	// 	//convertir les %hex en ascii
+	// 	while ((i = tmp_uri.find("%", i)) != std::string::npos)
+	// 	{
+	// 		hexcode = tmp_uri.substr(i, i + 2);
+	// 		ascii = static_cast<int>(std::strtol(hexcode.c_str(), NULL, 16));
+	// 		//replace '%' by hexcode
+	// 		tmp_uri[i] = static_cast<char>(ascii);
+	// 		j = i + 1;
+	// 		//todo: remove the hex value
+	// 		while (j + 2 < tmp_uri.length())
+	// 		{	
+	// 			tmp_uri[j] = tmp_uri[j + 2];
+	// 			j++;
+	// 		}
+	// 		tmp_uri[j] = '\0';
+	// 		//remove the processed part to prevent infinite loop
+	// 		i++;
+	// 	}
+	// 	//mettre la string en lowercase
+	// 	return tmp_uri;	
+	// }
+
+	// void        Request::_parsePath(std::string line)
+	// {
+	// 	size_t j ;
+	// 	std::string str;
+
+	// 	j = line.find_first_of(' ');
+	// 	str = line.substr(j + 1, line.size() - j + 1);
+	// 	j = str.find_first_of(' ');
+	// 	str = str.substr(0, j);
+	// 	_uri = str;
+	// 	_uri = _decodeUri(_uri);
+	// }
+
+	// void        Request::_parseMethod(std::string line)
+	// {
+	// 	size_t  i;
+	// 	std::string str;
+
+	// 	i = line.find_first_of(' ');
+	// 	_method.assign(line, 0, i);
+	// 	_parsePath(line);
+	// 	_checkVersion(line);
+	// }
+
+	// //Check Request HTTP Version (accept 1.0 and 1.1)
+	// void		Request::_checkVersion(std::string line)
+	// {
+	// 	size_t 		j;
+	// 	std::string	str;
+
+	// 	j = line.find_last_of(' ');
+	// 	str = line.substr(j + 1, line.size() - j + 1);
+	// 	size_t i = str.find("HTTP/");
+	// 	if (i != 0 || i == std::string::npos)
+	// 	{
+	// 		_code = 400;
+	// 		LOG_DEBUG("HTTP BAD VERSION" << std::endl);
+	// 		return ;
+	// 	}
+	// 	this->_version = str.substr(str.find_first_of('/') + 1, 3);
+	// }
+
 	bool	Request::_checkHeader(std::string str)
 	{
 		/*
@@ -102,7 +247,7 @@ namespace webserv
 		if (i == std::string::npos)
 			return "";
 		ret = line.substr(i + 1, line.size() - i + 1);
-		i = ret.find_first_not_of(' ') - 1;
+		i = ret.find_first_not_of(' ');
 		if (i == std::string::npos)
 			return "";
 		ret = ret.substr(i, ret.size() - i);
@@ -113,13 +258,17 @@ namespace webserv
 	{
 		size_t		i = 0;
 		size_t		j = 0;
-		std::string	tmp_uri(uri);
-		std::string	res_uri;
+		std::string	res_uri(uri);
 
-		while ((i = tmp_uri.find("/", i)) != std::string::npos)
+		while ((i = res_uri.find("/", i)) != std::string::npos)
 		{
-			j = tmp_uri.find_first_not_of("/", i);
-			res_uri = tmp_uri.substr(0, i) + tmp_uri.substr(j, std::string::npos);
+			j = res_uri.find_first_not_of("/", i);
+			if (j == std::string::npos)
+			{			
+				res_uri = res_uri.substr(0, res_uri.find_first_of('/')) + "/";
+				break ;
+			}
+			res_uri = res_uri.substr(0, i + 1) + res_uri.substr(j, std::string::npos);
 			i += j - i;
 		}
 		return	res_uri;
@@ -135,16 +284,17 @@ namespace webserv
 
 		//sanitize le path
 		tmp_uri = _sanitizeUri(tmp_uri);
+		std::cout << "urii: " << tmp_uri << std::endl;
 		//convertir les %hex en ascii
 		while ((i = tmp_uri.find("%", i)) != std::string::npos)
 		{
-			hexcode = tmp_uri.substr(i, i + 2);
+			hexcode = tmp_uri.substr(i + 1, 2);
 			ascii = static_cast<int>(std::strtol(hexcode.c_str(), NULL, 16));
 			//replace '%' by hexcode
+			std::cout << "hexcode is : " << hexcode << std::endl;
 			tmp_uri[i] = static_cast<char>(ascii);
 			j = i + 1;
-			//todo: remove the hex value
-			while (j + 2 < tmp_uri.length())
+			while (j + 2 < tmp_uri.length() + 1)
 			{	
 				tmp_uri[j] = tmp_uri[j + 2];
 				j++;
@@ -154,6 +304,12 @@ namespace webserv
 			i++;
 		}
 		//mettre la string en lowercase
+		j = 0;
+		while (j < tmp_uri.length())
+		{
+			tmp_uri[j] = static_cast<char>(tolower(tmp_uri[j]));
+			j++;
+		}
 		return tmp_uri;	
 	}
 
@@ -162,12 +318,25 @@ namespace webserv
 		size_t j ;
 		std::string str;
 
-		j = line.find_first_of(' ');
+		if((j = line.find_first_of(' ')) == std::string::npos)
+		{
+			_code = 400;
+			return ;
+		}
 		str = line.substr(j + 1, line.size() - j + 1);
-		j = str.find_first_of(' ');
-		str = str.substr(0, j);
-		_uri = str;
-		_uri = _decodeUri(_uri);
+		if ((j = str.find_first_not_of(' ')) == std::string::npos)
+		{
+			_code = 400;
+			return ;
+		}
+		str = str.substr(j, str.find_first_of(' ', j) - j);
+		_raw_uri = str;
+		if (_raw_uri.empty())
+		{
+			_code = 400;
+			return ;
+		}
+		_uri = _decodeUri(_raw_uri);
 	}
 
 	void        Request::_parseMethod(std::string line)
@@ -179,6 +348,7 @@ namespace webserv
 		_method.assign(line, 0, i);
 		_parsePath(line);
 		_checkVersion(line);
+		std::cout << "_code: " << _code << std::endl;
 	}
 
 	//Check Request HTTP Version (accept 1.0 and 1.1)
@@ -187,16 +357,28 @@ namespace webserv
 		size_t 		j;
 		std::string	str;
 
-		j = line.find_last_of(' ');
+		j = line.find_first_of(_raw_uri) + _raw_uri.size();
+		if (line.find("HTTP/", j) == std::string::npos)
+		{
+			_code = 400;
+			return ;
+		}
 		str = line.substr(j + 1, line.size() - j + 1);
+		j = str.find_first_not_of(' ');
+		str = str.substr(j, 8);
+		std::cout << "version: " << str << std::endl;
 		size_t i = str.find("HTTP/");
 		if (i != 0 || i == std::string::npos)
 		{
 			_code = 400;
-			LOG_DEBUG("HTTP BAD VERSION" << std::endl);
 			return ;
 		}
 		this->_version = str.substr(str.find_first_of('/') + 1, 3);
+		if (_version != "1.0" && _version != "1.1")
+		{
+			_code = 400;
+			return ;
+		}
 	}
 
 	void        Request::_parse(std::string str)
