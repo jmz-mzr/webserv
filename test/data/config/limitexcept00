@@ -1,0 +1,3 @@
+server {
+	limit_except GET;
+}

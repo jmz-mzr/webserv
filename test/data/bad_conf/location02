@@ -1,4 +1,0 @@
-server {
-  location test error {
-  }
-}

@@ -87,3 +87,10 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+
+# Typescript / node.js
+package-lock.json
+node_modules/
+.node_modules/
+built/*
+build.json

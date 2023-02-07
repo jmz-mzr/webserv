@@ -1,3 +1,0 @@
-server {
-	error_page 600 error.html;
-}

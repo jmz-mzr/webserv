@@ -1,5 +1,0 @@
-server {
-	location /error/ {
-		return ftp://test;
-	}
-}
