@@ -272,6 +272,8 @@ namespace	webserv
 		ssize_t		received;
 
 		_buffer[0] = '\0';
+
+		// TODO : Recv before returning 1
 		if (client.hasUnprocessedBuffer())
 		   return (1);
 		if (client.isProcessingRequest()) {

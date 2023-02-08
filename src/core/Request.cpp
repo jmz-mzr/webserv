@@ -22,11 +22,16 @@ namespace	webserv
 												_location(0),
 												_isKeepAlive(true),
 												_hasReceivedHeaders(false),
+												_hasReceivedBody(false),
+												_hasBody(false),
+												_tempfilestream(),
+												_tempfilename(),
 												_bodySize(-1),
 												_isChunkedRequest(false),
 												_isTerminatedRequest(false),
 												_isInternalRedirect(false)
 	{
+		_initHeaders();
 		LOG_INFO("New Request instance");
 	}
 
@@ -40,18 +45,19 @@ namespace	webserv
 											_isTerminatedRequest(false),
 											_isInternalRedirect(false)
 	{
-		// NOTE: Except at Client creation (inserted in the client list),
-		// the Request should not be copied
+		// TO DO: handle swap of std::ofstream (or other _chunks object)
+		// 		  or not if Request in only copied at Client creation?
 
 		LOG_INFO("Request copied");
 	}
 
 	Request::~Request()
 	{
-		if (_tmpFile.is_open())
-			_closeTmpFile();
-		if (!_tmpFileName.empty())
-			_deleteTmpFile();
+		//uncomment when merge is done	
+		// if (_tmpFile.is_open())
+		// 	_closeTmpFile();
+		// if (!_tmpFileName.empty())
+		// 	_deleteTmpFile();
 	}
 
 	/**************************************************************************/
@@ -227,38 +233,34 @@ namespace	webserv
 										const char* recvBuffer,
 										const server_configs& serverConfigs)
 	{
-		// TO DO: parse: [=> use unprocessedBuff first, then recvBuff]
-		// 		  		 if (!_hasReceivedHeaders)
-		// 		  		   check and set Headers, returning 400 error if an
-		// 		  		   existing header has an incorrect value, or if a
-		// 		  		   request header field is too long (> 8192);
-		// 		  		   and only read the Content-Length amount to prevent
-		// 		  		   incomplete messages or reading the next request?;
-		//				 save what is not read in unprocessedBuff;
-		// 		  		 set _isChunkedRequest/_isTerminatedRequest if needed;
-		// 		  if (error) {
-		// 		    log error;
-		// 		    clearRequest(); // only if closing connection error?
-		// 		    return (errorCode 4xx or 5xx);
-		// 		  }
-		// 		  try {	// or try-catch in client?
-		// 		    save chunk;
-		// 		  } catch (const std::exception& e) {
-		// 		    log error;
-		// 		    clearRequest(); // only if closing connection error?
-		// 		    return (errorCode 4xx or 5xx);
-		// 		  }
-		// 		  if (last chunk) {
-		// 		    set _isTerminatedRequest;
-		//		  if (!_hasReceivedHeaders && not loaded config) {
-		//		    _loadServerConfig(serverConfigs);
-		//		    return (_checkHeaders);
-		//		  }
-		// 		  return (0);
-
+		// headers are already filled by normal parsing
+		// we only need to parse the body and add/remove the footers
 		(void)recvBuffer;
 		(void)unprocessedBuffer;
-		if (_hasReceivedHeaders && (!_serverConfig || !_location)) {
+		
+		std::string processedBody;
+		std::string	chunkedBody = 
+		_buffer.substr(_bufferIndex, std::string::npos);
+		long		chunkSize;
+		size_t		i = 0;
+
+		chunkSize = strtol(chunkedBody.c_str(), NULL, 16);
+		
+		//Documentation : www.jmarshall.com/easy/http
+		while (chunkSize)
+		{
+			i = chunkedBody.find("\r\n", i) + 2;
+			processedBody += chunkedBody.substr(i, 
+			static_cast<unsigned long>(chunkSize));
+			i += static_cast<unsigned long>(chunkSize + 2); 
+			chunkSize = strtol(chunkedBody.c_str() + i, NULL, 16);
+		}
+		if (chunkedBody.find("\r\n0\r\n") == chunkedBody.size() - 5)
+			_hasReceivedBody = true;
+		_body += processedBody;
+		
+		if (_hasReceivedBody && _hasReceivedHeaders 
+		&& (!_serverConfig || !_location)) {
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
 			// After header sent, check content length header, etc
@@ -267,7 +269,7 @@ namespace	webserv
 		}
 		return (0);
 	}
-
+		
 	bool	Request::_parseRequestTarget(const std::string& requestTarget)
 	{
 		// TO DO: This is a temp version of the function, used for the internal
@@ -286,33 +288,97 @@ namespace	webserv
 		return (true);
 	}
 
+	bool	Request::_isChunkEnd()
+	{
+		std::string	chunkedBody = 
+		_buffer.substr(_bufferIndex, std::string::npos);
+
+		if (chunkedBody.find("\r\n0\r\n") == chunkedBody.size() - 5)
+			return true;
+		return false;
+	}
+
 	int	Request::parseRequest(std::string& unprocessedBuffer,
 								const char* recvBuffer,
 								const server_configs& serverConfigs)
 	{
-		// TO DO: if (_isChunkedRequest)
-		// 		    return (_parseChunkedRequest(...));
-		// 		  parse: [=> use unprocessedBuff first, then recvBuff]
-		// 		  		 check and set Headers, returning 400 error if an
-		// 		  		 existing header has an incorrect value;
-		//				 save what is not read in unprocessedBuff;
-		// 		  		 set _isChunked/_hasReceived/_isTerminated if needed;
-		// 		  		 and only read the Content-Length amount to prevent
-		// 		  		 incomplete messages or reading the next request?;
-		// 		  if (error) {
-		// 		    log error;
-		// 		    clearRequest(); // only if closing connection error?
-		// 		    return (errorCode 4xx or 5xx);
-		// 		  }
-		//		  if (!_hasReceivedHeaders && not loaded config) {
-		//		    _loadServerConfig(serverConfigs);
-		//		    return (_checkHeaders);
-		//		  }
-		// 		  return (0);
+		_buffer = (unprocessedBuffer + recvBuffer);
+		
+		//"CRLFCRLF" or "\r\n\r\n" pattern marks the end of the header section
+		size_t i = _buffer.find("\r\n\r\n");
+	
+		if (i != std::string::npos)
+		{
+			if (_tempfilename.empty())
+			{
+				std::stringstream ss;
+				struct timeval	time_now;
 
-		(void)recvBuffer;
-		(void)unprocessedBuffer;
-		if (_hasReceivedHeaders && (!_serverConfig || !_location)) {
+				ss << gettimeofday(&time_now, NULL);
+				_tempfilename = "body_" + ss.str();
+				//TOOD : figure out where to close the streams
+				_tempfilestream.open(_tempfilename.c_str(), std::ofstream::binary);
+				if (!_tempfilestream.is_open())
+					return (500);
+				_requestFileStream.open(_tempfilename.c_str(), std::ifstream::binary);
+				if (!_requestFileStream.is_open())
+					return (500);
+			}
+			//If content length isn't specified, we should start
+			//parsing when all the headers are received (RFC)
+			if (_buffer.find("Content-Length: ") == std::string::npos && !_hasBody)
+			{
+				//we discard excess buffer
+				_buffer = _buffer.substr(0, i + 4);
+				_parse(_buffer);
+				if (_code != 0)
+					return (_code);
+				// If the encoding is chunked, we parse the body
+				if (_headers["Transfer-Encoding"] == "chunked" && _isChunkEnd())
+				{
+					_hasBody = true;
+					_parseChunkedRequest(unprocessedBuffer, recvBuffer,
+					 serverConfigs);
+					_tempfilestream << _body;
+				}
+				else
+					unprocessedBuffer = _buffer;
+			}
+			else
+			{
+				//the request has a body because Content Length header exists
+				_hasBody = true;
+				std::string body_size = _buffer.substr(
+					_buffer.find("Content-Length: ") 
+					+ strlen("Content-Length: ") , 10);
+				
+				//HTTP Request body size
+				_bodySize = static_cast<int64_t>(std::atoi(body_size.c_str()));
+				//	if Content-Length header is present, we wait to receive
+				//	the entire request body before processing
+				if (_bodySize > 0 && _buffer.size() >=
+				static_cast<unsigned long>(_bodySize) + i + 4)
+				{
+					_parse(_buffer);
+					if (_code != 0)
+						return (_code);
+					_body = _buffer.substr(_bufferIndex, 
+					static_cast<unsigned long> (_bodySize));
+					_tempfilestream << _body;
+					_hasReceivedBody = true;
+				}
+				else
+					unprocessedBuffer += _buffer;
+			}
+		}
+		// if we don't have received all the headers yet
+		// we save the request in unprocessedBuffer
+		else
+			unprocessedBuffer += _buffer;
+		_buffer.clear();
+		if (( (_hasBody && _hasReceivedBody && _hasReceivedHeaders)
+		|| (!_hasBody && _hasReceivedHeaders) )
+		&& (!_serverConfig || !_location)) {
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
 			// After header sent, check content length header, etc
@@ -320,6 +386,38 @@ namespace	webserv
 			return (_checkHeaders());
 		}
 		return (0);
+	}
+
+	//set the accepted languages values in a map sorted by quality value
+	void	Request::_setLanguage()
+	{
+		std::string	header = this->_headers["Accept-Language"];
+		std::vector<std::string> language_values;
+
+		if (header != "")
+		{
+			//Trim all spaces and separate the languages, the separator is ","
+			header = ft_string_remove(header, ' ');
+			language_values = ft_string_split(header, ",");
+			//insert the languages with their quality value
+			for (std::vector<std::string>::iterator it = language_values.begin();
+			it != language_values.end(); it++)
+			{
+				std::vector<std::string> values;
+				values = ft_string_split(*it, ";");
+				// when no quality value is specified, the default value is 1.0
+				if (values.size() == 1)
+					_languages.insert(std::make_pair(1.0, values[0]));
+				else
+				{
+					//the quality value starts with "q=" example : "q=0.8"
+					//we need to remove the 2 first characters before conversion
+					double weight = static_cast<double>(
+						atof(values[1].c_str() + 2));
+					_languages.insert(std::make_pair(weight, values[0]));
+				}
+			}
+		}
 	}
 
 	void	Request::setRequestMethod(const std::string& method)

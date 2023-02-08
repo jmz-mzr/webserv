@@ -3,11 +3,16 @@
 
 # include <vector>
 # include <string>
+# include <map>
 # include <fstream>
+# include <sys/time.h>
+# include <sstream>
+# include <iostream>
 
 # include "config/ServerConfig.hpp"
 # include "core/AcceptSocket.hpp"
 # include "config/Location.hpp"
+# include "utils/utils.hpp"
 
 namespace	webserv
 {
@@ -70,28 +75,34 @@ namespace	webserv
 		void			_parse(std::string str);
 		void        	_parseMethod(std::string line);
 		void        	_parsePath(std::string line);
+		void			_checkVersion(std::string line);
 		std::string		_readLine();
 		std::string		_getKey(std::string line);
 		std::string		_getValue(std::string line);
+		std::string		_decodeUri(std::string uri);
+		std::string		_sanitizeUri(std::string uri);
 		bool			_parseRequestTarget(const std::string& requestTarget);
 		void			_parseInternalTarget(const std::string& redirectTo);
 		int				_parseChunkedRequest(std::string& unprocessedBuffer,
 										const char* buffer,
 										const server_configs& serverConfigs);
+		bool			_loadServerConfig(const server_configs& serverConfigs);
+		bool			_loadLocation(const ServerConfig& serverConfig);
+		bool			_loadExtensionLocation(const ServerConfig& serverConfig);
+		bool			_loadExtensionLocation(const Location& location);
+		bool			_isChunkEnd();
+		bool			_checkHeader(std::string str);
+		std::string		_formatValue(std::string str);
+		int				_checkHeaders() const;
+		std::string		_getServerName() const;
+		int				_checkHost() const;
+		int				_checkMaxBodySize() const;
+		int				_checkMethod() const;
+		void			_setLanguage();
+		void			_logError(const char* errorAt) const;
+		void			_closeTmpFile();
+		void			_deleteTmpFile();
 
-		bool		_loadServerConfig(const server_configs& serverConfigs);
-		bool		_loadLocation(const ServerConfig& serverConfig);
-		bool		_loadExtensionLocation(const ServerConfig& serverConf);
-		bool		_loadExtensionLocation(const Location& location);
-		int			_checkHeaders() const;
-		int			_checkHost() const;
-		int			_checkMaxBodySize() const;
-		int			_checkMethod() const;
-
-		void	_closeTmpFile();
-		void	_deleteTmpFile();
-
-		void	_logError(const char* errorAt) const;
 
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
@@ -101,6 +112,9 @@ namespace	webserv
 		const AcceptSocket&					_clientSocket;
 		const ServerConfig*					_serverConfig;
 		const Location*						_location;
+		int									_code;
+		std::string							_version;
+		std::map<double, std::string>		_languages;
 
 		// TO DO: 1) If the request line is invalid, immediately return 400
 		// but record it here anyway for the debug messages
@@ -123,6 +137,7 @@ namespace	webserv
 		// All the many other rules are in the RFCs (9112 et 3986) and in the
 		// NGINX implementation (https://bit.ly/3XEvVs1)
 		std::string			_uri;
+		std::string			_raw_uri;
 
 		// TO DO: It is what comes after the first '?' in the URI
 		std::string			_query;
@@ -140,8 +155,13 @@ namespace	webserv
 		// 2) Only set it to false if 'Connection' Header is set to "close"
 		bool				_isKeepAlive;
 		bool				_hasReceivedHeaders;
-
-		// TO DO: 1) The Content-Length also limits the size of what is actually
+		bool				_hasReceivedBody;
+		bool				_hasBody;
+		
+		std::ofstream		_tempfilestream;
+		std::ifstream		_requestFileStream;
+		std::string			_tempfilename;
+		// TO DO: The Content-Length also limits the size of what is actually
 		// going to be processed from the body (even if it is longer)
 		// 2) If the request method is DELETE and the request has a body, or
 		// if it has a Content-Length header with a positive value, immediately
@@ -171,3 +191,4 @@ namespace	webserv
 }	// namespace webserv
 
 #endif	// REQUEST_HPP
+

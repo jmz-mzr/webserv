@@ -4,6 +4,7 @@
 # include <algorithm>
 # include <string>
 # include <utility>
+# include <vector>
 
 # include <netinet/in.h>
 # include <arpa/inet.h>
@@ -33,6 +34,10 @@ namespace	webserv
 							const uint16_t port);
 	void		copySockAddr(sockaddr_in& addr, const sockaddr_in& src);
 	uint64_t	getSockAddrId(sockaddr_in& addr);
+
+	//string_utils
+	std::vector<std::string>    ft_string_split(std::string &str, std::string delim);
+	std::string    				ft_string_remove(std::string src, char token);
 
 	struct dir_entry_compare {
 		bool	operator()(const std::pair<std::string, struct stat>& p1,

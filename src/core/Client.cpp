@@ -15,6 +15,7 @@ namespace	webserv
 												_serverConfigs(serverConfigs),
 												_socket(serverFd),
 //												_isKeepAlive(true),
+												_unprocessedBuffer(),
 												_request(_socket)
 	{
 		LOG_INFO("New Client instance");
@@ -28,6 +29,7 @@ namespace	webserv
 										_serverConfigs(src._serverConfigs),
 										_socket(src._socket),
 //										_isKeepAlive(src._isKeepAlive),
+										_unprocessedBuffer(src._unprocessedBuffer),
 										_request(src._request),
 										_response(src._response)
 	{

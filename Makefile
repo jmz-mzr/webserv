@@ -51,7 +51,8 @@ UTILS		=	ft_charcmp_icase.cpp \
 				ft_strcmp_icase.cpp \
 				sockaddr_in.cpp \
 				Logger.cpp \
-				trim.cpp
+				trim.cpp \
+				string_utils.cpp
 SRC			=	main.cpp $(CORE) $(CONFIG) $(UTILS)
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
