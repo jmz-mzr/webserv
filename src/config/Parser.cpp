@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cerrno>
 #include <climits>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
 #include <map>
 #include <set>
@@ -11,19 +13,35 @@
 #include <string>
 #include <vector>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "core/Socket.hpp"
 #include "utils/exceptions.hpp"
+#include "utils/global_defs.hpp"
 #include "utils/Logger.hpp"
 #include "utils/utils.hpp"
 
 namespace	webserv {
 
 namespace	config {
+
+static void	_errorHandler(const std::string& error_msg)
+{ throw SyntaxErrorException(error_msg); }
+
+static void	_listenError(const std::string& err, const std::string& arg)
+{ _errorHandler(err + " in \"" + arg + "\" of the \"listen\" directive"); }
+
+static bool isnotdigit(char c)
+{ return (!bool(std::isdigit(c))); }
+
+static bool isnothostnamevalid(char c)
+{ return (!(bool(std::isdigit(c)) || bool(std::isalpha(c)) || (c == '-'))); }
 
 /******************************************************************************/
 /*                         CONSTRUCTORS / DESTRUCTORS                         */
@@ -68,6 +86,13 @@ Parser::Parser()
 			&Parser::_setRoot
 		},
 		{
+			kAlias,
+			kDirective | kForbiddenDup | kArgcStrict | kLocCtx,
+			1,
+			"alias",
+			&Parser::_setAlias
+		},
+		{
 			kAutoindex,
 			kDirective | kForbiddenDup | kArgcStrict | kLocCtx,
 			1,
@@ -82,11 +107,11 @@ Parser::Parser()
 			&Parser::_setIndex
 		},
 		{
-			kFastCgiPass,
+			kCgiPass,
 			kDirective | kForbiddenDup | kArgcStrict | kLocCtx,
 			1,
-			"fastcgi_pass",
-			&Parser::_setFastCgiPass
+			"cgi_pass",
+			&Parser::_setCgiPass
 		},
 		{
 			kListen,
@@ -117,7 +142,7 @@ Parser::Parser()
 			&Parser::_addServer
 		}
 	};
-	
+
 	for (size_t i = 0; i < Parser::kDirectiveNb; i++) {
 		_grammar.insert(std::make_pair(directives[i].str, directives[i]));
 	}
@@ -143,18 +168,9 @@ Parser::ConfigData::ConfigData(Type t, Config& conf) : type(t), config(conf)
 /*                              MEMBER FUNCTIONS                              */
 /******************************************************************************/
 
-void	Parser::_errorHandler(const std::string& error_msg)
-{ throw SyntaxErrorException(error_msg); }
-
-void	Parser::_listenError(const std::string& err)
-{
-	_errorHandler(err + " in \"" + _currDirectivePtr->argv[0]
-										+ "\" of the \"listen\" directive");
-}
-
 /**
  * @brief Check ending char
- * @param directive 
+ * @param directive
  */
 void	Parser::_parseType(const Directive& directive)
 {
@@ -176,8 +192,8 @@ void	Parser::_parseType(const Directive& directive)
 
 /**
  * @brief Check the containing block
- * 
- * @param directive 
+ *
+ * @param directive
  */
 void	Parser::_parseContext(const Directive& directive)
 {
@@ -196,8 +212,8 @@ void	Parser::_parseContext(const Directive& directive)
 
 /**
  * @brief Check if duplicate
- * 
- * @param directive 
+ *
+ * @param directive
  */
 void	Parser::_parseDup(const Directive& directive)
 {
@@ -214,8 +230,8 @@ void	Parser::_parseDup(const Directive& directive)
 
 /**
  * @brief Check the argument count
- * 
- * @param directive 
+ *
+ * @param directive
  */
 void	Parser::_parseArgc(const Directive& directive)
 {
@@ -229,7 +245,7 @@ void	Parser::_parseArgc(const Directive& directive)
 void	Parser::_parseDirective(it_t nameToken, it_t ctrlToken)
 {
 	std::map<std::string, DirectiveSyntax>::iterator syntaxIter;
-	
+
 	if ((syntaxIter = _grammar.find(nameToken->value)) == _grammar.end()) {
 		_errorHandler("unknown directive \"" + nameToken->value + "\"");
 	} else {
@@ -260,7 +276,7 @@ void	Parser::operator()(Lexer::token_queue& tokens)
 				&& (ctrlToken == tokens.begin())) {
 			if ((_configStack.top().type == kServer)
 					&& (_currConfig->getListens().empty())) {
-				sockaddr_in	defaultAddr; 
+				sockaddr_in	defaultAddr;
 				setSockAddr(defaultAddr, INADDR_ANY, 8000);
 				_currConfig->addListenPair(defaultAddr);
 			}
@@ -276,9 +292,6 @@ void	Parser::operator()(Lexer::token_queue& tokens)
 	}
 }
 
-static bool isnotdigit(char c)
-{ return (!bool(std::isdigit(c))); }
-
 void	Parser::_addErrorPage(Directive& currDirective)
 {
 	const std::string&	uri = currDirective.argv.back();
@@ -288,12 +301,12 @@ void	Parser::_addErrorPage(Directive& currDirective)
 			it != currDirective.argv.end() - 1;
 			it++) {
 		if (std::find_if(it->begin(), it->end(), &isnotdigit) != it->end())
-			_errorHandler("invalid value \"" + (*it) + "\"");
+			_errorHandler("invalid value \"" + *it + "\"");
 		errorCode = strtol(it->c_str(), NULL, 10);
 		if (errno)
 			THROW_LOGIC("strtol(): " << strerror(errno));
 		if ((errorCode < 300) || (errorCode > 599)) {
-			_errorHandler("value \"" + (*it) + "\" must be between 300 and 599");
+			_errorHandler("value \"" + *it + "\" must be between 300 and 599");
 		}
 		_currConfig->addErrorPage(static_cast<int>(errorCode), uri);
 	}
@@ -318,7 +331,7 @@ void	Parser::_setMaxBodySize(Directive& currDirective)
 		default:
 			_errorHandler("\"client_max_body_size\" directive invalid value");
 	}
-	if (size > (LONG_MAX >> shift))
+	if (size > (std::numeric_limits<int64_t>::max() >> shift))
 		_errorHandler("\"client_max_body_size\" directive invalid value");
 	size <<= shift;
 	_currConfig->setMaxBodySize(size);
@@ -339,15 +352,61 @@ void	Parser::_setLimitExcept(Directive& currDirective)
 	}
 }
 
-//TODO: URL parser
 void	Parser::_setReturnPair(Directive& currDirective)
 {
-	(void)currDirective;
+	std::string		arg1(currDirective.argv[0]);
+	size_t			pos = arg1.find(':');
+
+	if (pos != std::string::npos) {
+		std::string	scheme = arg1.substr(0, pos);
+
+		if ((scheme == "http" || scheme == "https")
+				&& (arg1.compare(pos + 1, 2, "//") == 0))
+			_currConfig->setReturnPair(std::make_pair(302, arg1));
+		else
+			_errorHandler("invalid return code \"" + arg1 + "\"");
+	} else {
+		long	errorCode;
+
+		if (std::find_if(arg1.begin(), arg1.end(), &isnotdigit) != arg1.end())
+			_errorHandler("invalid return code \"" + arg1 + "\"");
+		errorCode = strtol(arg1.c_str(), NULL, 10);
+		if (errno)
+			THROW_LOGIC("strtol(): " << strerror(errno));
+		if ((errorCode < 0) || (errorCode > 999))
+			_errorHandler("invalid return code \"" + arg1 + "\"");
+		if (currDirective.argv.size() > 1)
+			_currConfig->setReturnPair(
+							std::make_pair(errorCode, currDirective.argv[1]));
+		else
+			_currConfig->setReturnPair(std::make_pair(errorCode, ""));
+	}
+}
+
+/**
+ * @brief Check for duplicate alias/root directive (mutually exclusive)
+ *
+ * @param argType type of tested directive
+ */
+void	Parser::_duplicateCheck(const std::string& currDirStr,
+								const size_t otherDirType,
+								const std::string& otherDirStr)
+{
+	if (_configStack.top().isDefined[otherDirType])
+		_errorHandler(otherDirStr + " directive is duplicate, " +
+					currDirStr + " directive was specified earlier.");
 }
 
 void	Parser::_setRoot(Directive& currDirective)
 {
+	_duplicateCheck("root", kAlias, "alias");
 	_currConfig->setRoot(currDirective.argv[0]);
+}
+
+void	Parser::_setAlias(Directive& currDirective)
+{
+	_duplicateCheck("alias", kRoot, "root");
+	_currConfig->setAlias(currDirective.argv[0]);
 }
 
 void	Parser::_setAutoIndex(Directive& currDirective)
@@ -366,27 +425,40 @@ void	Parser::_setIndex(Directive& currDirective)
 	_currConfig->setIndex(currDirective.argv[0]);
 }
 
-// TODO
-void	Parser::_setFastCgiPass(Directive& currDirective)
+void	Parser::_setCgiPass(Directive& currDirective)
 {
-	(void)currDirective;
+	std::string	path;
+	struct stat	fileInfos;
+
+	if (currDirective.argv[0][0] != '/') {
+		path = XSTR(WEBSERV_ROOT);
+		if (*(--(path.end())) != '/')
+			path += "/";
+	}
+	path += currDirective.argv[0];
+	errno = 0;
+	if (stat(path.c_str(), &fileInfos) < 0) {
+		THROW_FATAL("stat() error:" << strerror(errno));
+	} else if (!S_ISREG(fileInfos.st_mode)/* || !(sb.st_mode & S_IXUSR)*/) {
+		return (_errorHandler("\"" + path + "\" is not a regular file"));
+	}
+	_currConfig->setCgiPass(path);
 }
 
-// Each element of the hostname must be from 1 to 63 characters long
-// and the entire hostname, including the dots, can be at most 253
-// characters long. Valid characters for hostnames are ASCII(7)
-// letters from a to z, the digits from 0 to 9, and the hyphen (-).
-// A hostname may not start with a hyphen. A bad host name should throw
-// "invalid host in "+=*&^%$!?<>" of the "listen" directive"
 void	Parser::_parseHost(const std::string& str,
 										std::list<sockaddr_in>& addrList)
 {
 	struct in_addr**	hostList;
-	struct hostent*		hent = gethostbyname(str.c_str());
+	struct hostent*		hent;
 	in_port_t			port;
 
+	if (std::find_if(str.begin(), str.end(), &isnothostnamevalid) != str.end()
+			|| (str.size() < 1 || str.size() > 63)
+			|| str[0] == '-')
+		_errorHandler("invalid host in \"" + str + "\" of the listen directive");
+	hent = gethostbyname(str.c_str());
 	if (hent == NULL)
-		_listenError("host not found");
+		_listenError("host not found", _currDirectivePtr->argv[0]);
 	hostList = reinterpret_cast<struct in_addr**>(hent->h_addr_list);
 	port = addrList.back().sin_port;
 	addrList.pop_back();
@@ -404,7 +476,7 @@ void	Parser::_parseAddress(const std::string& str,
 										std::list<sockaddr_in>& addrList)
 {
 	if (str.empty())
-		_listenError("no host");
+		_listenError("no host", _currDirectivePtr->argv[0]);
 	if (str == "*") {
 		addrList.back().sin_addr.s_addr = INADDR_ANY;
 	} else {
@@ -420,8 +492,8 @@ int		Parser::_parsePort(const std::string& str,
 									std::list<sockaddr_in>& addrList)
 {
 	sockaddr_in		addr;
-	uint16_t		port;
-	uint16_t		portMax = ((2 << 15) - 1);
+	unsigned long	port;
+	unsigned long	portMax = ((2 << 15) - 1);
 
 	if (std::find_if(str.begin(), str.end(), &isnotdigit) != str.end())
 	{
@@ -429,10 +501,13 @@ int		Parser::_parsePort(const std::string& str,
 		addrList.push_back(addr);
 		return (-1);
 	} else {
-		port = static_cast<uint16_t>(strtoul(str.c_str(), NULL, 10));
+		errno = 0;
+		port = strtoul(str.c_str(), NULL, 10);
+		if (errno == ERANGE)
+			return (-1);
 		if ((port == 0) || (port > portMax))
-			_listenError("invalid port");
-		setSockAddr(addr, INADDR_ANY, port);
+			_listenError("invalid port", _currDirectivePtr->argv[0]);
+		setSockAddr(addr, INADDR_ANY, static_cast<uint16_t>(port));
 		addrList.push_back(addr);
 		return (0);
 	}
@@ -445,7 +520,8 @@ void	Parser::_addListen(Directive& currDirective)
 	size_t					pos = input.find(':');
 
 	if (pos != std::string::npos) {
-		_parsePort(input.substr(pos + 1, input.size() - pos), addrList);
+		if (_parsePort(input.substr(pos + 1, input.size() - pos), addrList) < 0)
+			_listenError("invalid port", &currDirective.argv[0][pos + 1]);
 		_parseAddress(input.substr(0, pos), addrList);
 	} else if (_parsePort(input, addrList) < 0)
 		_parseAddress(input, addrList);
@@ -466,11 +542,23 @@ void	Parser::_addServerName(Directive& currDirective)
 	_currConfig->addServerName(ft_str_tolower(currDirective.argv[0]));
 }
 
-// TODO: limit nested locations
 void	Parser::_addLocation(Directive& currDirective)
 {
-	Config& locConf = _currConfig->addConfig(currDirective.argv[0], Config());
+	Config::LocationType	type;
 
+	if (currDirective.argv[0].find('*') != std::string::npos) {
+		type = Config::kFile;
+	} else {
+		type = Config::kPath;
+	}
+
+	if ( ((_currConfig->getType() == Config::kPath) && (type == Config::kPath))
+			|| (_currConfig->getType() == Config::kFile)
+			|| (_configStack.size() > 2) )
+		_errorHandler("Location too deeply nested");
+	
+	Config& locConf = _currConfig->addConfig(currDirective.argv[0], Config());
+	locConf.setType(type);
 	_configStack.push(ConfigData(kLocation, locConf));
 	_currConfig = &locConf;
 }

@@ -1,5 +1,3 @@
-include utils.mk
-
 #################
 ##> Variables <##
 #################
@@ -17,7 +15,7 @@ TESTDIR		=	test
 WORKDIR		:=	$(realpath .)
 
 ifeq ($(PREFIX),)
-  PREFIX	= /usr/local
+  PREFIX	=	/usr/local
 endif
 
 EXEC_PREFIX	=	$(PREFIX)
@@ -78,10 +76,6 @@ ifneq ($(filter-out debug release,$(BUILD)),)
   $(error '$(BUILD)' is not a correct value. Build options are 'debug' or 'release')
 endif
 
-ifeq (install,$(strip $(MAKECMDGOALS)))
-  override BUILD = release
-endif
-
 ifeq (test,$(strip $(MAKECMDGOALS)))
   CXXFLAGS +=	-std=c++11
   CPPFLAGS +=	-DLOG_OSTREAM=webserv::Logger::kNone
@@ -90,33 +84,39 @@ else
   CPPFLAGS +=	-DLOG_OSTREAM=webserv::Logger::kBoth
 endif
 
+ifneq ($(filter install, $(strip $(MAKECMDGOALS))),)
+  override BUILD = release
+endif
+
 ifeq (debug,$(BUILD))
-  CXXFLAGS +=	-fsanitize=address,undefined -Og \
-				-fstack-protector-all \
-				-Wpedantic \
-				-Wshadow \
-				-Wnon-virtual-dtor \
-				-Wold-style-cast \
-				-Wcast-align \
-				-Wunused \
-				-Wconversion \
-				-Wsign-conversion \
-				-Wnull-dereference \
-				-Wdouble-promotion \
-				-Wformat=2 \
-				-Wmisleading-indentation
-#ifeq (Linux,$(UNAME))
-#  CXXFLAGS +=	-Wduplicated-cond \
-#				-Wduplicated-branches \
-#				-Wlogical-op \
-#				-Wuseless-cast
-#endif
-  CPPFLAGS +=	-DNDEBUG -DLOG_LEVEL=webserv::Logger::kDebug \
-  				-DLOG_FILE=webserv.log
+  CXXFLAGS +=	-fsanitize=address,undefined -Og
+# 				-fstack-protector-all \
+# 				-Wpedantic \
+# 				-Wshadow \
+# 				-Wnon-virtual-dtor \
+# 				-Wold-style-cast \
+# 				-Wcast-align \
+# 				-Wunused \
+# 				-Wconversion \
+# 				-Wsign-conversion \
+# 				-Wnull-dereference \
+# 				-Wdouble-promotion \
+# 				-Wformat=2 \
+# 				-Wmisleading-indentation
+# ifeq (Linux,$(UNAME))
+#   CXXFLAGS +=	-Wduplicated-cond \
+# 				-Wduplicated-branches \
+# 				-Wlogical-op \
+# 				-Wuseless-cast
+# endif
+  CPPFLAGS +=	-DLOG_FILE=/tmp/webserv.log \
+				-DLOG_LEVEL=webserv::Logger::kDebug \
+				-DCONF_FILE=conf/default.conf
 else
-  CPPFLAGS +=	-DNDEBUG -DLOG_LEVEL=webserv::Logger::kError \
-  				-DLOG_FILE=$(LOGDIR)/webserv.log \
-				-DDEFAULT_CONF=$(SYSCONFDIR)/$(NAME)/conf/test.conf
+  CPPFLAGS +=	-DNDEBUG \
+				-DLOG_FILE=$(LOGDIR)/webserv.log \
+				-DLOG_LEVEL=webserv::Logger::kError \
+				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf
   CXXFLAGS +=	-O3
 endif
 
@@ -139,73 +139,40 @@ export LIB
 
 .PHONY:			all clean fclean test
 
-all:			.info $(BIN)
+all:			$(BIN)
 
 $(BUILDIR)/%.o:	%.cpp | $(DEPDIR)
-				@$(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
-				@printf "%4s%-30s$(GRN)$(CHECK)$(RESET)\n" "" "$(subst src/,,$<)"
+				$(CXX) $(DEPFLAGS) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(DEPDIR):
-				@mkdir -p $@
+				mkdir -p $@
 
 -include $(wildcard $(DEP))
 
-.info:			$(wildcard $(BUILDIR)/*.o)
-ifeq (0,$(MAKELEVEL))
-				@cat .header
-endif
-				@$(call print_title,INFO)
-				@printf "$(UWHT)%s$(RESET)\t$(FBLU)%s$(RESET)\n\n" "Build profile:" "$(BUILD)"
-				@printf "$(UWHT)%s$(RESET)\n" "Preproc opts:"
-				@$(call print_str_format_width,$(CPPFLAGS),30)
-				@printf "$(UWHT)%s$(RESET)\n" "Compiler opts:"
-				@$(call print_str_format_width,$(CXXFLAGS),30)
-				@$(call print_title,COMPILE)
-				@touch $@
-
 $(BIN):			$(OBJ)
-				@touch .info
-				@$(call print_title,LINK)
-				@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^
-				@printf "%4s%-30s$(GRN)$(CHECK)$(RESET)\n" "" "$@"
-				@printf "\n\n"
+				$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^
 
 $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ))
-				@$(call print_title,ARCHIVE)
-				@$(AR) rcs $@ $?
-				@printf "%4s%-30s$(GRN)$(CHECK)$(RESET)\n" "" "$@"
+				$(AR) rcs $@ $?
 
-install:		.info $(BIN) $(LIB)
-				@$(call print_title,INSTALL)
-				@install -d $(BINDIR)
-				@install -m 755 $(BIN) $(BINDIR)/$(NAME)
-				@printf "%4s%s  🡆  %s\n" "$(BIN)" "" "$(BINDIR)/$(NAME)"
-				@cp -R conf $(SYSCONFDIR)/$(NAME)/
-				@printf "%4s%s  🡆  %s\n" "conf/" "" "$(SYSCONFDIR)/$(NAME)/conf"
-				@printf "\n\n"
+install:		$(BIN) $(LIB)
+				install -d $(BINDIR)
+				install -m 755 $(BIN) $(BINDIR)/$(NAME)
+				cp -R conf $(SYSCONFDIR)/$(NAME)/
 
-test:			.info $(LIB)
-				@touch .info
-				@$(MAKE) -sC $(TESTDIR)
-				@chmod +x $(TESTBIN)
-				@$(call print_title,TEST)
-				@./$(TESTBIN)
+uninstall:
+				$(RM) $(BINDIR)/$(NAME)
+				$(RM) -rf $(SYSCONFDIR)/$(NAME)
+
+test:			$(LIB)
+				$(MAKE) -C $(TESTDIR)
+				chmod +x $(TESTBIN)
+				./$(TESTBIN)
 
 clean:
-				@cat .header
-				@$(call print_title,DELETE)
-				@printf "%4s" ""
-				$(RM) -rf build .info
-ifeq (clean,$(MAKECMDGOALS))
-	@printf "\n\n"
-endif
+				$(RM) -rf build
 
 fclean:			clean
-				@printf "%4s" ""
 				$(RM) -rf lib* webserv*
-ifeq (fclean,$(MAKECMDGOALS))
-	@printf "\n\n"
-endif
 
-re:				fclean
-				@$(MAKE) -s all
+re:				fclean all

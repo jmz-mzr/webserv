@@ -23,12 +23,22 @@ namespace	webserv
 		_cc[2].str = "WARN", _cc[2].color = HYEL;
 		_cc[3].str = "INFO", _cc[3].color = HWHT;
 		_cc[4].str = "DEBUG", _cc[4].color = HCYN;
-		if (_ostream & kFile)
-		{
+
+		if (_ostream & kFile) {
 			_logfile.open(XSTR(LOG_FILE));
-			if (!(_logfile.good())) {
-				LOG_WARN("Cannot open \"" << XSTR(LOG_FILE) << "\", ignored");
+			if ( !(_logfile.good()) ) {
 				_ostream &= ~kFile;
+				if ((_ostream & kConsole) && (kWarn <= _threshold)) {
+					std::ostringstream	stream;
+
+					stream << "webserv: [" << _cc[kWarn].color
+						<< _cc[kWarn].str << RESET
+						<< "] " << BWHT << __FILE__ << ":"
+						<< __LINE__ << RESET << ": "
+						<< "Cannot open \"" << XSTR(LOG_FILE) << "\", ignored";
+
+					std::cerr << stream.str() << std::endl;
+				}
 			}
 		}
 	}
@@ -37,7 +47,7 @@ namespace	webserv
 	{
 		if (_logfile.is_open()) {
 			_logfile.close();
-			if (!(_logfile.good())) {
+			if ( !(_logfile.good()) ) {
 				LOG_WARN("close(" << XSTR(LOG_FILE) << ") failed");
 			} else {
 				LOG_INFO("close(" << XSTR(LOG_FILE) << ")");
@@ -61,9 +71,9 @@ namespace	webserv
 				<< ": " << msg;
 			output = stream.str();
 			if (_ostream & kConsole)
-				_logfile << output << std::endl;
-			if (_ostream & kFile)
 				std::cerr << output << std::endl;
+			if (_ostream & kFile)
+				_logfile << output << std::endl;
 		}
 	}
 

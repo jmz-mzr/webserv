@@ -1,4 +1,5 @@
 #include "core/Webserv.hpp"
+#include "core/Response.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -74,7 +75,7 @@ namespace	webserv
 	}
 
 	bool	Webserv::_sameSocket(const sockaddr_in& listenPair,
-										const sockaddr_in& serverAddr) const
+									const sockaddr_in& serverAddr) const
 	{
 		return (listenPair.sin_port == serverAddr.sin_port &&
 				listenPair.sin_addr.s_addr == serverAddr.sin_addr.s_addr);
@@ -152,39 +153,28 @@ namespace	webserv
 
 	void	Webserv::init(int argc, char** argv)
 	{
+		std::string		webservRoot(XSTR(WEBSERV_ROOT));
+
 		if (argc > 2 || argc < 1) {
 			_usageHelper();
 			LOG_DEBUG("argc=" << argc);
 			THROW_LOGIC("Bad number of arguments");
 		} else {
 			ConfigParser config(
-				(argc == 2) ? argv[1] : XSTR(DEFAULT_CONF_FILE) );
+				(argc == 2) ? argv[1] : XSTR(CONF_FILE) );
 			_loadServers(config.parseFile());
 		}
-	}
-
-	void	Webserv::_broadcastMsg(const std::string& msg,
-									const int senderId) const	// tmp exam version
-	{
-		for (std::list<Client>::const_iterator client = _clients.begin();
-				client != _clients.end(); ++client) {
-			if (client->getId() == senderId)
-				continue ;
-			if (send(client->getSocket().getFd(), msg.c_str(), msg.size(),
-						MSG_DONTWAIT) == -1)
-				LOG_ERROR("Could not send message to client (id="
-						<< client->getSocket().getFd() << "): "
-						<< strerror(errno));
-		}
+		if (webservRoot.size() == 0)
+			THROW_FATAL("WEBSERV_ROOT cannot be an empty path");
+		if (webservRoot[0] != '/')
+			THROW_FATAL("WEBSERV_ROOT must start at root ('/')");
+		(void)Logger::getInstance();
+		Response::initResponseMaps();
 	}
 
 	Webserv::client_iter	Webserv::_removeClient(client_iter client,
 													pollFd_iter pollFd)
 	{
-		std::ostringstream		msg;
-
-		msg << "server: client " << client->getId() << " just left\n";	// tmp exam version
-		_broadcastMsg(msg.str(), client->getId());	// tmp exam version
 		LOG_INFO("Removing client (fd=" << client->getSocket().getFd() << ")");
 		client->closeSocket();
 		if (pollFd != _pollFds.end())
@@ -194,12 +184,10 @@ namespace	webserv
 
 	void	Webserv::_addClient(const int serverFd, const Server& server)
 	{
-		static int			clientId = 0;	// tmp exam version
 		struct pollfd		newPollFd;
-		std::ostringstream	msg;	// tmp exam version
 
 		try {
-			_clients.push_back(Client(clientId, serverFd, server.getConfigs())); // tmp version
+			_clients.push_back(Client(serverFd, server.getConfigs()));
 		} catch (const std::exception& e) {
 			LOG_ERROR("Could not add client to _clients: " << e.what());
 			return ;
@@ -217,9 +205,6 @@ namespace	webserv
 		LOG_INFO("Client added to Server listening on \""
 				<< server.getSocket().getIpAddr() << ":"
 				<< server.getSocket().getPort() << "\"");
-		msg << "server: client " << clientId << " just arrived\n";	// tmp exam version
-		_broadcastMsg(msg.str(), clientId);	// tmp exam version
-		++clientId;	// tmp exam version
 	}
 
 	Webserv::pollFd_iter	Webserv::_findPollFd(const int fdToFind,
@@ -273,7 +258,7 @@ namespace	webserv
 
 	ssize_t	Webserv::_receiveClientRequest(Client& client, pollFd_iter pollFd)
 	{
-		// TO DO: 1) What if a request comes while the last one is not terminated?
+		// TO DO: 1) What if a request comes while last one is not terminated?
 		// 		  Or while the last response has not been (fully) sent yet?
 		// 		  Wait before the next recv? Ignore it?
 		// 		  Drop previous request? prepareErrorResponse(...)?
@@ -291,14 +276,13 @@ namespace	webserv
 		// TODO : Recv before returning 1
 		if (client.hasUnprocessedBuffer())
 		   return (1);
-		if (!(pollFd->revents & POLLIN))
-		   return (-1);
 		if (client.isProcessingRequest()) {
 			LOG_DEBUG("Finish responding to the last request before receiving"
 					<< " this new client request (fd=" << clientFd << ")");
-			return (-1);	// see "TO DO" for other options
+			return (1);	// see "TO DO" for other options
 		}
-		// >>> should be higher
+		if (!(pollFd->revents & POLLIN))
+		   return (1);
 		received = recv(clientFd, _buffer, RECV_BUFFER_SIZE - 1, _ioFlags);
 		if (received > 0) {
 			_buffer[received] = '\0';
@@ -310,78 +294,18 @@ namespace	webserv
 		return (received);
 	}
 
-	int	Webserv::_extractMsg(std::string& buffer, std::string& msg)	// tmp exam version
+	bool	Webserv::_handleClientRequest(Client& client)
 	{
-		size_t	i;
+		int		errorCode;
 
-		msg.clear();
-		if (buffer.empty())
-			return (0);
-		i = 0;
-		while (buffer[i]) {
-			if (buffer[i] == '\n') {
-				msg.swap(buffer);
-				buffer.assign(msg, i + 1, std::string::npos);
-				msg.erase(i + 1);
-				return (1);
-			}
-			++i;
+		if (!client.hasRequestTerminated()) {
+			errorCode = client.parseRequest(_buffer);
+			if (errorCode != 0)
+				return (client.prepareErrorResponse(errorCode));
 		}
-		return (0);
-	}
-
-	void	Webserv::_bufferAndSendMsg(Client& client)	// tmp exam version
-	{
-		int					extracted;
-		std::string			msg;
-		std::ostringstream	msgWithHeader;
-
-		try {
-			client.buffer += _buffer;
-		} catch (const std::exception& e) {
-			LOG_ERROR("Unable to buffer the client message (id="
-					<< client.getId() << ")");
-		}
-		while ((extracted = _extractMsg(client.buffer, msg)) > 0) {
-			msgWithHeader << "client " << client.getId() << ": " << msg;
-			_broadcastMsg(msgWithHeader.str(), client.getId());
-		}
-	}
-
-	void	Webserv::_handleClientRequest(Client& client)
-	{
-		client.parseRequest(_buffer);
-		if (client.hasError())
-			client.prepareErrorResponse();
-		else if (client.hasRequestTerminated())
-			client.prepareResponse();
-	}
-
-	bool	Webserv::_sendResponse(Client& client, int clientFd)
-	{
-		const char*	buff = client.getResponse().getResponseBuffer().data();
-		size_t		len = client.getResponse().getResponseBuffer().size();
-		ssize_t		sent;
-		size_t		totalSent = 0;
-
-		for (int retry = 3; retry > 0; --retry) {
-			sent = send(clientFd, buff + totalSent, len - totalSent, _ioFlags);
-			if (sent > 0)
-				totalSent += static_cast<size_t>(sent);
-			if (totalSent == len)
-				return (true);
-			if (sent < 0 || totalSent != len) {
-				if (sent < 0)
-					LOG_ERROR("Could not send response to client (fd="
-							<< clientFd << "): " << strerror(errno));
-				ft_sleep(0.1);
-				continue ;
-			}
-		}
-		if (client.hasError())
-			return (false);
-		client.prepareErrorResponse(500);
-		return (_sendResponse(client, clientFd));
+		if (client.hasRequestTerminated() && !client.hasResponseReady())
+			return (client.prepareResponse());
+		return (true);
 	}
 
 	bool	Webserv::_handleClientResponse(Client& client, pollFd_iter pollFd)
@@ -390,21 +314,23 @@ namespace	webserv
 		// just closes the connection (because of "return"/"timeout" directive)
 		// 2) If needed, implement a timeout directive, or default timeout
 
-		if (client.getResponse().getResponseCode() == 408)
-			return (true);
+		const Response&		response = client.getResponse();
+
+		if (response.getResponseCode() == 408)
+			return (false);
 		if ((pollFd->revents & POLLOUT) != 0 && client.hasResponseReady()) {
-			if (!_sendResponse(client, client.getSocket().getFd()))
+			if (!client.sendResponse(_ioFlags))
+				return (false);
+			if (response.isPartialResponse())
 				return (true);
-			if (client.getResponse().isChunkedResponse())
-				client.prepareResponse();
-			else if (!client.getResponse().isKeepAlive())
-				return (true);
-			else
-				client.clearResponse();
+			if (!response.isKeepAlive())
+				return (false);
+			client.clearResponse();
+			client.clearRequest();	// not here?
 		}
 		if (!client.isKeepAlive())
-			return (true);
-		return (false);
+			return (false);
+		return (true);
 	}
 
 	void	Webserv::_handleClients()
@@ -419,12 +345,11 @@ namespace	webserv
 			if (pollFd != _pollFds.end()) {
 				_showOtherRevents(pollFd, CLIENT);
 				received = _receiveClientRequest(*client, pollFd);
-				if (received > 0) {
-
-					//_bufferAndSendMsg(*client);	// tmp exam version
-					_handleClientRequest(*client);
+				if (received > 0 && !_handleClientRequest(*client)) {
+					client = _removeClient(client, pollFd);
+					continue ;
 				}
-				if (received == 0 || _handleClientResponse(*client, pollFd)) {
+				if (received <= 0 || !_handleClientResponse(*client, pollFd)) {
 					client = _removeClient(client, pollFd);
 					continue ;
 				}
@@ -437,7 +362,8 @@ namespace	webserv
 	void	Webserv::run()
 	{
 		while (!Webserv::receivedSigInt) {
-			if (poll(_pollFds.data(), _pollFds.size(), -1) == -1) {
+			if (poll(_pollFds.data(),
+						static_cast<uint32_t>(_pollFds.size()), -1) == -1) {
 				LOG_WARN("poll() error: " << strerror(errno));
 				continue ;
 			}

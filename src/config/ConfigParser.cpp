@@ -23,9 +23,9 @@ ConfigParser::ConfigParser(const std::string& path)
 	_file.open(_filePath.c_str());
 	if (!_file.good()) {
 		LOG_WARN("Cannot open \"" << _filePath << "\"");
-		if (_filePath == XSTR(DEFAULT_CONF_FILE))
+		if (_filePath == XSTR(CONF_FILE))
 			THROW_LOGIC("Loading configuration failed");
-		_filePath = XSTR(DEFAULT_CONF_FILE);
+		_filePath = XSTR(CONF_FILE);
 		_file.open(_filePath.c_str());
 		if (!_file.good()) {
 			LOG_WARN("Cannot open \"" << _filePath << "\"");

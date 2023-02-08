@@ -1,5 +1,5 @@
-#ifndef CONFIG_HPP
-#define CONFIG_HPP
+#ifndef CONFIG_CONFIG_HPP
+#define CONFIG_CONFIG_HPP
 
 #include <map>
 #include <set>
@@ -23,39 +23,47 @@ namespace webserv {
 		typedef std::set<std::string, strcmp_icase>			hostname_set;
 		typedef std::set<sockaddr_in, listen_compare>		listen_set;
 
+		enum LocationType { kNone, kPath, kFile };
+
 		Config();
 		Config(const Config& src);
 		~Config() {}
 
+		void		setType(const LocationType type);
 		void		addErrorPage(const int status, const std::string& uri);
 		void		setMaxBodySize(const int64_t size);
 		void		addLimitExcept(const std::string& method);
 		void		setReturnPair(const return_pair& returnPair);
 		void		setRoot(const std::string& path);
+		void		setAlias(const std::string& path);
 		void		setAutoIndex(bool b);
 		void		setIndex(const std::string& path);
-		void		setFastCgiPass(const std::string& path);
+		void		setCgiPass(const std::string& path);
 		bool		addListenPair(const sockaddr_in& addr);
 		void		addServerName(const std::string& name);
 		Config&		addConfig(const std::string& path, const Config& config);
 
+		const LocationType&		getType() const { return (_lType); }
 		const listen_set&		getListens() const { return (_listens); }
 		const hostname_set&		getServerNames() const { return (_serverNames);}
 		const error_page_map&	getErrorPages() const { return (_errorPages); }
-		const int64_t&		getMaxBodySize() const { return (_maxBodySize);}
-
+		const int64_t&			getMaxBodySize() const { return (_maxBodySize);}
 		const limit_except_set&	getLimitExcept() const { return (_limitExcept);}
 		const return_pair&		getReturnPair() const { return (_return); }
 		const std::string&		getRoot() const { return (_root); }
+		const std::string&		getAlias() const { return (_alias); }
 		bool					isAutoIndex() const { return (_autoIndex); }
 		const std::string&		getIndex() const { return (_index); }
-		const std::string&		getFastCgiPass() const { return (_fastCgiPass);}
+		const std::string&		getCgiPass() const { return (_cgiPass);}
 
 		const config_map&		getConfigs() const { return (_configs); }
 
 		friend std::ostream&	operator<<(std::ostream&, const Config&);
-
 	private:
+		LocationType				_lType;
+		// TO DO: In order, first check the _maxBodySize, then _limitExcept,
+		// then _return, _cgiPass, _index, _autoIndex when building Response
+
 		// 1) We must resolve the eventual localhost address
 		// (case-insensitively: it must work with "LOCalhOST:80")
 		// with /etc/host and "*" (or no address) with "0.0.0.0"
@@ -111,7 +119,7 @@ namespace webserv {
 		// in /usr/local/etc/nginx/nginx.conf:114')
 		// 5) If the definition was inherited from the Config, the first
 		// definition line replaces it
-		int64_t					_maxBodySize;
+		int64_t						_maxBodySize;
 
 		// Same as with NGINX -> if the set is not empty, and the
 		// method is not in the set, we deny the access and return a 403
@@ -147,7 +155,20 @@ namespace webserv {
 		// duplicate in /usr/local/etc/nginx/nginx.conf:117')
 		// 2) If it was not defined it must not stay empty, and like NGINX
 		// it must be set to the default _root: "html"
+		// 3) Cannot be defined if "alias" was already specified in a location,
+		// otherwise it must throw an exception (like '"root" directive is
+		// duplicate, "alias" directive was specified earlier in
+		// /usr/local/etc/nginx/nginx.conf:68)
 		std::string					_root;
+
+		// 1) Can only be defined once, and if another definition line
+		// appears, it must throw an exception (like '"alias" directive is
+		// duplicate in /usr/local/etc/nginx/nginx.conf:68')
+		// 2) Cannot be defined if "root" was already specified in a location,
+		// otherwise it must throw an exception (like '"alias" directive is
+		// duplicate, "root" directive was specified earlier in
+		// /usr/local/etc/nginx/nginx.conf:68)
+		std::string					_alias;
 
 		// 1) For the sake of simplicity, accept only one default file
 		// to answer if the request is a directory (unlike NGINX's index)
@@ -166,7 +187,7 @@ namespace webserv {
 		bool						_autoIndex;
 
 		// 1) Can only be defined once, and if another definition line
-		// appears, it must throw an exception (like '"fastcgi_pass" directive
+		// appears, it must throw an exception (like '"cgi_pass" directive
 		// is duplicate in /usr/local/etc/nginx/nginx.conf:109')
 		// 2) It must be either a valid IP address, or a valid hostname (no special
 		// characters, and can be translated, case-insensitively to an IP address
@@ -176,7 +197,7 @@ namespace webserv {
 		// 'invalid port in upstream "loCalhOst:80000" in /usr/.../nginx.conf:133',
 		// 'host not found in upstream "127.0.0.1000" in /usr/.../nginx.conf:133',
 		// 'host not found in upstream "localhosttt" in /usr/.../nginx.conf:133')
-		std::string					_fastCgiPass;
+		std::string					_cgiPass;
 
 		// TO DO: 1) The locations are case-insensitive, so they must
 		// be recorded in lowercase with str_tolower
@@ -196,9 +217,8 @@ namespace webserv {
 		config_map					_configs;
 
 		Config&						operator=(const Config& rhs);
-
 	};
 
 }	// namespace webserv
 
-#endif // CONFIG_HPP
+#endif // CONFIG_CONFIG_HPP

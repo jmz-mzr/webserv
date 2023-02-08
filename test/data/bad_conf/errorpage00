@@ -1,0 +1,5 @@
+server {
+	location /error/ {
+		error_page 404 error.html;
+	}
+}

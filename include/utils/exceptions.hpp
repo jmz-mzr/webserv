@@ -25,7 +25,7 @@ namespace webserv {
 	class	FatalErrorException: public std::runtime_error {
 	public:
 		FatalErrorException(const std::string& msg = "A fatal error occured")
-				: std::runtime_error(msg) 
+				: std::runtime_error(msg)
 		{ }
 
 	};
@@ -46,4 +46,3 @@ namespace webserv {
 	};
 
 }	// namespace webserv
-

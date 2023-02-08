@@ -121,8 +121,8 @@ void	Lexer::operator()(const std::string& lineBuffer)
 
 /**
  * @brief Unary predicate, checking token is not a Lexer::Token::kWord
- * 
- * @param Lexer::Token 
+ *
+ * @param Lexer::Token
  */
 bool			Lexer::isNotWord(Lexer::Token tk)
 { return (tk.type != Lexer::Token::kWord); }
