@@ -35,6 +35,7 @@ CONFIG		=	Config.cpp \
 				Parser.cpp \
 				ServerConfig.cpp
 CORE		=	AcceptSocket.cpp \
+				CgiHandler.cpp \
 				Client.cpp \
 				ConnectSocket.cpp \
 				ListenSocket.cpp \
@@ -44,7 +45,8 @@ CORE		=	AcceptSocket.cpp \
 				Server.cpp \
 				Socket.cpp \
 				Webserv.cpp
-UTILS		=	ft_charcmp_icase.cpp \
+UTILS		=	createRandomFilename.cpp \
+				ft_charcmp_icase.cpp \
 				ft_inet_ntoa.cpp \
 				ft_sleep.cpp \
 				ft_str_tolower.cpp \
