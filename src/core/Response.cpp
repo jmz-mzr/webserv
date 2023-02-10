@@ -29,7 +29,7 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Response::Response(): _requestedFileName(XSTR(WEBSERV_ROOT)),
+	Response::Response(): _requestedFilename(XSTR(WEBSERV_ROOT)),
 //							_requestedFileFd(-1),
 							_fileBuffer(0),
 							_fileBufferSize(0),
@@ -48,7 +48,7 @@ namespace	webserv
 	}
 
 	Response::Response(const Response& src):
-									_requestedFileName(XSTR(WEBSERV_ROOT)),
+									_requestedFilename(XSTR(WEBSERV_ROOT)),
 //									_requestedFileFd(src._requestedFileFd),
 									_fileBuffer(0),
 									_fileBufferSize(0),
@@ -195,7 +195,7 @@ namespace	webserv
 			<< ", request: \"" << request.getRequestLine()
 			<< "\", host: \"" << request.getHost() << "\"";
 		if (filename[0] == '\0')
-			filename = _requestedFileName.c_str();
+			filename = _requestedFilename.c_str();
 		if (errorAt[0] != '\0' && errorType[0] != '\0') {
 			LOG_ERROR(errorAt << space1 << "\"" << filename << "\" "
 					<< errorType << " (" << errno << ": " << strerror(errno)
@@ -216,14 +216,14 @@ namespace	webserv
 		if (entryName[0] == '.')
 			return (0);
 		memset(&fileInfos, 0, sizeof(fileInfos));
-		if (stat(_requestedFileName.c_str(), &fileInfos) < 0) {
+		if (stat(_requestedFilename.c_str(), &fileInfos) < 0) {
 			if (errno != ENOENT && errno != ELOOP) {
 				_logError(request, "stat()", "failed");
 				if (errno == EACCES)
 					return (0);
 				return (500);
 			}
-			if (lstat(_requestedFileName.c_str(), &fileInfos) < 0) {
+			if (lstat(_requestedFilename.c_str(), &fileInfos) < 0) {
 				_logError(request, "lstat()", "failed");
 				return (500);
 			}
@@ -235,14 +235,14 @@ namespace	webserv
 	void	Response::_closeIndexDirectory()
 	{
 		if (closedir(_indexDirectory) < 0)
-			LOG_ERROR("Bad closedir() on \"" << _requestedFileName << "\"");
+			LOG_ERROR("Bad closedir() on \"" << _requestedFilename << "\"");
 		_indexDirectory = 0;
 	}
 
 	int	Response::_loadDirEntries(const Request& request)
 	{
 		struct dirent*	dirEntry;
-		size_t			pathLen = _requestedFileName.size();
+		size_t			pathLen = _requestedFilename.size();
 		int				errorCode;
 
 		while (1) {
@@ -255,10 +255,10 @@ namespace	webserv
 				}
 				break ;
 			}
-			_requestedFileName += '/';
-			_requestedFileName += dirEntry->d_name;
+			_requestedFilename += '/';
+			_requestedFilename += dirEntry->d_name;
 			errorCode = _loadDirEntry(request, dirEntry->d_name);
-			_requestedFileName[pathLen] = '\0';
+			_requestedFilename[pathLen] = '\0';
 			if (errorCode != 0)
 				return (errorCode);
 		}
@@ -523,8 +523,8 @@ namespace	webserv
 			_logError(request, "", "directory index is forbidden");
 			return (403);
 		}
-		LOG_DEBUG("http autoindex: \"" << _requestedFileName << "\"");
-		_indexDirectory = opendir(_requestedFileName.c_str());
+		LOG_DEBUG("http autoindex: \"" << _requestedFilename << "\"");
+		_indexDirectory = opendir(_requestedFilename.c_str());
 		if (!_indexDirectory) {
 			_logError(request, "opendir()", "failed");
 			if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG)
@@ -542,28 +542,28 @@ namespace	webserv
 
 	int	Response::_loadDirIndex(const Request& request, size_t indexLen)
 	{
-		size_t			dirPos = _requestedFileName.size() - indexLen - 1;
-		char			dirChar = _requestedFileName[dirPos + (dirPos == 0)];
+		size_t			dirPos = _requestedFilename.size() - indexLen - 1;
+		char			dirChar = _requestedFilename[dirPos + (dirPos == 0)];
 		struct stat		dirInfos;
 
 		dirPos += (dirPos == 0);
-		_requestedFileName[dirPos] = '\0';
-		LOG_DEBUG("http index check dir: \"" << _requestedFileName << "\"");
+		_requestedFilename[dirPos] = '\0';
+		LOG_DEBUG("http index check dir: \"" << _requestedFilename << "\"");
 		memset(&dirInfos, 0, sizeof(dirInfos));
-		if (stat(_requestedFileName.c_str(), &dirInfos) < 0) {
+		if (stat(_requestedFilename.c_str(), &dirInfos) < 0) {
 			if (errno != EACCES && errno != ENOENT) {
 				_logError(request, "stat()", "failed");
 				return (500);
 			}
 			if (errno == EACCES)
 				return (_loadAutoIndex(request));
-			_requestedFileName[dirPos] = dirChar;
+			_requestedFilename[dirPos] = dirChar;
 			_logError(request, "", "is not found");
 			return (404);
 		}
 		if (S_ISDIR(dirInfos.st_mode))
 			return (_loadAutoIndex(request));
-		_requestedFileName[dirPos] = dirChar;
+		_requestedFilename[dirPos] = dirChar;
 		_logError(request, "", "is not a directory");
 		return (500);
 	}
@@ -575,11 +575,11 @@ namespace	webserv
 
 		if (index[0] == '/')
 			return (_loadInternalRedirect(request, index));
-		_requestedFileName += index;
-		LOG_DEBUG("Open index \"" << _requestedFileName << "\"");
+		_requestedFilename += index;
+		LOG_DEBUG("Open index \"" << _requestedFilename << "\"");
 		memset(&fileInfos, 0, sizeof(fileInfos));
-		if (stat(_requestedFileName.c_str(), &fileInfos) < 0) {
-			LOG_DEBUG("stat() \"" << _requestedFileName << "\" failed ("
+		if (stat(_requestedFilename.c_str(), &fileInfos) < 0) {
+			LOG_DEBUG("stat() \"" << _requestedFilename << "\" failed ("
 					<< errno << ": " << strerror(errno));
 			if (errno == EACCES) {
 				_logError(request, "", "is forbidden");
@@ -593,7 +593,7 @@ namespace	webserv
 			}
 			return (_loadDirIndex(request, index.size()));
 		}
-		return (_loadInternalRedirect(request, _requestedFileName));
+		return (_loadInternalRedirect(request, _requestedFilename));
 	}
 
 	void	Response::_closeRequestedFile()
@@ -604,7 +604,7 @@ namespace	webserv
 		_requestedFile.clear();
 		_requestedFile.close();
 		if (_requestedFile.fail()) {
-			LOG_ERROR("Bad close() on \"" << _requestedFileName << "\"");
+			LOG_ERROR("Bad close() on \"" << _requestedFilename << "\"");
 			_requestedFile.clear();
 		}
 	}
@@ -612,10 +612,10 @@ namespace	webserv
 	bool	Response::_openAndStatFile(const Request& request,
 										struct stat* fileInfos)
 	{
-		LOG_DEBUG("http filename: \"" << _requestedFileName << "\"");
-//		_requestedFileFd = open(_requestedFileName.c_str(),
+		LOG_DEBUG("http filename: \"" << _requestedFilename << "\"");
+//		_requestedFileFd = open(_requestedFilename.c_str(),
 //				O_RDONLY | O_NONBLOCK);
-		_requestedFile.open(_requestedFileName.c_str(), std::ios::in
+		_requestedFile.open(_requestedFilename.c_str(), std::ios::in
 				| std::ios::binary);
 //		if (_requestedFileFd < 0) {
 		if (_requestedFile.fail()) {
@@ -623,14 +623,14 @@ namespace	webserv
 			return (false);
 		}
 		memset(fileInfos, 0, sizeof(*fileInfos));
-		if (stat(_requestedFileName.c_str(), fileInfos) < 0) {
+		if (stat(_requestedFilename.c_str(), fileInfos) < 0) {
 			_logError(request, "stat()", "failed");
 			_closeRequestedFile();
 			return (false);
 		} else if (S_ISDIR(fileInfos->st_mode))
 			_closeRequestedFile();
 		else
-			LOG_DEBUG("http file opened: " << _requestedFileName);
+			LOG_DEBUG("http file opened: " << _requestedFilename);
 //		LOG_DEBUG("http file fd: " << _requestedFileFd);
 		return (true);
 	}
@@ -767,7 +767,7 @@ namespace	webserv
 
 	int	Response::_removeRequestedDirectory(const Request& request)
 	{
-		std::string		filepath = _requestedFileName;
+		std::string		filepath = _requestedFilename;
 
 		if (*request.getUri().rbegin() != '/') {
 			_logError(request, "DELETE", "failed");
@@ -777,7 +777,7 @@ namespace	webserv
 			filepath.erase(filepath.end() - 1);
 		if (!_removeDirectoryTree(request, filepath.c_str()))
 			return (500);
-		if (rmdir(_requestedFileName.c_str()) < 0) {
+		if (rmdir(_requestedFilename.c_str()) < 0) {
 			_logError(request, "rmdir()", "failed");
 			if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG)
 				return (404);
@@ -793,8 +793,8 @@ namespace	webserv
 	{
 		struct stat		fileInfos;
 
-		LOG_DEBUG("http delete filename: \"" << _requestedFileName << "\"");
-		if (lstat(_requestedFileName.c_str(), &fileInfos) < 0) {
+		LOG_DEBUG("http delete filename: \"" << _requestedFilename << "\"");
+		if (lstat(_requestedFilename.c_str(), &fileInfos) < 0) {
 			_logError(request, "lstat()", "failed");
 			if (errno == ENOTDIR)
 				return (409);
@@ -806,7 +806,7 @@ namespace	webserv
 		}
 		if (S_ISDIR(fileInfos.st_mode))
 			return (_removeRequestedDirectory(request));
-		else if (unlink(_requestedFileName.c_str()) < 0) {
+		else if (unlink(_requestedFilename.c_str()) < 0) {
 			_logError(request, "unlink()", "failed");
 			if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG)
 				return (404);
@@ -825,7 +825,7 @@ namespace	webserv
 		_contentType = "text/html";
 		_contentLength = _getPostResponseBody(request).size();
 		memset(&fileInfos, 0, sizeof(fileInfos));
-		if (stat(_requestedFileName.c_str(), &fileInfos) < 0)
+		if (stat(_requestedFilename.c_str(), &fileInfos) < 0)
 			_logError(request, "stat()", "failed");
 		else
 			_lastModifiedTime = fileInfos.st_mtime;
@@ -837,8 +837,8 @@ namespace	webserv
 	{
 		// TO DO: Add an option to create the full path if it doesn't exist ?
 
-		if (rename(request.getTmpFileName().c_str(),
-					_requestedFileName.c_str()) < 0) {
+		if (rename(request.getTmpFilename().c_str(),
+					_requestedFilename.c_str()) < 0) {
 			_logError(request, "rename()", "failed");
 			return (500);
 		}
@@ -849,14 +849,14 @@ namespace	webserv
 
 /*	int	Response::_appendRequestTmpFile(const Request& request)
 	{
-		request.getTmpFile().open(request.getTmpFileName().c_str(), std::ios::in
+		request.getTmpFile().open(request.getTmpFilename().c_str(), std::ios::in
 				| std::ios::binary);
 		if (request.getTmpFile().fail()) {
 			_logError(request, "open()", "failed",
-					request.getTmpFileName().c_str());
+					request.getTmpFilename().c_str());
 			return (500);	// tmpFile deleted in clear request
 		}
-		_requestedFile.open(_requestedFileName.c_str(), std::ios::out
+		_requestedFile.open(_requestedFilename.c_str(), std::ios::out
 				| std::ios::app | std::ios::binary);
 		if (_requestedFile.fail()) {
 			_logError(request, "open()", "failed");
@@ -896,13 +896,13 @@ namespace	webserv
 
 		struct stat		fileInfos;
 
-		if (*_requestedFileName.rbegin() == '/') {
+		if (*_requestedFilename.rbegin() == '/') {
 			_logError(request, "Cannot POST to a directory:", "");
 			return (409);
 		}
-		LOG_DEBUG("http post filename: \"" << _requestedFileName << "\"");
+		LOG_DEBUG("http post filename: \"" << _requestedFilename << "\"");
 		memset(&fileInfos, 0, sizeof(fileInfos));
-		if (stat(_requestedFileName.c_str(), &fileInfos) < 0)
+		if (stat(_requestedFilename.c_str(), &fileInfos) < 0)
 			return (_moveRequestTmpFile(request));
 		if (S_ISDIR(fileInfos.st_mode)) {
 			errno = EISDIR;
@@ -910,7 +910,7 @@ namespace	webserv
 			return (409);
 		}
 		memset(&fileInfos, 0, sizeof(fileInfos));
-		if (stat(request.getTmpFileName().c_str(), &fileInfos) < 0) {
+		if (stat(request.getTmpFilename().c_str(), &fileInfos) < 0) {
 			_logError(request, "stat()", "failed");
 			return (500);
 		}
@@ -927,11 +927,11 @@ namespace	webserv
 			return (false);
 		aliasUri.replace(0, locationName.size(), location->getAlias());
 		if (aliasUri[0] == '/')
-			_requestedFileName = aliasUri;
+			_requestedFilename = aliasUri;
 		else {
-			if (*_requestedFileName.rbegin() != '/')
-				_requestedFileName += '/';
-			_requestedFileName += aliasUri;
+			if (*_requestedFilename.rbegin() != '/')
+				_requestedFilename += '/';
+			_requestedFilename += aliasUri;
 		}
 		return (true);
 	}
@@ -940,15 +940,15 @@ namespace	webserv
 	{
 		if (!_loadFileWithAlias(request)) {
 			if (request.getLocation()->getRoot()[0] == '/')
-				_requestedFileName = request.getLocation()->getRoot();
+				_requestedFilename = request.getLocation()->getRoot();
 			else {
-				if (*_requestedFileName.rbegin() != '/')
-					_requestedFileName += '/';
-				_requestedFileName += request.getLocation()->getRoot();
+				if (*_requestedFilename.rbegin() != '/')
+					_requestedFilename += '/';
+				_requestedFilename += request.getLocation()->getRoot();
 			}
-			if (*_requestedFileName.rbegin() == '/')
-				_requestedFileName.erase(_requestedFileName.end() - 1);
-			_requestedFileName += request.getUri();
+			if (*_requestedFilename.rbegin() == '/')
+				_requestedFilename.erase(_requestedFilename.end() - 1);
+			_requestedFilename += request.getUri();
 		}
 		//if (!request.getLocation().getCgiPass().empty())
 		//	return (_loadCgiPass(request));
@@ -956,7 +956,7 @@ namespace	webserv
 			return (_postRequestBody(request));
 		if (request.getRequestMethod() == "DELETE")
 			return (_removeRequestedFile(request));
-		if (*_requestedFileName.rbegin() == '/')
+		if (*_requestedFilename.rbegin() == '/')
 			return (_loadIndex(request));
 		return (_openRequestedFile(request));
 	}
@@ -1092,7 +1092,7 @@ namespace	webserv
 									int responseCodeToKeep)
 	{
 		_responseBuffer.clear();
-		_requestedFileName = XSTR(WEBSERV_ROOT);
+		_requestedFilename = XSTR(WEBSERV_ROOT);
 //		if (_requestedFileFd >= 0)
 		if (_requestedFile.is_open())
 			_closeRequestedFile();

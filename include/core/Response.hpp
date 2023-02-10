@@ -112,7 +112,7 @@ namespace	webserv
 																	extension);
 
 		std::string		_responseBuffer;
-		std::string		_requestedFileName;
+		std::string		_requestedFilename;
 //		int				_requestedFileFd;
 		std::fstream	_requestedFile;
 		char*			_fileBuffer;

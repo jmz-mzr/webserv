@@ -41,8 +41,8 @@ namespace	webserv
 										{ return (_host); }
 		std::fstream&			getTmpFile()
 										{ return (_tmpFile); }
-		const std::string&		getTmpFileName() const
-										{ return (_tmpFileName); }
+		const std::string&		getTmpFilename() const
+										{ return (_tmpFilename); }
 
 		const std::string&		getServerName() const;
 		const ServerConfig*		getServerConfig() const
@@ -63,7 +63,9 @@ namespace	webserv
 
 		void	clearRequest();
 	private:
-		typedef ServerConfig::location_map			locations_map;
+		typedef ServerConfig::location_map				_location_map;
+		typedef std::map<std::string, std::string,
+							strcmp_icase>				_header_map;
 
 		Request();
 
@@ -103,8 +105,7 @@ namespace	webserv
 		void			_closeTmpFile();
 		void			_deleteTmpFile();
 
-
-		std::map<std::string, std::string>	_headers;
+		_header_map							_headers;
 		std::string							_body;
 		std::string							_buffer;
 		std::string							_method;
@@ -157,10 +158,9 @@ namespace	webserv
 		bool				_hasReceivedHeaders;
 		bool				_hasReceivedBody;
 		bool				_hasBody;
-		
-		std::ofstream		_tempfilestream;
+
+		std::ofstream		_tmpFileStream;
 		std::ifstream		_requestFileStream;
-		std::string			_tempfilename;
 		// TO DO: The Content-Length also limits the size of what is actually
 		// going to be processed from the body (even if it is longer)
 		// 2) If the request method is DELETE and the request has a body, or
@@ -182,7 +182,7 @@ namespace	webserv
 		// (without error), there must be an empty tmp file on the disk!
 		std::string			_tmpString;
 		std::fstream		_tmpFile;
-		std::string			_tmpFileName;
+		std::string			_tmpFilename;
 
 		bool				_isTerminatedRequest;
 		bool				_isInternalRedirect;
