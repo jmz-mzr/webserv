@@ -63,11 +63,15 @@ namespace	webserv
 
 	const std::string&	Request::getServerName() const
 	{
-		static const std::string	emptyString("");
+		static const std::string					emptyString("");
+		ServerConfig::hostname_set::const_iterator	serverName;
 
-		if (_serverConfig && _serverConfig->getServerNames().begin()
-				!= _serverConfig->getServerNames().end())
+		if (_serverConfig && !_serverConfig->getServerNames().empty()) {
+			serverName = _serverConfig->getServerNames().find(_host);
+			if (serverName != _serverConfig->getServerNames().end())
+				return (*serverName);
 			return (*_serverConfig->getServerNames().begin());
+		}
 		return (emptyString);
 	}
 
@@ -469,7 +473,12 @@ namespace	webserv
 	{
 		_serverConfig = 0;
 		_location = 0;
+		_requestLine.clear();
 		_requestMethod.clear();
+		_uri.clear();
+		_query.clear();
+		_extension.clear();
+		_contentType.clear();
 		_host.clear();
 		_isKeepAlive = true;
 		_hasReceivedHeaders = false;

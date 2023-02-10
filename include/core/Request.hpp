@@ -37,8 +37,12 @@ namespace	webserv
 										{ return (_query); }
 		const std::string&		getExtension() const
 										{ return (_extension); }
+		const std::string&		getContentType() const
+										{ return (_contentType); }
 		const std::string&		getHost() const
 										{ return (_host); }
+		int64_t					getBodySize() const
+										{ return (_bodySize); }
 		std::fstream&			getTmpFile()
 										{ return (_tmpFile); }
 		const std::string&		getTmpFilename() const
@@ -81,35 +85,40 @@ namespace	webserv
 		std::string		_readLine();
 		std::string		_getKey(std::string line);
 		std::string		_getValue(std::string line);
+//		std::string		_formatValue(std::string str);
 		std::string		_decodeUri(std::string uri);
 		std::string		_sanitizeUri(std::string uri);
-		bool			_parseRequestTarget(const std::string& requestTarget);
-		void			_parseInternalTarget(const std::string& redirectTo);
+		bool			_checkHeader(std::string str);
+		void			_setLanguage();
+		bool			_isChunkEnd();
 		int				_parseChunkedRequest(std::string& unprocessedBuffer,
 										const char* buffer,
 										const server_configs& serverConfigs);
-		bool			_loadServerConfig(const server_configs& serverConfigs);
-		bool			_loadLocation(const ServerConfig& serverConfig);
-		bool			_loadExtensionLocation(const ServerConfig& serverConfig);
-		bool			_loadExtensionLocation(const Location& location);
-		bool			_isChunkEnd();
-		bool			_checkHeader(std::string str);
-		std::string		_formatValue(std::string str);
-		int				_checkHeaders() const;
-		std::string		_getServerName() const;
-		int				_checkHost() const;
-		int				_checkMaxBodySize() const;
-		int				_checkMethod() const;
-		void			_setLanguage();
-		void			_logError(const char* errorAt) const;
-		void			_closeTmpFile();
-		void			_deleteTmpFile();
 
+		bool	_loadServerConfig(const server_configs& serverConfigs);
+		bool	_loadLocation(const ServerConfig& serverConfig);
+		bool	_loadExtensionLocation(const ServerConfig& serverConf);
+		bool	_loadExtensionLocation(const Location& location);
+		int		_checkHeaders() const;
+		int		_checkHost() const;
+		int		_checkMaxBodySize() const;
+		int		_checkMethod() const;
+
+		bool	_parseRequestTarget(const std::string& requestTarget);
+		void	_parseInternalTarget(const std::string& redirectTo);
+
+		void	_closeTmpFile();
+		void	_deleteTmpFile();
+
+		void	_logError(const char* errorAt) const;
+
+		// TO DO: Initialize them, and reset them in clearRequest()
 		_header_map							_headers;
 		std::string							_body;
 		std::string							_buffer;
 		std::string							_method;
 		std::string::size_type				_bufferIndex;
+
 		const AcceptSocket&					_clientSocket;
 		const ServerConfig*					_serverConfig;
 		const Location*						_location;
@@ -125,7 +134,8 @@ namespace	webserv
 		// TO DO: 1) The uppercase letters, '_' and '-' are valid characters
 		// that must be accepted when parsing the method in the request line,
 		// that will lead to unallowed methods (like "_GET" or "P-OST")
-		// 2) If invalid return 400, if not allowed _checkHeaders will return 405
+		// 2) If invalid return 400, if not allowed _checkHeaders will return 405,
+		// and if exist but is not implemented can return 501
 		std::string			_requestMethod;
 
 		// TO DO: 1) It is what comes before '#', or the first '?' starting the query,
@@ -149,6 +159,9 @@ namespace	webserv
 		// It is used to set the Response's "Content-Type"
 		std::string			_extension;
 
+		std::string			_contentType;
+
+		// TO DO: Cannot be neither undefined nor empty
 		std::string			_host;
 
 		// TO DO: 1) Ignore 'Keep-Alive' Header and do not implement "timeout"
@@ -166,6 +179,10 @@ namespace	webserv
 		// 2) If the request method is DELETE and the request has a body, or
 		// if it has a Content-Length header with a positive value, immediately
 		// return 415 and LOG_ERROR("DELETE with body is unsupported")
+		// 3) If both the "Transfer-Encoding: chunked" and "Content-Length" are
+		// present, immediately return 400
+		// 4) If receiving a correct chunked request, when the request is over,
+		// we set the _bodySize (even if 0)
 		int64_t				_bodySize;
 
 		bool				_isChunkedRequest;
@@ -182,6 +199,7 @@ namespace	webserv
 		// (without error), there must be an empty tmp file on the disk!
 		std::string			_tmpString;
 		std::fstream		_tmpFile;
+		// TO DO: Create a unique name
 		std::string			_tmpFilename;
 
 		bool				_isTerminatedRequest;

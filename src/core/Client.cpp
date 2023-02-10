@@ -15,7 +15,6 @@ namespace	webserv
 												_serverConfigs(serverConfigs),
 												_socket(serverFd),
 //												_isKeepAlive(true),
-												_unprocessedBuffer(),
 												_request(_socket)
 	{
 		LOG_INFO("New Client instance");
@@ -28,11 +27,12 @@ namespace	webserv
 	Client::Client(const Client& src): _serverFd(src._serverFd),
 										_serverConfigs(src._serverConfigs),
 										_socket(src._socket),
-//										_isKeepAlive(src._isKeepAlive),
-										_unprocessedBuffer(src._unprocessedBuffer),
-										_request(src._request),
-										_response(src._response)
+//										_isKeepAlive(true),
+										_request(src._request)
 	{
+		// NOTE: Except at Client creation (inserted in the client list),
+		// the Client should not be copied
+
 		LOG_INFO("Client copied");
 		LOG_DEBUG("serverFd=" << _serverFd << " ; "
 				<< "fd=" << _socket.getFd() << " ; "

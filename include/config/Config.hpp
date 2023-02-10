@@ -54,8 +54,7 @@ namespace webserv {
 		const std::string&		getAlias() const { return (_alias); }
 		bool					isAutoIndex() const { return (_autoIndex); }
 		const std::string&		getIndex() const { return (_index); }
-		const std::string&		getCgiPass() const { return (_cgiPass);}
-
+		const std::string&		getCgiPass() const { return (_cgiPass); }
 		const config_map&		getConfigs() const { return (_configs); }
 
 		friend std::ostream&	operator<<(std::ostream&, const Config&);
