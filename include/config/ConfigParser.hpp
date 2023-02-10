@@ -18,8 +18,6 @@ namespace	webserv {
 
 	class	ConfigParser {
 	public:
-		typedef std::map<int, std::string>				error_pages_map;
-
 		ConfigParser(const std::string& path);
 		~ConfigParser();
 

@@ -26,9 +26,11 @@ namespace	webserv
 	bool		ft_strcmp_icase(const std::string& str1,
 								const std::string& str2);
 	std::string	ft_str_tolower(const std::string& str);
-	std::string trimLeft(const std::string &s);
-	std::string trimRight(const std::string &s);
+	std::string trimLeft(const std::string& str);
+	std::string trimRight(const std::string& str);
 	std::string	trim(const std::string& str);
+	std::string	createRandomFilename(const std::string& path = "/tmp/",
+										const std::string& prefix = "");
 	void		initSockAddr(sockaddr_in& addr);
 	void		setSockAddr(sockaddr_in& addr, const in_addr_t ip,
 							const uint16_t port);
@@ -76,6 +78,7 @@ namespace	webserv
 		numberString << number;
 		return (numberString.str());
 	}
+
 }	// namespace webserv
 
 #endif  // UTILS_HPP

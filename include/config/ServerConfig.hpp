@@ -51,7 +51,7 @@ namespace	webserv
 		sockaddr_in					_listenPair;
 		hostname_set				_serverNames;
 		error_page_map				_errorPages;
-		int64_t					_maxBodySize;
+		int64_t						_maxBodySize;
 		location_map				_locations;
 	};
 

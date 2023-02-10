@@ -5,14 +5,17 @@
 # include <sys/types.h>
 # include <dirent.h>
 
+# include <ctime>
+# include <cstdio>
+
 # include <string>
 # include <utility>
 # include <set>
 # include <fstream>
-# include <ctime>
 
 # include "core/Request.hpp"
 # include "utils/utils.hpp"
+# include "core/CgiHandler.hpp"
 
 namespace	webserv
 {
@@ -46,64 +49,103 @@ namespace	webserv
 
 		Response&	operator=(const Response& rhs);
 
-		bool				_loadReturn(const Request& request);
-		void				_loadRelativeLocationPrefix(const Request& request);
-		bool				_loadErrorPage(Request& request);
-		int					_loadRequestedFile(Request& request);
-		bool				_loadFileWithAlias(Request& request);
-		int					_removeRequestedFile(const Request& request);
-		int					_removeRequestedDirectory(const Request& request);
-		bool				_removeDirectoryTree(const Request& request,
-													const char* path);
-		bool				_removeDirEntry(const Request& request,
-											const char* dirPath,
-											const char* entryName,
-											bool* hasError);
-		void				_deleteFile(const Request& request,
-										const char* filename);
-		void				_deleteDirectory(const Request& request,
-												const char* dirname);
-		int					_postRequestBody(const Request& request);
-		int					_moveRequestTmpFile(const Request& request);
-		int					_handleRequestAlreadyExistingFile(const Request&
-										request, const struct stat* fileInfos);
-		void				_setPostHeaders(const Request& request);
-		const std::string	_getPostResponseBody(const Request& request);
-		int					_openRequestedFile(const Request& request);
-		bool				_openAndStatFile(const Request& request,
-												struct stat* fileInfos);
-		void				_loadDirLocation(const Request& request);
-		void				_loadFileHeaders(const Request& request,
-												const struct stat* fileInfos);
-		void				_closeRequestedFile();
-		int					_loadIndex(Request& request);
-		int					_loadInternalRedirect(Request& request,
-												const std::string& redirectTo);
-		int					_loadDirIndex(const Request& request,
-											size_t indexLen);
-		int					_loadAutoIndex(const Request& request);
-		void				_prepareFileResponse(Request& request);
-		void				_prepareChunkedResponse(Request& request);
-		void				_clearBuffer();
-		int					_loadDirEntries(const Request& request);
-		int					_loadDirEntry(const Request& request,
-											const char* entryName);
-		void				_closeIndexDirectory();
-		int					_loadAutoindexHtml(const Request& request);
-		void				_loadAutoindexEntry(const _dir_entry_pair& entry);
-		const std::string	_escapeHtml(const std::string& str,
+		bool	_loadReturn(const Request& request);
+		void	_loadRelativeLocationPrefix(const Request& request);
+		bool	_loadErrorPage(Request& request);
+
+		int				_loadRequestedFile(Request& request);
+		bool			_loadFileWithAlias(Request& request);
+		int				_openRequestedFile(const Request& request);
+		bool			_openAndStatFile(const Request& request,
+											struct stat* fileInfos);
+		void			_closeRequestedFile();
+		void			_loadDirLocation(const Request& request);
+		void			_loadFileHeaders(const struct stat* fileInfos);
+		std::string		_getFileExtension();
+
+		int		_loadIndex(Request& request);
+		int		_loadInternalRedirect(Request& request,
+										const std::string& redirectTo);
+		int		_loadDirIndex(const Request& request, size_t indexLen);
+		int		_loadAutoIndex(const Request& request);
+
+		void	_prepareFileResponse(Request& request);
+		void	_prepareChunkedResponse(Request& request);
+
+		int				_loadDirEntries(const Request& request);
+		int				_loadDirEntry(const Request& request,
+										const char* entryName);
+		void			_closeIndexDirectory();
+		int				_loadAutoindexHtml(const Request& request);
+		void			_loadAutoindexEntry(const _dir_entry_pair& entry);
+		std::string		_escapeHtml(const std::string& str,
 									size_t maxLen = std::string::npos) const;
-		const std::string	_escapeUriComponent(const std::string& uri) const;
-		const std::string	_escapeUri(const std::string& uri) const;
-		const std::string	_getFileDate(const struct stat& fileInfos) const;
-		const std::string	_getFileSize(const struct stat& fileInfos) const;
-		void				_loadChunkHeaderAndTrailer(bool isLastChunk);
-		void				_loadHeaders(const Request& request);
-		const std::string	_getAllowedMethods(const Request& request) const;
-		const std::string	_getETag() const;
+		std::string		_escapeUriComponent(const std::string& uri) const;
+		std::string		_escapeUri(const std::string& uri) const;
+		std::string		_getFileDate(const struct stat& fileInfos) const;
+		std::string		_getFileSize(const struct stat& fileInfos) const;
+		void			_loadChunkHeaderAndTrailer(bool isLastChunk);
+
+		int		_removeRequestedFile(const Request& request);
+		int		_removeRequestedDirectory(const Request& request);
+		bool	_removeDirectoryTree(const Request& request, const char* path);
+		bool	_removeDirEntry(const Request& request, const char* dirPath,
+								const char* entryName, bool* hasError);
+		void	_deleteFile(const Request& request, const char* filename);
+		void	_deleteDirectory(const Request& request, const char* dirname);
+
+		int				_postRequestBody(const Request& request);
+		int				_moveRequestTmpFile(const Request& request);
+		int				_handleRequestAlreadyExistingFile(const Request&
+										request, const struct stat* fileInfos);
+		void			_setPostHeaders(const Request& request);
+		std::string		_getPostResponseBody(const Request& request);
+
+		int		_loadCgiPass(Request& request);
+		int		_statCgiScript(const Request& request);
+		int		_processCgiOutput(Request& request, CgiHandler& cgi);
+		void	_prepareCgiOutputParsing(FILE* cgiOutputFile);
+		int		_readCgiHeaders(const Request& request, CgiHandler& cgi,
+								char* buffer);
+		bool	_parseCgiHeader(const Request& request, CgiHandler& cgi,
+								const char* buffer);
+		bool	_loadCgiHeaderFields(const Request& request, const char* buffer,
+										std::string& fieldName,
+										std::string& fieldValue) const;
+		bool	_isFieldName(const char c) const;
+		bool	_isFieldValue(const char c) const;
+		bool	_recordCgiHeader(const Request& request, CgiHandler& cgi,
+									const std::string& fieldName,
+									const std::string& fieldValue,
+									const char* buffer);
+		bool	_parseCgiContentType(const Request& request,
+										const std::string& fieldValue);
+		bool	_parseCgiLocation(const Request& request,
+									const std::string& fieldValue);
+		bool	_parseCgiStatus(const Request& request, CgiHandler& cgi,
+								const std::string& fieldValue) const;
+		bool	_parseCgiContentLength(const Request& request,
+										const std::string& fieldValue);
+		bool	_checkCgiHeaders(const Request& request, CgiHandler& cgi);
+		bool	_checkCgiEof(FILE* cgiOutputFile) const;
+		bool	_checkCgiLocation(const Request& request,
+									CgiHandler& cgi) const;
+		bool	_loadTmpCgiBodyFile(const Request& request,
+									FILE* cgiOutputFile);
+		bool	_createTmpCgiBodyFile(const Request& request);
+		bool	_checkCgiBodyLength(const Request& request,
+									const char* filename);
+		void	_loadCgiHeaders(const Request& request, CgiHandler& cgi);
+
+		bool			_handleBodyDrop(const Request& request);
+		void			_loadHeaders(const Request& request);
+		std::string		_getAllowedMethods(const Request& request) const;
+		std::string		_getETag() const;
+
+		void	_clearBuffer();
 
 		void	_logError(const Request& request, const char* errorAt,
-						const char* errorType, const char* filename = "") const;
+						const char* errorType, const char* filename = 0) const;
 
 		static const std::string&	_getDate(time_t lastModifiedTime = -1);
 		static const std::string&	_getResponseStatus(int responseCode);
@@ -112,7 +154,8 @@ namespace	webserv
 																	extension);
 
 		std::string		_responseBuffer;
-		std::string		_requestedFileName;
+		std::string		_requestedFilename;
+		std::string		_tmpCgiBodyFilename;
 //		int				_requestedFileFd;
 		std::fstream	_requestedFile;
 		char*			_fileBuffer;

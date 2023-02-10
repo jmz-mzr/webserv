@@ -24,8 +24,6 @@ namespace	webserv
 												_hasReceivedHeaders(false),
 												_hasReceivedBody(false),
 												_hasBody(false),
-												_tempfilestream(),
-												_tempfilename(),
 												_bodySize(-1),
 												_isChunkedRequest(false),
 												_isTerminatedRequest(false),
@@ -45,19 +43,18 @@ namespace	webserv
 											_isTerminatedRequest(false),
 											_isInternalRedirect(false)
 	{
-		// TO DO: handle swap of std::ofstream (or other _chunks object)
-		// 		  or not if Request in only copied at Client creation?
+		// NOTE: Except at Client creation (inserted in the client list),
+		// the Request should not be copied
 
 		LOG_INFO("Request copied");
 	}
 
 	Request::~Request()
 	{
-		//uncomment when merge is done	
-		// if (_tmpFile.is_open())
-		// 	_closeTmpFile();
-		// if (!_tmpFileName.empty())
-		// 	_deleteTmpFile();
+		if (_tmpFile.is_open())
+			_closeTmpFile();
+		if (!_tmpFilename.empty())
+			_deleteTmpFile();
 	}
 
 	/**************************************************************************/
@@ -66,11 +63,15 @@ namespace	webserv
 
 	const std::string&	Request::getServerName() const
 	{
-		static const std::string	emptyString("");
+		static const std::string					emptyString("");
+		ServerConfig::hostname_set::const_iterator	serverName;
 
-		if (_serverConfig && _serverConfig->getServerNames().begin()
-				!= _serverConfig->getServerNames().end())
+		if (_serverConfig && !_serverConfig->getServerNames().empty()) {
+			serverName = _serverConfig->getServerNames().find(_host);
+			if (serverName != _serverConfig->getServerNames().end())
+				return (*serverName);
 			return (*_serverConfig->getServerNames().begin());
+		}
 		return (emptyString);
 	}
 
@@ -132,7 +133,7 @@ namespace	webserv
 
 	bool	Request::_loadExtensionLocation(const ServerConfig& serverConfig)
 	{
-		locations_map::const_iterator		extLocation;
+		_location_map::const_iterator		extLocation;
 
 		extLocation = serverConfig.getLocations().lower_bound("*.~");
 		while (extLocation != serverConfig.getLocations().end()
@@ -154,7 +155,7 @@ namespace	webserv
 
 	bool	Request::_loadExtensionLocation(const Location& location)
 	{
-		locations_map::const_iterator		extLocation;
+		_location_map::const_iterator		extLocation;
 
 		extLocation = location.getNestedLocations().lower_bound("*.~");
 		while (extLocation != location.getNestedLocations().end()
@@ -176,7 +177,7 @@ namespace	webserv
 
 	bool	Request::_loadLocation(const ServerConfig& serverConfig)
 	{
-		locations_map::const_iterator		location;
+		_location_map::const_iterator		location;
 
 		if (_loadExtensionLocation(serverConfig))
 			return (true);
@@ -237,29 +238,28 @@ namespace	webserv
 		// we only need to parse the body and add/remove the footers
 		(void)recvBuffer;
 		(void)unprocessedBuffer;
-		
-		std::string processedBody;
-		std::string	chunkedBody = 
-		_buffer.substr(_bufferIndex, std::string::npos);
+
+		std::string	processedBody;
+		std::string	chunkedBody = _buffer.substr(_bufferIndex);
 		long		chunkSize;
 		size_t		i = 0;
 
 		chunkSize = strtol(chunkedBody.c_str(), NULL, 16);
-		
+
 		//Documentation : www.jmarshall.com/easy/http
 		while (chunkSize)
 		{
 			i = chunkedBody.find("\r\n", i) + 2;
-			processedBody += chunkedBody.substr(i, 
-			static_cast<unsigned long>(chunkSize));
-			i += static_cast<unsigned long>(chunkSize + 2); 
+			processedBody += chunkedBody.substr(i,
+					static_cast<unsigned long>(chunkSize));
+			i += static_cast<unsigned long>(chunkSize + 2);
 			chunkSize = strtol(chunkedBody.c_str() + i, NULL, 16);
 		}
 		if (chunkedBody.find("\r\n0\r\n") == chunkedBody.size() - 5)
 			_hasReceivedBody = true;
 		_body += processedBody;
-		
-		if (_hasReceivedBody && _hasReceivedHeaders 
+
+		if (_hasReceivedBody && _hasReceivedHeaders
 		&& (!_serverConfig || !_location)) {
 			if (!_loadServerConfig(serverConfigs))
 				return (500);
@@ -269,7 +269,7 @@ namespace	webserv
 		}
 		return (0);
 	}
-		
+
 	bool	Request::_parseRequestTarget(const std::string& requestTarget)
 	{
 		// TO DO: This is a temp version of the function, used for the internal
@@ -290,8 +290,7 @@ namespace	webserv
 
 	bool	Request::_isChunkEnd()
 	{
-		std::string	chunkedBody = 
-		_buffer.substr(_bufferIndex, std::string::npos);
+		std::string	chunkedBody = _buffer.substr(_bufferIndex);
 
 		if (chunkedBody.find("\r\n0\r\n") == chunkedBody.size() - 5)
 			return true;
@@ -303,24 +302,24 @@ namespace	webserv
 								const server_configs& serverConfigs)
 	{
 		_buffer = (unprocessedBuffer + recvBuffer);
-		
+
 		//"CRLFCRLF" or "\r\n\r\n" pattern marks the end of the header section
 		size_t i = _buffer.find("\r\n\r\n");
-	
+
 		if (i != std::string::npos)
 		{
-			if (_tempfilename.empty())
+			if (_tmpFilename.empty())
 			{
 				std::stringstream ss;
 				struct timeval	time_now;
 
 				ss << gettimeofday(&time_now, NULL);
-				_tempfilename = "body_" + ss.str();
+				_tmpFilename = "body_" + ss.str();
 				//TOOD : figure out where to close the streams
-				_tempfilestream.open(_tempfilename.c_str(), std::ofstream::binary);
-				if (!_tempfilestream.is_open())
+				_tmpFileStream.open(_tmpFilename.c_str(), std::ofstream::binary);
+				if (!_tmpFileStream.is_open())
 					return (500);
-				_requestFileStream.open(_tempfilename.c_str(), std::ifstream::binary);
+				_requestFileStream.open(_tmpFilename.c_str(), std::ifstream::binary);
 				if (!_requestFileStream.is_open())
 					return (500);
 			}
@@ -338,33 +337,32 @@ namespace	webserv
 				{
 					_hasBody = true;
 					_parseChunkedRequest(unprocessedBuffer, recvBuffer,
-					 serverConfigs);
-					_tempfilestream << _body;
+							serverConfigs);
+					_tmpFileStream << _body;
 				}
 				else
 					unprocessedBuffer = _buffer;
 			}
 			else
 			{
-				//the request has a body because Content Length header exists
+				// the request has a body because Content Length header exists
 				_hasBody = true;
 				std::string body_size = _buffer.substr(
-					_buffer.find("Content-Length: ") 
-					+ strlen("Content-Length: ") , 10);
-				
-				//HTTP Request body size
+						_buffer.find("Content-Length: ")
+						+ strlen("Content-Length: ") , 10);
+				// HTTP Request body size
 				_bodySize = static_cast<int64_t>(std::atoi(body_size.c_str()));
 				//	if Content-Length header is present, we wait to receive
 				//	the entire request body before processing
 				if (_bodySize > 0 && _buffer.size() >=
-				static_cast<unsigned long>(_bodySize) + i + 4)
+						static_cast<unsigned long>(_bodySize) + i + 4)
 				{
 					_parse(_buffer);
 					if (_code != 0)
 						return (_code);
-					_body = _buffer.substr(_bufferIndex, 
-					static_cast<unsigned long> (_bodySize));
-					_tempfilestream << _body;
+					_body = _buffer.substr(_bufferIndex,
+							static_cast<unsigned long> (_bodySize));
+					_tmpFileStream << _body;
 					_hasReceivedBody = true;
 				}
 				else
@@ -458,15 +456,15 @@ namespace	webserv
 		_tmpFile.clear();
 		_tmpFile.close();
 		if (_tmpFile.fail()) {
-			LOG_ERROR("Bad close() on \"" << _tmpFileName << "\"");
+			LOG_ERROR("Bad close() on \"" << _tmpFilename << "\"");
 			_tmpFile.clear();
 		}
 	}
 
 	void	Request::_deleteTmpFile()
 	{
-		if (unlink(_tmpFileName.c_str()) < 0) {
-			_logError(std::string(std::string("unlink(") + _tmpFileName
+		if (unlink(_tmpFilename.c_str()) < 0) {
+			_logError(std::string(std::string("unlink(") + _tmpFilename
 					   + ") failed: " + strerror(errno)).c_str());
 		}
 	}
@@ -475,7 +473,12 @@ namespace	webserv
 	{
 		_serverConfig = 0;
 		_location = 0;
+		_requestLine.clear();
 		_requestMethod.clear();
+		_uri.clear();
+		_query.clear();
+		_extension.clear();
+		_contentType.clear();
 		_host.clear();
 		_isKeepAlive = true;
 		_hasReceivedHeaders = false;
@@ -484,11 +487,11 @@ namespace	webserv
 		_tmpString.clear();
 		if (_tmpFile.is_open())
 			_closeTmpFile();
-		if (!_tmpFileName.empty()) {
+		if (!_tmpFilename.empty()) {
 			_deleteTmpFile();
-			_tmpFileName.clear();
+			_tmpFilename.clear();
 		}
-		_tmpFileName.clear();
+		_tmpFilename.clear();
 		_isTerminatedRequest = false;
 		_isInternalRedirect = false;
 	}

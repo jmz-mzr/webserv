@@ -59,7 +59,7 @@ namespace webserv
 	// 	/*
 	// 	The value of the HTTP request header you want to set can only contain:
 	// 	Alphanumeric characters: a-z, A-Z, and 0-9
-	// 	The following special characters: _ :;.,\/"'?!(){}[]@<>=-+*#$&`|~^% 
+	// 	The following special characters: _ :;.,\/"'?!(){}[]@<>=-+*#$&`|~^%
 	// 	*/
 
 	// 	std::string	format = "0123456789_ :;.,\\/\"\'?!(){}[]@<>=-+*#$&`|~^%";
@@ -145,7 +145,7 @@ namespace webserv
 	// 		j = i + 1;
 	// 		//todo: remove the hex value
 	// 		while (j + 2 < tmp_uri.length())
-	// 		{	
+	// 		{
 	// 			tmp_uri[j] = tmp_uri[j + 2];
 	// 			j++;
 	// 		}
@@ -154,7 +154,7 @@ namespace webserv
 	// 		i++;
 	// 	}
 	// 	//mettre la string en lowercase
-	// 	return tmp_uri;	
+	// 	return tmp_uri;
 	// }
 
 	// void        Request::_parsePath(std::string line)
@@ -204,7 +204,7 @@ namespace webserv
 		/*
 		The value of the HTTP request header you want to set can only contain:
 		Alphanumeric characters: a-z, A-Z, and 0-9
-		The following special characters: _ :;.,\/"'?!(){}[]@<>=-+*#$&`|~^% 
+		The following special characters: _ :;.,\/"'?!(){}[]@<>=-+*#$&`|~^%
 		*/
 
 		std::string	format = "0123456789_ :;.,\\/\"\'?!(){}[]@<>=-+*#$&`|~^%";
@@ -264,7 +264,7 @@ namespace webserv
 		{
 			j = res_uri.find_first_not_of("/", i);
 			if (j == std::string::npos)
-			{			
+			{
 				res_uri = res_uri.substr(0, res_uri.find_first_of('/')) + "/";
 				break ;
 			}
@@ -295,7 +295,7 @@ namespace webserv
 			tmp_uri[i] = static_cast<char>(ascii);
 			j = i + 1;
 			while (j + 2 < tmp_uri.length() + 1)
-			{	
+			{
 				tmp_uri[j] = tmp_uri[j + 2];
 				j++;
 			}
@@ -310,7 +310,7 @@ namespace webserv
 			tmp_uri[j] = static_cast<char>(tolower(tmp_uri[j]));
 			j++;
 		}
-		return tmp_uri;	
+		return tmp_uri;
 	}
 
 	void        Request::_parsePath(std::string line)
@@ -408,7 +408,8 @@ namespace webserv
 		LOG_DEBUG("method : " << _method);
 		LOG_DEBUG("_uri : " << _uri);
 		LOG_DEBUG("parsed headers : ");
-		for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
+		for (_header_map::const_iterator it = _headers.begin();
+				it != _headers.end(); ++it)
 		{
 			LOG_DEBUG("[" << it->first << "]: " << it->second);
 		}
