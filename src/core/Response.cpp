@@ -1,16 +1,17 @@
-#include "core/Response.hpp"
-
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h>
 
-#include <map>
 #include <cerrno>
 #include <cstring>
-#include <sstream>
-#include <utility>
 #include <cctype>
-#include <cstdio>
+#include <cstdlib>
 
+#include <map>
+#include <sstream>
+#include <limits>
+
+#include "core/Response.hpp"
 #include "webserv_config.hpp"
 #include "utils/global_defs.hpp"
 #include "utils/Logger.hpp"
@@ -114,7 +115,7 @@ namespace	webserv
 		return (false);
 	}
 
-	const std::string	Response::_getETag() const
+	std::string	Response::_getETag() const
 	{
 		std::ostringstream		eTag;
 
@@ -132,8 +133,7 @@ namespace	webserv
 		return (eTag.str());
 	}
 
-	const std::string
-		Response::_getAllowedMethods(const Request& request) const
+	std::string	Response::_getAllowedMethods(const Request& request) const
 	{
 		typedef Location::limit_except_set	limit_set;
 
@@ -150,7 +150,7 @@ namespace	webserv
 					allowStr << ", ";
 			}
 		} else
-			allowStr << "GET, POST, DELETE";
+			allowStr << "GET, HEAD, POST, DELETE";
 		return (allowStr.str());
 	}
 
@@ -166,7 +166,7 @@ namespace	webserv
 			<< "Content-Type: " << _contentType << CRLF;	// only if content?
 		if (_responseCode == 405)
 			headers << "Allow: " << _getAllowedMethods(request) << CRLF;
-		if (_contentLength != -1)
+		if (_contentLength != -1 && _responseCode > 199 && _responseCode != 204)
 			headers << "Content-Length: " << _contentLength << CRLF;
 		if (_lastModifiedTime != -1)
 			headers << "Last-Modified: " << _getDate(_lastModifiedTime) << CRLF;
@@ -179,6 +179,7 @@ namespace	webserv
 			headers << "ETag: " << _getETag() << CRLF;
 		headers << CRLF;
 		_responseBuffer = headers.str();
+		LOG_DEBUG("HTTP Headers:\n" << _responseBuffer);
 	}
 
 	void	Response::_logError(const Request& request,
@@ -194,7 +195,7 @@ namespace	webserv
 			<< ", server: " << request.getServerName()
 			<< ", request: \"" << request.getRequestLine()
 			<< "\", host: \"" << request.getHost() << "\"";
-		if (filename[0] == '\0')
+		if (!filename)
 			filename = _requestedFilename.c_str();
 		if (errorAt[0] != '\0' && errorType[0] != '\0') {
 			LOG_ERROR(errorAt << space1 << "\"" << filename << "\" "
@@ -212,7 +213,7 @@ namespace	webserv
 	{
 		struct stat		fileInfos;
 
-		LOG_DEBUG("http autoindex file: " << entryName);
+		LOG_DEBUG("HTTP autoindex file: " << entryName);
 		if (entryName[0] == '.')
 			return (0);
 		memset(&fileInfos, 0, sizeof(fileInfos));
@@ -266,8 +267,8 @@ namespace	webserv
 		return (0);
 	}
 
-	const std::string	Response::_escapeHtml(const std::string& str,
-												size_t maxLen) const
+	std::string	Response::_escapeHtml(const std::string& str,
+										size_t maxLen) const
 	{
 		std::string					strEscaped;
 		size_t						pos;
@@ -292,8 +293,7 @@ namespace	webserv
 		return (strEscaped);
 	}
 
-	const std::string
-		Response::_escapeUriComponent(const std::string& uri) const
+	std::string	Response::_escapeUriComponent(const std::string& uri) const
 	{
 		static char		hex[] = "0123456789ABCDEF";
 		std::string		uriEscaped;
@@ -313,8 +313,7 @@ namespace	webserv
 		return (uriEscaped);
 	}
 
-	const std::string
-		Response::_escapeUri(const std::string& uri) const
+	std::string	Response::_escapeUri(const std::string& uri) const
 	{
 		static char		hex[] = "0123456789ABCDEF";
 		std::string		uriEscaped;
@@ -335,8 +334,7 @@ namespace	webserv
 		return (uriEscaped);
 	}
 
-	const std::string
-		Response::_getFileDate(const struct stat& fileInfos) const
+	std::string	Response::_getFileDate(const struct stat& fileInfos) const
 	{
 		char			buffer[32];
 		struct tm*		gmtTime = std::gmtime(&fileInfos.st_mtime);
@@ -345,8 +343,7 @@ namespace	webserv
 		return (buffer);
 	}
 
-	const std::string
-		Response::_getFileSize(const struct stat& fileInfos) const
+	std::string	Response::_getFileSize(const struct stat& fileInfos) const
 	{
 		std::ostringstream	fileSize;
 		std::string			buffer(19, ' ');
@@ -501,7 +498,8 @@ namespace	webserv
 	int	Response::_loadInternalRedirect(Request& request,
 										const std::string& redirectTo)
 	{
-		// TO DO: Return error only after 10 identical redirect (like NGINX)?
+		// TO DO: 1) Return error only after 10 identical redirect (like NGINX)?
+		// 2) Do we need to first clear the response (if return/error_page)?
 
 		int		errorCode;
 
@@ -518,12 +516,13 @@ namespace	webserv
 
 	int	Response::_loadAutoIndex(const Request& request)
 	{
-		if (request.getRequestMethod() != "GET"
+		if ((request.getRequestMethod() != "GET"
+				&& request.getRequestMethod() != "HEAD")
 				|| !request.getLocation()->isAutoIndex()) {
 			_logError(request, "", "directory index is forbidden");
 			return (403);
 		}
-		LOG_DEBUG("http autoindex: \"" << _requestedFilename << "\"");
+		LOG_DEBUG("HTTP autoindex: \"" << _requestedFilename << "\"");
 		_indexDirectory = opendir(_requestedFilename.c_str());
 		if (!_indexDirectory) {
 			_logError(request, "opendir()", "failed");
@@ -548,7 +547,7 @@ namespace	webserv
 
 		dirPos += (dirPos == 0);
 		_requestedFilename[dirPos] = '\0';
-		LOG_DEBUG("http index check dir: \"" << _requestedFilename << "\"");
+		LOG_DEBUG("HTTP index check dir: \"" << _requestedFilename << "\"");
 		memset(&dirInfos, 0, sizeof(dirInfos));
 		if (stat(_requestedFilename.c_str(), &dirInfos) < 0) {
 			if (errno != EACCES && errno != ENOENT) {
@@ -604,7 +603,10 @@ namespace	webserv
 		_requestedFile.clear();
 		_requestedFile.close();
 		if (_requestedFile.fail()) {
-			LOG_ERROR("Bad close() on \"" << _requestedFilename << "\"");
+			if (!_tmpCgiBodyFilename.empty()) {
+				LOG_ERROR("Bad close() on \"" << _tmpCgiBodyFilename << "\"");
+			} else
+				LOG_ERROR("Bad close() on \"" << _requestedFilename << "\"");
 			_requestedFile.clear();
 		}
 	}
@@ -612,7 +614,7 @@ namespace	webserv
 	bool	Response::_openAndStatFile(const Request& request,
 										struct stat* fileInfos)
 	{
-		LOG_DEBUG("http filename: \"" << _requestedFilename << "\"");
+		LOG_DEBUG("HTTP filename: \"" << _requestedFilename << "\"");
 //		_requestedFileFd = open(_requestedFilename.c_str(),
 //				O_RDONLY | O_NONBLOCK);
 		_requestedFile.open(_requestedFilename.c_str(), std::ios::in
@@ -625,13 +627,13 @@ namespace	webserv
 		memset(fileInfos, 0, sizeof(*fileInfos));
 		if (stat(_requestedFilename.c_str(), fileInfos) < 0) {
 			_logError(request, "stat()", "failed");
-			_closeRequestedFile();
+			//_closeRequestedFile();
 			return (false);
 		} else if (S_ISDIR(fileInfos->st_mode))
 			_closeRequestedFile();
 		else
-			LOG_DEBUG("http file opened: " << _requestedFilename);
-//		LOG_DEBUG("http file fd: " << _requestedFileFd);
+			LOG_DEBUG("HTTP file opened: " << _requestedFilename);
+//			LOG_DEBUG("HTTP file fd: " << _requestedFileFd);
 		return (true);
 	}
 
@@ -643,13 +645,41 @@ namespace	webserv
 			_location += std::string("?") + request.getQuery();
 	}
 
-	void	Response::_loadFileHeaders(const Request& request,
-										const struct stat* fileInfos)
+	std::string	Response::_getFileExtension()
 	{
-		_responseCode = 200;
+		const char*		name = _requestedFilename.c_str();
+		int				i = static_cast<int>(_requestedFilename.size()) - 1;
+		int				ext = 0;
+
+		if (i <= 1 || !isprint(name[i]) || name[i] == '/' || name[i] == '.')
+			return ("");
+		while (--i > 0) {
+			if (!isprint(name[i]) || name[i] == '/')
+				return ("");
+			if (_requestedFilename[i] == '.') {
+				for (int j = i - 1; j >= 0; --j) {
+					if (!isprint(name[j]) || name[j] == '/')
+						return ("");
+					if (isprint(name[j]) && name[j] != '.') {
+						ext = i + 1;
+						break ;
+					}
+				}
+				break ;
+			}
+		}
+		if (ext != 0)
+			return (&name[ext]);
+		return ("");
+	}
+
+	void	Response::_loadFileHeaders(const struct stat* fileInfos)
+	{
+		if (_responseCode == 0)
+			_responseCode = 200;
 		_contentLength = fileInfos->st_size;
 		_lastModifiedTime = fileInfos->st_mtime;
-		_contentType = _getContentType(request.getExtension());
+		_contentType = _getContentType(_getFileExtension());
 	}
 
 	int	Response::_openRequestedFile(const Request& request)
@@ -665,18 +695,18 @@ namespace	webserv
 				return (404);
 			return (500);
 		} else if (S_ISDIR(fileInfos.st_mode)) {
-			LOG_DEBUG("http dir");
+			LOG_DEBUG("HTTP dir");
 			_loadDirLocation(request);
 			return (301);
 		} else if (!S_ISREG(fileInfos.st_mode)) {
 			_logError(request, "", "is not a regular file");
-			_closeRequestedFile();
+			//_closeRequestedFile();
 			return (404);
 		} else if (request.getRequestMethod() == "POST") { // shouldn't get here??
-			_closeRequestedFile();
+			//_closeRequestedFile();
 			return (405);
 		}
-		_loadFileHeaders(request, &fileInfos);
+		_loadFileHeaders(&fileInfos);
 		if (_contentLength > 0)
 			_isFileResponse = true;
 		return (0);
@@ -685,7 +715,7 @@ namespace	webserv
 	void	Response::_deleteDirectory(const Request& request,
 										const char* dirname)
 	{
-		LOG_DEBUG("http delete dir: \"" << dirname << "\"");
+		LOG_DEBUG("HTTP delete dir: \"" << dirname << "\"");
 		if (rmdir(dirname) < 0)
 			_logError(request, "rmdir()", "failed", dirname);
 	}
@@ -693,7 +723,7 @@ namespace	webserv
 	void	Response::_deleteFile(const Request& request,
 									const char* filename)
 	{
-		LOG_DEBUG("http delete file: \"" << filename << "\"");
+		LOG_DEBUG("HTTP delete file: \"" << filename << "\"");
 		if (unlink(filename) < 0)
 			_logError(request, "unlink()", "failed", filename);
 	}
@@ -793,7 +823,7 @@ namespace	webserv
 	{
 		struct stat		fileInfos;
 
-		LOG_DEBUG("http delete filename: \"" << _requestedFilename << "\"");
+		LOG_DEBUG("HTTP delete filename: \"" << _requestedFilename << "\"");
 		if (lstat(_requestedFilename.c_str(), &fileInfos) < 0) {
 			_logError(request, "lstat()", "failed");
 			if (errno == ENOTDIR)
@@ -900,7 +930,7 @@ namespace	webserv
 			_logError(request, "Cannot POST to a directory:", "");
 			return (409);
 		}
-		LOG_DEBUG("http post filename: \"" << _requestedFilename << "\"");
+		LOG_DEBUG("HTTP post filename: \"" << _requestedFilename << "\"");
 		memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0)
 			return (_moveRequestTmpFile(request));
@@ -936,6 +966,429 @@ namespace	webserv
 		return (true);
 	}
 
+	int	Response::_statCgiScript(const Request& request)
+	{
+		struct stat		fileInfos;
+
+		LOG_DEBUG("CGI filename: \"" << _requestedFilename << "\"");
+		memset(&fileInfos, 0, sizeof(fileInfos));
+		if (stat(_requestedFilename.c_str(), &fileInfos) < 0) {
+			_logError(request, "stat()", "failed");
+			return (500);
+		} else if (S_ISDIR(fileInfos.st_mode)) {
+			LOG_DEBUG("CGI dir");
+			_loadDirLocation(request);
+			return (301);
+		} else if (!S_ISREG(fileInfos.st_mode)) {
+			_logError(request, "", "is not a regular file");
+			return (404);
+		}
+		return (0);
+	}
+
+	void	Response::_prepareCgiOutputParsing(FILE* cgiOutputFile)
+	{
+		std::rewind(cgiOutputFile);
+		_contentType.clear();
+		_location.clear();
+	}
+
+	bool	Response::_isFieldName(const char c) const
+	{
+		if (!std::isprint(c) || c == '(' || c == ')' || c == '<' || c == '>'
+				|| c == '@' || c == ',' || c == ';' || c == ':' || c == '\\'
+				|| c == '"' || c == '/' || c == '[' || c == ']' || c == '?'
+				|| c == '=' || c == '{' || c == '}' || c == ' ' || c == '\t')
+			return (false) ;
+		return (true);
+	}
+
+	bool	Response::_isFieldValue(const char c) const
+	{
+		if (std::isprint(c) || c == '\t')
+			return (true) ;
+		return (false);
+	}
+
+	bool	Response::_loadCgiHeaderFields(const Request& request,
+											const char* buffer,
+											std::string& fieldName,
+											std::string& fieldValue) const
+	{
+		int				i = 0;
+		int				startValue = 0;
+
+		while (_isFieldName(buffer[i]))
+			++i;
+		if (buffer[i] != ':' || i == 0) {
+			_logError(request, "Wrong character in CGI header:", "", buffer);
+			return (false);
+		}
+		fieldName.assign(buffer, i++);
+		while (_isFieldValue(buffer[i])) {
+			if (!startValue && buffer[i] != ' ' && buffer[i] != '\t')
+				startValue = i;
+			++i;
+		}
+		if (buffer[i] && buffer[i] != '\n' && buffer[i] != '\r')
+			_logError(request, "Wrong character in CGI header:", "", buffer);
+		if (buffer[i] == '\r' && buffer[i + 1] != '\n')
+			return (false);
+		if (startValue) {
+			while (buffer[i - 1] == ' ' || buffer[i - 1] == '\t')
+				--i;
+			fieldValue.assign(&buffer[startValue], i - startValue);
+		}
+		return (true);
+	}
+
+	bool	Response::_parseCgiContentType(const Request& request,
+											const std::string& fieldValue)
+	{
+		if (!_contentType.empty()) {
+			_logError(request, "This CGI header was returned twice:", "",
+					"Content-Type");
+			return (false);
+		}
+		_contentType = fieldValue;
+		return (true);
+	}
+
+	bool	Response::_parseCgiLocation(const Request& request,
+										const std::string& fieldValue)
+	{
+		// TO DO: Check the Location parsing as with the request URI
+		// (see RFC 3875, RFC 3986)
+
+		if (!_location.empty()) {
+			_logError(request, "This CGI header was returned twice:", "",
+					"Location");
+			return (false);
+		}
+		_location = fieldValue;
+		return (true);
+	}
+
+	bool	Response::_parseCgiStatus(const Request& request, CgiHandler& cgi,
+										const std::string& fieldValue) const
+	{
+		int		i = 0;
+
+		if (cgi.responseCode != 0) {
+			_logError(request, "This CGI header was returned twice:", "",
+					"Status");
+			return (false);
+		}
+		while (std::isdigit(fieldValue[i])) {
+			if (++i == 4)
+				break ;
+		}
+		if (i != 3) {
+			_logError(request, "Incorrect CGI's Status header value:", "",
+					fieldValue.c_str());
+			return (false);
+		}
+		cgi.responseCode = std::atoi(std::string(fieldValue, 0, 3).c_str());
+		if (!fieldValue[i])
+			return (true);
+		if (fieldValue[i] != ' ' || !std::isprint(fieldValue[i + 1])) {
+			_logError(request, "Incorrect CGI's Status header value:", "",
+					fieldValue.c_str());
+			return (false);
+		}
+		return (true);
+	}
+
+	bool	Response::_parseCgiContentLength(const Request& request,
+												const std::string& fieldValue)
+	{
+		int		i = 0;
+
+		if (_contentLength != -1) {
+			_logError(request, "This CGI header was returned twice:", "",
+					"Content-Length");
+			return (false);
+		}
+		while (std::isdigit(fieldValue[i]))
+			++i;
+		if (fieldValue[i]) {
+			_logError(request, "Incorrect CGI's Content-Length header value:",
+					"", fieldValue.c_str());
+			return (false);
+		}
+		errno = 0;
+		_contentLength = std::strtoll(fieldValue.c_str(), 0, 10);
+		if (_contentLength == std::numeric_limits<int64_t>::max()
+				|| errno != 0) {
+			_logError(request, "Incorrect", "CGI's Content-Length header value",
+					fieldValue.c_str());
+			return (false);
+		}
+		return (true);
+	}
+
+	bool	Response::_recordCgiHeader(const Request& request, CgiHandler& cgi,
+										const std::string& fieldName,
+										const std::string& fieldValue,
+										const char* buffer)
+	{
+		if (ft_strcmp_icase(fieldName, "Content-Type")) {
+			if (!_parseCgiContentType(request, fieldValue))
+				return (false);
+		} else if (ft_strcmp_icase(fieldName, "Location")) {
+			if (!_parseCgiLocation(request, fieldValue))
+				return (false);
+		} else if (ft_strcmp_icase(fieldName, "Status")) {
+			if (!_parseCgiStatus(request, cgi, fieldValue))
+				return (false);
+		} else if (ft_strcmp_icase(fieldName, "Content-Length")) {
+			if (!_parseCgiContentLength(request, fieldValue))
+				return (false);
+		} else {
+			cgi.headers += buffer;
+			if (cgi.headers[cgi.headers.size() - 2] != '\r')
+				cgi.headers.insert(cgi.headers.end() - 1, '\r');
+		}
+		return (true);
+	}
+
+	bool	Response::_parseCgiHeader(const Request& request, CgiHandler& cgi,
+										const char* buffer)
+	{
+		std::string		fieldName;
+		std::string		fieldValue;
+
+		if (buffer == std::string(CRLF) || buffer == std::string("\n")) {
+			LOG_DEBUG("All CGI headers received");
+			cgi.hasReadHeaders = true;
+			return (true);
+		}
+		if (!_loadCgiHeaderFields(request, buffer, fieldName, fieldValue))
+			return (false);
+		if (!fieldValue.empty()) {
+			LOG_DEBUG("CGI header: " << buffer);
+			if (!_recordCgiHeader(request, cgi, fieldName, fieldValue, buffer))
+				return (false);
+			++cgi.nbHeaders;
+		} else
+			LOG_DEBUG("CGI header ignored: " << buffer);
+		return (true);
+	}
+
+	int	Response::_readCgiHeaders(const Request& request, CgiHandler& cgi,
+									char* buffer)
+	{
+		while (!std::feof(cgi.getOutputFile()) && !cgi.hasReadHeaders) {
+			if (std::fgets(buffer, 4096, cgi.getOutputFile()) == 0)
+				break ;
+			if (!_parseCgiHeader(request, cgi, buffer))
+				return (502);
+		}
+		if (std::ferror(cgi.getOutputFile())) {
+			_logError(request, "Error with", "while reading CGI", "fgets()");
+			return (500);
+		}
+		return (0);
+	}
+
+	bool	Response::_checkCgiEof(FILE* cgiOutputFile) const
+	{
+		int		c;
+
+		if (std::feof(cgiOutputFile))
+			return (true);
+		c = std::fgetc(cgiOutputFile);
+		if (std::feof(cgiOutputFile))
+			return (true);
+		if (std::ferror(cgiOutputFile))
+			return (false);
+		std::ungetc(c, cgiOutputFile);
+		return (false);
+	}
+
+	bool	Response::_checkCgiLocation(const Request& request,
+										CgiHandler& cgi) const
+	{
+		bool	hasError = false;
+
+		if (!_location.empty() && _location[0] == '/'
+				&& (cgi.nbHeaders != 1 || cgi.hasBody)) {
+			_logError(request, "Wrong CGI Local Redirect while serving", "");
+			return (false);
+		}
+		if (!_location.empty() && _location[0] != '/') {
+			if (!cgi.hasBody && cgi.nbHeaders != 1)
+				hasError = true;
+			else if (cgi.hasBody && (_contentType.empty()
+						|| (cgi.responseCode != 301 && cgi.responseCode != 302
+							&& cgi.responseCode != 303
+							&& cgi.responseCode != 307
+							&& cgi.responseCode != 308)))
+				hasError = true;
+		}
+		if (hasError) {
+			_logError(request, "Wrong CGI Client Redirect while serving", "");
+			return (false);
+		}
+		return (true);
+	}
+
+	bool	Response::_checkCgiHeaders(const Request& request, CgiHandler& cgi)
+	{
+		cgi.hasBody = !_checkCgiEof(cgi.getOutputFile());
+		if (std::ferror(cgi.getOutputFile())) {
+			_logError(request, "Error with", "while reading CGI", "fgetc()");
+			return (false);
+		} else if (!cgi.hasReadHeaders || cgi.nbHeaders == 0) {
+			_logError(request, "Incomplete CGI headers while serving", "");
+			return (false);
+		} else if (cgi.hasBody && _contentType.empty()) {
+			_logError(request, "CGI Document Response misses header", "",
+					"Content-Type");
+			return (false);
+		} else if (cgi.hasBody && _contentLength != -1) {
+			LOG_WARN("The CGI sent a \"Content-Length\" header without data");
+			_contentLength = -1;
+		} else if (!_checkCgiLocation(request, cgi))
+			return (false);
+		if (!cgi.hasBody)
+			LOG_DEBUG("CGI output reached EOF");
+		return (true);
+	}
+
+	bool	Response::_createTmpCgiBodyFile(const Request& request)
+	{
+		_tmpCgiBodyFilename = createRandomFilename();
+		LOG_DEBUG("CGI tmp body filename: \"" << _tmpCgiBodyFilename << "\"");
+		_requestedFile.open(_tmpCgiBodyFilename.c_str(), std::ios::in
+				| std::ios::out | std::ios::binary);
+		if (_requestedFile.fail()) {
+			_logError(request, "open()", "failed", _tmpCgiBodyFilename.c_str());
+			return (false);
+		}
+		LOG_DEBUG("CGI tmp body file created");
+		return (true);
+	}
+
+	bool	Response::_checkCgiBodyLength(const Request& request,
+											const char* filename)
+	{
+		struct stat		fileInfos;
+		int64_t			fileSize;
+
+		memset(&fileInfos, 0, sizeof(fileInfos));
+		if (stat(filename, &fileInfos) < 0) {
+			_logError(request, "stat()", "failed", filename);
+			return (false);
+		} else if (!S_ISREG(fileInfos.st_mode)) {
+			_logError(request, "", "is not a regular file", filename);
+			return (false);
+		}
+		fileSize = fileInfos.st_size;
+		if (_contentLength != fileSize) {
+			LOG_WARN("The CGI sent more data (" << fileSize
+					<< ") than specified in its \"Content-Length\" header ("
+					<< _contentLength << ")");
+			_contentLength = fileSize;
+		}
+		return (true);
+	}
+
+	bool	Response::_loadTmpCgiBodyFile(const Request& request,
+											FILE* cgiOutputFile)
+	{
+		char		buffer[4096];
+		size_t		bytesRead;
+
+		if (!_createTmpCgiBodyFile(request))
+			return (false);
+		while (!std::feof(cgiOutputFile)) {
+			bytesRead = std::fread(buffer, sizeof(char), 4095, cgiOutputFile);
+			if (std::ferror(cgiOutputFile)) {
+				_logError(request, "Error in", "while reading CGI", "fread()");
+				return (false);
+			}
+			buffer[bytesRead] = '\0';
+			_requestedFile << buffer;
+		}
+		LOG_DEBUG("CGI body recorded in: " << _tmpCgiBodyFilename);
+		_requestedFile.seekg(0, std::ios::beg);
+		if (_requestedFile.fail()) {
+			_logError(request, "seekg()", "failed",
+					_tmpCgiBodyFilename.c_str());
+			return (false);
+		}
+		return (_checkCgiBodyLength(request, _tmpCgiBodyFilename.c_str()));
+	}
+
+	void	Response::_loadCgiHeaders(const Request& request, CgiHandler& cgi)
+	{
+		if (!_location.empty() && _location[0] != '/' && !cgi.hasBody)
+			cgi.responseCode = 302;
+		else if (cgi.responseCode == 0 && _responseCode == 0)
+			cgi.responseCode = 200;
+		if (cgi.responseCode != 200 || _responseCode == 0)
+			_responseCode = cgi.responseCode;
+		if (_contentType.empty())
+			_contentType = _getContentType("");
+		_loadHeaders(request);
+		if (!cgi.headers.empty()) {
+			if (_responseBuffer.size() > 4 && (_responseBuffer.c_str()
+				   + (_responseBuffer.size() - 4) == std::string(CRLF CRLF)))
+				_responseBuffer.erase(_responseBuffer.size() - 2);
+			_responseBuffer += cgi.headers + CRLF;
+			LOG_DEBUG("Added CGI Headers:\n" << cgi.headers << CRLF);
+		}
+	}
+
+	int	Response::_processCgiOutput(Request& request, CgiHandler& cgi)
+	{
+		char			buffer[4096];
+		int				errorCode;
+
+		_prepareCgiOutputParsing(cgi.getOutputFile());
+		errorCode = _readCgiHeaders(request, cgi, buffer);
+		if (errorCode)
+			return (errorCode);
+		if (!_checkCgiHeaders(request, cgi))
+			return (502);
+		if (!_location.empty() && _location[0] == '/')
+			return (_loadInternalRedirect(request, _location));
+		if (cgi.hasBody) {
+			if (!_loadTmpCgiBodyFile(request, cgi.getOutputFile()))
+				return (500);
+			_isFileResponse = true;
+		}
+		_loadCgiHeaders(request, cgi);
+		return (0);
+	}
+
+	int	Response::_loadCgiPass(Request& request) try
+	{
+		// TO DO: Check leaks of sockets/fds/Logger in the child process?
+
+		CgiHandler		cgi(request.getLocation()->getCgiPass(),
+							_requestedFilename);
+		int				responseCode;
+
+		responseCode = _statCgiScript(request);
+		if (responseCode)
+			return (responseCode);
+		cgi.loadEnv(request, _getContentType(request.getExtension()));
+		if (!cgi.prepareCgiIo(request))
+			return (500);
+		responseCode = cgi.launchCgiProcess(request);
+		if (responseCode)
+			return (responseCode);
+		responseCode = _processCgiOutput(request, cgi);
+		if (responseCode)
+			return (responseCode);
+		return (0);
+	}
+	catch (...) {
+		throw ;
+	}
+
 	int	Response::_loadRequestedFile(Request& request)
 	{
 		if (!_loadFileWithAlias(request)) {
@@ -950,22 +1403,22 @@ namespace	webserv
 				_requestedFilename.erase(_requestedFilename.end() - 1);
 			_requestedFilename += request.getUri();
 		}
-		//if (!request.getLocation().getCgiPass().empty())
-		//	return (_loadCgiPass(request));
-		if (request.getRequestMethod() == "POST")
-			return (_postRequestBody(request));
 		if (request.getRequestMethod() == "DELETE")
 			return (_removeRequestedFile(request));
+		if (!request.getLocation()->getCgiPass().empty())
+			return (_loadCgiPass(request));
+		if (request.getRequestMethod() == "POST")
+			return (_postRequestBody(request));
 		if (*_requestedFilename.rbegin() == '/')
 			return (_loadIndex(request));
 		return (_openRequestedFile(request));
 	}
 
-	const std::string	Response::_getPostResponseBody(const Request& request)
+	std::string	Response::_getPostResponseBody(const Request& request)
 	{
 		std::ostringstream		postResponseBody;
 
-		if (_responseCode == 201) // not if coming from CGI ?
+		if (_responseCode == 201 && request.getLocation()->getCgiPass().empty())
 			postResponseBody << "<html>" CRLF
 				"<head><title>Your file has been saved!</title></head>" CRLF
 				"<body>" CRLF
@@ -978,8 +1431,23 @@ namespace	webserv
 		return (postResponseBody.str());
 	}
 
+	bool	Response::_handleBodyDrop(const Request& request)
+	{
+		if (request.getRequestMethod() == "HEAD"
+				|| _responseCode == 204 || _responseCode == 304
+				|| (_responseCode >= 100 && _responseCode < 200)) {
+			LOG_DEBUG("HTTP set discard body");
+			_isChunkedResponse = false;
+			_isFileResponse = false;
+			return (true);
+		}
+		return (false);
+	}
+
 	void	Response::prepareResponse(Request& request)
 	{
+		// TO DO: Evaluate If-xxx conditional headers
+
 		int		responseCode;
 
 		if (_isResponseReady)
@@ -997,7 +1465,8 @@ namespace	webserv
 		if (responseCode != 0)
 			return (prepareErrorResponse(request, responseCode));
 		_loadHeaders(request);
-		if (request.getRequestMethod() == "POST") // not if coming from CGI ?
+		if (!_handleBodyDrop(request) && request.getRequestMethod() == "POST"
+				&& request.getLocation()->getCgiPass().empty())
 			_responseBuffer += _getPostResponseBody(request);
 		_isResponseReady = true;
 	}
@@ -1012,7 +1481,8 @@ namespace	webserv
 		errorPage = request.getLocation()->getErrorPages().find(_responseCode);
 		if (errorPage != request.getLocation()->getErrorPages().end()) {
 			if (errorPage->second[0] == '/') {
-				if (request.getRequestMethod() != "GET")
+				if (request.getRequestMethod() != "GET"
+						&& request.getRequestMethod() != "HEAD")
 					request.setRequestMethod("GET");
 				errorCode = request.loadInternalRedirect(errorPage->second);
 				if (errorCode != 0) {
@@ -1059,7 +1529,8 @@ namespace	webserv
 		} else if (returnCode < 0 || returnText.empty())
 			return (false);
 		_loadHeaders(request);
-		_responseBuffer += returnText;
+		if (!_handleBodyDrop(request))
+			_responseBuffer += returnText;
 		_isResponseReady = true;
 		return (true);
 	}
@@ -1084,7 +1555,8 @@ namespace	webserv
 			_contentLength = static_cast<int64_t>(specialBody->length());
 		}
 		_loadHeaders(request);
-		_responseBuffer += *specialBody;
+		if (!_handleBodyDrop(request))
+			_responseBuffer += *specialBody;
 		_isResponseReady = true;
 	}
 
@@ -1093,6 +1565,7 @@ namespace	webserv
 	{
 		_responseBuffer.clear();
 		_requestedFilename = XSTR(WEBSERV_ROOT);
+		_tmpCgiBodyFilename.clear();
 //		if (_requestedFileFd >= 0)
 		if (_requestedFile.is_open())
 			_closeRequestedFile();
