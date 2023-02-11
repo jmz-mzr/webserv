@@ -16,6 +16,8 @@ namespace	webserv
 	ListenSocket::ListenSocket(const sockaddr_in& address)
 			: Socket(kListen, address)
 	{
+		const int enable = 1;
+		setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
 		if (bind(_fd, reinterpret_cast<sockaddr*>(&_addr), _addrLen) < 0) {
 			closeFd();
 			LOG_DEBUG(*this);

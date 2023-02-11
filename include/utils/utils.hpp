@@ -23,6 +23,8 @@ namespace	webserv
 	void		ft_sleep(double seconds);
 	bool		ft_charcmp_icase(const unsigned char c1,
 									const unsigned char c2);
+	bool		ft_charcmp_icase2(const unsigned char c1,
+									const unsigned char c2);
 	bool		ft_strcmp_icase(const std::string& str1,
 								const std::string& str2);
 	std::string	ft_str_tolower(const std::string& str);
@@ -66,7 +68,7 @@ namespace	webserv
 		bool	operator()(const std::string& s1, const std::string& s2) const
 		{
 			return (std::lexicographical_compare(s1.begin(), s1.end(),
-						s2.begin(), s2.end(), &ft_charcmp_icase));
+						s2.begin(), s2.end(), &ft_charcmp_icase2));
 		}
 	};
 

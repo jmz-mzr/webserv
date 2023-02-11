@@ -12,14 +12,14 @@ TEST(ConfigParsingInit, ctorEmptyArgument) {
 }
 
 TEST(ConfigParsingInit, emptyFile) {
-	ConfigParser test("test/data/bad_conf/empty");
+	ConfigParser test("test/data/config/empty");
 	ASSERT_THROW(test.parseFile(), FatalErrorException);
 }
 
 class ConfigParsing : public testing::TestWithParam<std::string> {
 protected:
 	void	SetUp() override {
-		confDir = "test/data/bad_conf/";
+		confDir = "test/data/config/";
 		filePath = confDir + GetParam();
 	}
 

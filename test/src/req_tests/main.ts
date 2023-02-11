@@ -2,20 +2,34 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as net from 'net'
 
-export interface Headers {
-	[name: string]: string
-}
-
 export class Response {
+	body?: string;
 	protocol: string;
-	statusCode: number;
+	statusCode: number = -1;
 	status?: string;
 
-	constructor(protocol: string, statusCode: number, status?: string) {
-		this.statusCode = statusCode;
-		this.protocol = protocol;
-		if (status) {
-			this.status = status;
+	constructor(data: string) {
+		let httpMessage = data.split("\r\n\r\n");
+		if (!httpMessage[0].length) {
+			throw new Error(`HTTP response bad format: ${httpMessage}`);
+		}
+		if (httpMessage.length > 1) {
+			this.body = httpMessage[1];
+		}
+		let head = httpMessage[0].split("\r\n");
+		let statusLine = head[0].split(' ');
+		if (statusLine.length < 2) {
+			throw new Error(`Status line invalid: ${statusLine}`);
+		}
+		this.protocol = statusLine[0];
+
+		if (!isNumber(statusLine[1])) {
+			throw new Error(`Status code invalid: ${statusLine[1]}`);
+		}
+		this.statusCode = Number(statusLine[1]);
+		
+		if (statusLine.length > 2) {
+			this.status = statusLine.slice(2).join(' ');
 		}
 	}
 }
@@ -38,6 +52,13 @@ export class Request {
 	}
 }
 
+function isNumber(value: string | number): boolean
+{
+	return ((value != null) &&
+			(value !== '') &&
+			!isNaN(Number(value.toString())));
+}
+
 const filePath = path.join(__dirname, '../../data/requests.json')
 const tests = require(filePath);
 
@@ -50,8 +71,12 @@ for (let test of tests) {
 		socket.write(request.buffer);
 	});
 	socket.on('data', (data) => {
-		//TODO: parsing de reponse pour comparer avec data.expectedCode
-		console.log(data.toString());
+		const response = new Response(data.toString());
+		if (response.statusCode === test.expectedCode) {
+			console.log(`\x1b[32mSUCCESS\x1b[0m\tExpected: ${test.expectedCode}`);
+		} else {
+			console.log(`\x1b[31mFAIL\x1b[0m\tExpected: ${test.expectedCode} | Actual: \x1b[31m${response.statusCode}\x1b[0m`);
+		}
 		socket.end();
 	});
 	socket.on('timeout', () => {
@@ -59,7 +84,7 @@ for (let test of tests) {
 		socket.end();
 	});
 	socket.on('end', () => {
-		console.log('disconnected from server');
-	  });
+		// console.log('disconnected from server');
+	});
 
 }
