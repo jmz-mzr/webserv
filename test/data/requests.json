@@ -49,5 +49,12 @@
 		],
 		"body": "",
 		"expectedCode": 400
+	},
+	{
+		"host": "localhost",
+		"port": 8080,
+		"requestLine": "GET / HTTP/1.1\r\n",
+		"body": "",
+		"expectedCode": 400
 	}
 ]

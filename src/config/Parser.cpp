@@ -445,31 +445,51 @@ void	Parser::_setCgiPass(Directive& currDirective)
 	_currConfig->setCgiPass(path);
 }
 
+static void	_addAddress(struct addrinfo* result,
+											std::list<sockaddr_in>& addrList)
+{
+	in_port_t	port;
+
+	port = addrList.back().sin_port;
+	addrList.pop_back();
+	for (struct addrinfo* currAddr = result; currAddr != NULL ; ) {
+		sockaddr_in		addr;
+		sockaddr_in*	tmp = reinterpret_cast<sockaddr_in*>(currAddr->ai_addr);
+
+		initSockAddr(addr);
+		addr.sin_addr.s_addr = tmp->sin_addr.s_addr;
+		addr.sin_port = port;
+		addr.sin_family = AF_INET;
+		addrList.push_back(addr);
+		currAddr = currAddr->ai_next;
+	}
+}
+
 void	Parser::_parseHost(const std::string& str,
 										std::list<sockaddr_in>& addrList)
 {
-	struct in_addr**	hostList;
-	struct hostent*		hent;
-	in_port_t			port;
+	struct addrinfo		hints;
+	struct addrinfo*	result;
+	int					error;
 
 	if (std::find_if(str.begin(), str.end(), &isnothostnamevalid) != str.end()
 			|| (str.size() < 1 || str.size() > 63)
 			|| str[0] == '-')
-		_errorHandler("invalid host in \"" + str + "\" of the listen directive");
-	hent = gethostbyname(str.c_str());
-	if (hent == NULL)
-		_listenError("host not found", _currDirectivePtr->argv[0]);
-	hostList = reinterpret_cast<struct in_addr**>(hent->h_addr_list);
-	port = addrList.back().sin_port;
-	addrList.pop_back();
-	for (int i = 0; hostList[i] != NULL; i++) {
-		sockaddr_in	addr;
-		initSockAddr(addr);
-		addr.sin_addr.s_addr = hostList[i]->s_addr;
-		addr.sin_port = port;
-		addr.sin_family = AF_INET;
-		addrList.push_back(addr);
+		_errorHandler("invalid host in \"" + str
+											+ "\" of the listen directive");
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_socktype = SOCK_STREAM;
+	error = getaddrinfo(str.c_str(), NULL, &hints, &result);
+	if (error) {
+		if (error == EAI_SYSTEM) {
+			THROW_FATAL("getaddrinfo() error: " << strerror(errno));
+		} else
+			THROW_FATAL("getaddrinfo() error: " << gai_strerror(error));
 	}
+	if (result == NULL)
+		_listenError("host not found", _currDirectivePtr->argv[0]);
+	_addAddress(result, addrList);
+	freeaddrinfo(result);
 }
 
 void	Parser::_parseAddress(const std::string& str,

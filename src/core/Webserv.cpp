@@ -299,7 +299,6 @@ namespace	webserv
 		int		errorCode;
 
 		if (!client.hasRequestTerminated()) {
-			LOG_DEBUG("ICI");
 			errorCode = client.parseRequest(_buffer);
 			if (errorCode != 0)
 				return (client.prepareErrorResponse(errorCode));

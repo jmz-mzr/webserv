@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as net from 'net'
 
-export class Response {
+class Response {
 	body?: string;
 	protocol: string;
 	statusCode: number = -1;
@@ -34,7 +34,7 @@ export class Response {
 	}
 }
 
-export class Request {
+class Request {
 	buffer: string;
 	
 	constructor(reqLine: string, headers: string, body: string) {
