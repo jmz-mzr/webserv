@@ -4,13 +4,16 @@ RUN			apt-get update && apt-get install -y \
 			bc \
 			cmake \
 			coreutils \
+			curl \
 			git \
 			g++ \
+			nodejs \
 &&			rm -rf /var/lib/apt/lists/*
 
 WORKDIR		/usr/src
 
 RUN			git clone https://github.com/google/googletest.git -b release-1.12.1
+
 
 WORKDIR		/usr/src/googletest/build
 
