@@ -91,6 +91,7 @@ namespace	webserv
 		bool			_checkHeader(std::string str);
 		void			_setLanguage();
 		bool			_isChunkEnd();
+		size_t			_fullRequestReceived();
 		int				_parseChunkedRequest(std::string& unprocessedBuffer,
 										const char* buffer,
 										const server_configs& serverConfigs);

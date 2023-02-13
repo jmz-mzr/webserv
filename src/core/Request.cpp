@@ -40,6 +40,8 @@ namespace	webserv
 											_code(0),
 											_isKeepAlive(true),
 											_hasReceivedHeaders(false),
+											_hasReceivedBody(false),
+											_hasBody(false),
 											_bodySize(-1),
 											_isChunkedRequest(false),
 											_isTerminatedRequest(false),
@@ -299,14 +301,28 @@ namespace	webserv
 		return false;
 	}
 
+	size_t	Request::_fullRequestReceived()
+	{
+		size_t	i = 0;
+
+		//"CRLFCRLF" or "\r\n\r\n" pattern marks the end of the header section
+		if ((i = _buffer.find("\r\n\r\n")) != std::string::npos
+			|| (i = _buffer.find("\r\n\n")) != std::string::npos
+			|| (i = _buffer.find("\n\r\n")) != std::string::npos
+			|| (i = _buffer.find("\n\n")) != std::string::npos)
+			return i;
+		return std::string::npos;
+	}
+
 	int	Request::parseRequest(std::string& unprocessedBuffer,
 								const char* recvBuffer,
 								const server_configs& serverConfigs)
 	{
-		_buffer = (unprocessedBuffer + recvBuffer);
 
-		//"CRLFCRLF" or "\r\n\r\n" pattern marks the end of the header section
-		size_t i = _buffer.find("\r\n\r\n");
+		LOG_DEBUG("---PARSING REQUEST---");
+
+		_buffer = (unprocessedBuffer + recvBuffer);
+		size_t i = _fullRequestReceived();
 
 		if (i != std::string::npos)
 		{
@@ -317,7 +333,7 @@ namespace	webserv
 
 				ss << gettimeofday(&time_now, NULL);
 				_tmpFilename = "body_" + ss.str();
-				//TOOD : figure out where to close the streams
+				//TODO : figure out where to close the streams
 				_tmpFileStream.open(_tmpFilename.c_str(), std::ofstream::binary);
 				if (!_tmpFileStream.is_open())
 					return (500);
@@ -376,16 +392,22 @@ namespace	webserv
 		else
 			unprocessedBuffer += _buffer;
 		_buffer.clear();
+		_isTerminatedRequest = true;
 		if (( (_hasBody && _hasReceivedBody && _hasReceivedHeaders)
 		|| (!_hasBody && _hasReceivedHeaders) )
 		&& (!_serverConfig || !_location)) {
+			_isTerminatedRequest = true;
+			LOG_DEBUG("status code : " << _code);
 			if (!_loadServerConfig(serverConfigs))
-				return (500);
+			{
+				_code = 500;
+				return (_code);
+			}
 			// After header sent, check content length header, etc
 			// And check them when _isTerminatedRequest?
 			return (_checkHeaders());
 		}
-		return (0);
+		return (_code);
 	}
 
 	//set the accepted languages values in a map sorted by quality value
