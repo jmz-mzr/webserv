@@ -324,6 +324,7 @@ namespace	webserv
 		_buffer = (unprocessedBuffer + recvBuffer);
 		size_t i = _fullRequestReceived();
 
+		
 		if (i != std::string::npos)
 		{
 			if (_tmpFilename.empty())
@@ -390,7 +391,14 @@ namespace	webserv
 		// if we don't have received all the headers yet
 		// we save the request in unprocessedBuffer
 		else
+		{
 			unprocessedBuffer += _buffer;
+			if (_buffer.length() < RECV_BUFFER_SIZE)
+			{
+				_code = 400;
+				return (_code);
+			}
+		}
 		_buffer.clear();
 		_isTerminatedRequest = true;
 		if (( (_hasBody && _hasReceivedBody && _hasReceivedHeaders)
