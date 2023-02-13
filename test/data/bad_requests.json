@@ -66,6 +66,12 @@
 				"Host : localhost:8080"
 			],
 			"expectedCode": [ 400 ]
+		},
+		{
+			"name": "no_host_header",
+			"requestLine": "GET / HTTP/1.1\r\n",
+			"headers": [],
+			"expectedCode": [ 400 ]
 		}
 	]
 }

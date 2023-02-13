@@ -20,6 +20,7 @@ namespace	webserv
 												_clientSocket(clientSocket),
 												_serverConfig(0),
 												_location(0),
+												_code(0),
 												_isKeepAlive(true),
 												_hasReceivedHeaders(false),
 												_hasReceivedBody(false),
@@ -36,6 +37,7 @@ namespace	webserv
 	Request::Request(const Request& src): _clientSocket(src._clientSocket),
 											_serverConfig(0),
 											_location(0),
+											_code(0),
 											_isKeepAlive(true),
 											_hasReceivedHeaders(false),
 											_bodySize(-1),
@@ -410,8 +412,7 @@ namespace	webserv
 				{
 					//the quality value starts with "q=" example : "q=0.8"
 					//we need to remove the 2 first characters before conversion
-					double weight = static_cast<double>(
-						atof(values[1].c_str() + 2));
+					double weight = atof(values[1].c_str() + 2);
 					_languages.insert(std::make_pair(weight, values[0]));
 				}
 			}
@@ -464,7 +465,7 @@ namespace	webserv
 	void	Request::_deleteTmpFile()
 	{
 		if (unlink(_tmpFilename.c_str()) < 0) {
-			_logError(std::string(std::string("unlink(") + _tmpFilename
+			_logError((std::string("unlink(") + _tmpFilename
 					   + ") failed: " + strerror(errno)).c_str());
 		}
 	}

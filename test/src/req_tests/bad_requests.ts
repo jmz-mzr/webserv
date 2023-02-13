@@ -1,7 +1,6 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import * as net from 'net'
-import test from 'node:test';
 
 class Response {
 	body?: string;

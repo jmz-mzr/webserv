@@ -69,6 +69,7 @@ namespace	webserv
 		try {
 			errorCode = _request.parseRequest(_unprocessedBuffer, recvBuffer,
 													_serverConfigs);
+			LOG_DEBUG("errorCode = " << errorCode);
 		} catch (const std::exception& e) {
 			_logError("Unable to parse the client request", e.what());
 			errorCode = 500;

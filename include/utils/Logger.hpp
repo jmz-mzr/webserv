@@ -16,14 +16,14 @@
 		stream << msg;														\
 		webserv::Logger::getInstance().log(__FILE__, __LINE__,				\
 											level, stream.str());			\
-	} catch (const std::exception& e) {										\
+	} catch (const std::exception& exception) {								\
 		if (webserv::Logger::getInstance().getOutputStream()				\
 				& webserv::Logger::kConsole)								\
-			std::cerr << "Logging error: " << e.what() << std::endl;		\
+			std::cerr << "Logging error: " << exception.what() << std::endl;\
 		if (webserv::Logger::getInstance().getOutputStream()				\
 				& webserv::Logger::kFile)									\
 			webserv::Logger::getInstance().getLogfile()						\
-				<< "Logging error: " << e.what() << std::endl;				\
+				<< "Logging error: " << exception.what() << std::endl;		\
 	}																		\
 }
 

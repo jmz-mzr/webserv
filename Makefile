@@ -160,6 +160,7 @@ $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ))
 install:		$(BIN) $(LIB)
 				install -d $(BINDIR)
 				install -m 755 $(BIN) $(BINDIR)/$(NAME)
+				install -m 755 html/index.html /usr/local/var/www/index.html
 				cp -R conf $(SYSCONFDIR)/$(NAME)/
 
 uninstall:
