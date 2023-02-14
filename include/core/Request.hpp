@@ -93,8 +93,7 @@ namespace	webserv
 		bool			_isChunkEnd();
 		size_t			_fullRequestReceived();
 		int				_parseChunkedRequest(std::string& unprocessedBuffer,
-										const char* buffer,
-										const server_configs& serverConfigs);
+										const char* buffer);
 
 		bool	_loadServerConfig(const server_configs& serverConfigs);
 		bool	_loadLocation(const ServerConfig& serverConfig);
@@ -108,6 +107,12 @@ namespace	webserv
 		bool	_parseRequestTarget(const std::string& requestTarget);
 		void	_parseInternalTarget(const std::string& redirectTo);
 
+		int		_parseNoCLen(std::string unprocessedBuffer, size_t lfpos,
+							const char* RecvBuffer);
+		int		_parseWithCLen(std::string unprocessedBuffer, size_t lfpos);
+		int		_checkIfRequestEnded(const server_configs& serverConfigs);
+
+		int		_generateTmpFile();
 		void	_closeTmpFile();
 		void	_deleteTmpFile();
 

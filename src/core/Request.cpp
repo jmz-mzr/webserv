@@ -235,8 +235,7 @@ namespace	webserv
 	}
 
 	int	Request::_parseChunkedRequest(std::string& unprocessedBuffer,
-										const char* recvBuffer,
-										const server_configs& serverConfigs)
+										const char* recvBuffer)
 	{
 		// headers are already filled by normal parsing
 		// we only need to parse the body and add/remove the footers
@@ -262,15 +261,6 @@ namespace	webserv
 		if (chunkedBody.find("\r\n0\r\n") == chunkedBody.size() - 5)
 			_hasReceivedBody = true;
 		_body += processedBody;
-
-		if (_hasReceivedBody && _hasReceivedHeaders
-		&& (!_serverConfig || !_location)) {
-			if (!_loadServerConfig(serverConfigs))
-				return (500);
-			// After header sent, check content length header, etc
-			// And check them when _isTerminatedRequest?
-			return (_checkHeaders());
-		}
 		return (0);
 	}
 
@@ -314,21 +304,8 @@ namespace	webserv
 		return std::string::npos;
 	}
 
-	int	Request::parseRequest(std::string& unprocessedBuffer,
-								const char* recvBuffer,
-								const server_configs& serverConfigs)
+	int	Request::_generateTmpFile()
 	{
-
-		LOG_DEBUG("---PARSING REQUEST---");
-
-		_buffer = (unprocessedBuffer + recvBuffer);
-		size_t i = _fullRequestReceived();
-
-		
-		if (i != std::string::npos)
-		{
-			if (_tmpFilename.empty())
-			{
 				std::stringstream ss;
 				struct timeval	time_now;
 
@@ -341,66 +318,58 @@ namespace	webserv
 				_requestFileStream.open(_tmpFilename.c_str(), std::ifstream::binary);
 				if (!_requestFileStream.is_open())
 					return (500);
-			}
-			//If content length isn't specified, we should start
-			//parsing when all the headers are received (RFC)
-			if (_buffer.find("Content-Length: ") == std::string::npos && !_hasBody)
-			{
-				//we discard excess buffer
-				_buffer = _buffer.substr(0, i + 4);
-				_parse(_buffer);
-				if (_code != 0)
-					return (_code);
-				// If the encoding is chunked, we parse the body
-				if (_headers["Transfer-Encoding"] == "chunked" && _isChunkEnd())
-				{
-					_hasBody = true;
-					_parseChunkedRequest(unprocessedBuffer, recvBuffer,
-							serverConfigs);
-					_tmpFileStream << _body;
-				}
-				else
-					unprocessedBuffer = _buffer;
-			}
-			else
-			{
-				// the request has a body because Content Length header exists
-				_hasBody = true;
-				std::string body_size = _buffer.substr(
-						_buffer.find("Content-Length: ")
-						+ strlen("Content-Length: ") , 10);
-				// HTTP Request body size
-				_bodySize = static_cast<int64_t>(std::atoi(body_size.c_str()));
-				//	if Content-Length header is present, we wait to receive
-				//	the entire request body before processing
-				if (_bodySize > 0 && _buffer.size() >=
-						static_cast<unsigned long>(_bodySize) + i + 4)
-				{
-					_parse(_buffer);
-					if (_code != 0)
-						return (_code);
-					_body = _buffer.substr(_bufferIndex,
-							static_cast<unsigned long> (_bodySize));
-					_tmpFileStream << _body;
-					_hasReceivedBody = true;
-				}
-				else
-					unprocessedBuffer += _buffer;
-			}
-		}
-		// if we don't have received all the headers yet
-		// we save the request in unprocessedBuffer
-		else
+		return (0);
+	}
+
+	int	Request::_parseNoCLen(std::string unprocessedBuffer, size_t lfpos,
+							const char* recvBuffer)
+	{
+		//Discard excess buffer
+		_buffer = _buffer.substr(0, lfpos + 4);
+		_parse(_buffer);
+		if (_code != 0)
+			return (_code);
+		// If the encoding is chunked, we parse the body
+		if (_headers["Transfer-Encoding"] == "chunked" && _isChunkEnd())
 		{
-			unprocessedBuffer += _buffer;
-			if (_buffer.length() < RECV_BUFFER_SIZE)
-			{
-				_code = 400;
-				return (_code);
-			}
+			_hasBody = true;
+			_parseChunkedRequest(unprocessedBuffer, recvBuffer);
+			_tmpFileStream << _body;
 		}
-		_buffer.clear();
-		_isTerminatedRequest = true;
+		else
+			unprocessedBuffer = _buffer;
+		return (_code);
+	}
+
+	int	Request::_parseWithCLen(std::string unprocessedBuffer, size_t lfpos)
+	{
+		// the request has a body because Content Length header exists
+		_hasBody = true;
+		std::string body_size = _buffer.substr(	_buffer.find("Content-Length: ")
+										+ strlen("Content-Length: ") , 10);
+		// HTTP Request body size
+		_bodySize = static_cast<int64_t>(std::atoi(body_size.c_str()));
+				
+		//	if Content-Length header is present, we wait to receive
+		//	the entire request body before processing
+		if (_bodySize > 0 && _buffer.size() >=
+			static_cast<unsigned long>(_bodySize) + lfpos + 4)
+		{
+			_parse(_buffer);
+			if (_code != 0)
+				return (_code);
+			_body = _buffer.substr(_bufferIndex,
+					static_cast<unsigned long> (_bodySize));
+			_tmpFileStream << _body;
+			_hasReceivedBody = true;
+		}
+		else
+			unprocessedBuffer += _buffer;
+		return (_code);
+	}
+
+	int	Request::_checkIfRequestEnded(const server_configs& serverConfigs)
+	{
 		if (( (_hasBody && _hasReceivedBody && _hasReceivedHeaders)
 		|| (!_hasBody && _hasReceivedHeaders) )
 		&& (!_serverConfig || !_location)) {
@@ -416,6 +385,55 @@ namespace	webserv
 			return (_checkHeaders());
 		}
 		return (_code);
+	}
+
+	int	Request::parseRequest(std::string& unprocessedBuffer,
+								const char* recvBuffer,
+								const server_configs& serverConfigs)
+	{
+
+		LOG_DEBUG("---PARSING REQUEST---");
+
+		//retrieving buffer from previous read
+		_buffer = (unprocessedBuffer + recvBuffer);
+		if (_buffer.empty())
+			return (400);
+		//checking if the request is received in its entirety
+		size_t i = _fullRequestReceived();
+
+		if (i != std::string::npos)
+		{
+			if (_tmpFilename.empty())
+			{
+				if (_generateTmpFile() != 0)
+					return (500);
+			}
+			//If content length isn't specified, we should start
+			//parsing when all the headers are received (RFC)
+			if (_buffer.find("Content-Length: ") == std::string::npos && !_hasBody)
+			{
+				if (_parseNoCLen(unprocessedBuffer, i, recvBuffer) != 0)
+					return (_code);
+			}
+			else
+			{
+				if (_parseWithCLen(unprocessedBuffer, i) != 0)
+					return (_code);
+			}
+		}
+		// if we don't have received all the headers yet
+		// we save the request in unprocessedBuffer
+		else
+		{
+			if (_buffer.length() < RECV_BUFFER_SIZE)
+			{
+				_code = 400;
+				return (_code);
+			}
+			unprocessedBuffer += _buffer;
+		}
+		_buffer.clear();
+		return (_checkIfRequestEnded(serverConfigs));
 	}
 
 	//set the accepted languages values in a map sorted by quality value
