@@ -16,7 +16,7 @@
 
 namespace	webserv
 {
-
+	#define URI_MAX_LENGTH 2048 //arbitrary max length of an uri
 	class	Request {
 	public:
 		typedef std::vector<ServerConfig>	server_configs;
@@ -94,6 +94,9 @@ namespace	webserv
 		size_t			_fullRequestReceived();
 		int				_parseChunkedRequest(std::string& unprocessedBuffer,
 										const char* buffer);
+
+		bool			_isCtlCharacter(int c);
+		bool			_isNotCtlString(std::string s);
 
 		bool	_loadServerConfig(const server_configs& serverConfigs);
 		bool	_loadLocation(const ServerConfig& serverConfig);

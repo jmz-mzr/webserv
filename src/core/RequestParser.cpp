@@ -54,151 +54,6 @@ namespace webserv
 		return line;
 	}
 
-	// bool	Request::_checkHeader(std::string str)
-	// {
-	// 	/*
-	// 	The value of the HTTP request header you want to set can only contain:
-	// 	Alphanumeric characters: a-z, A-Z, and 0-9
-	// 	The following special characters: _ :;.,\/"'?!(){}[]@<>=-+*#$&`|~^%
-	// 	*/
-
-	// 	std::string	format = "0123456789_ :;.,\\/\"\'?!(){}[]@<>=-+*#$&`|~^%";
-	// 	size_t		i = 0;
-	// 	size_t		len = str.length();
-
-	// 	if (str[str.size() - 1] == ' ')
-	// 		return false;
-	// 	while (i < len)
-	// 	{
-	// 		if (format.find(str[i]) != std::string::npos
-	// 		|| (str[i] >= 'a' && str[i] <= 'z')
-	// 		|| (str[i] >= 'A' && str[i <= 'Z']))
-	// 			i++;
-	// 		else
-	// 			return false;
-	// 	}
-	// 	return	true;
-	// }
-
-	// std::string        Request::_getKey(std::string line)
-	// {
-	// 	size_t i;
-	// 	std::string ret;
-
-	// 	i = line.find_first_of(':');
-	// 	if (i == std::string::npos)
-	// 		return "";
-	// 	ret = line.substr(0, i);
-	// 	_checkHeader(ret);
-	// 	return ret;
-	// }
-
-	// std::string        Request::_getValue(std::string line)
-	// {
-	// 	size_t i;
-	// 	std::string ret;
-
-	// 	i = line.find_first_of(':');
-	// 	if (i == std::string::npos)
-	// 		return "";
-	// 	ret = line.substr(i + 1, line.size() - i + 1);
-	// 	i = ret.find_first_not_of(' ') - 1;
-	// 	if (i == std::string::npos)
-	// 		return "";
-	// 	ret = ret.substr(i, ret.size() - i);
-	// 	return ret;
-	// }
-
-	// std::string		Request::_sanitizeUri(std::string uri)
-	// {
-	// 	size_t		i = 0;
-	// 	size_t		j = 0;
-	// 	std::string	tmp_uri(uri);
-	// 	std::string	res_uri;
-
-	// 	while ((i = tmp_uri.find("/", i)) != std::string::npos)
-	// 	{
-	// 		j = tmp_uri.find_first_not_of("/", i);
-	// 		res_uri = tmp_uri.substr(0, i) + tmp_uri.substr(j, std::string::npos);
-	// 		i += j - i;
-	// 	}
-	// 	return	res_uri;
-	// }
-
-	// std::string		Request::_decodeUri(std::string uri)
-	// {
-	// 	size_t i = 0;
-	// 	size_t j = 0;
-	// 	std::string hexcode;
-	// 	std::string tmp_uri(uri);
-	// 	int 	ascii;
-
-	// 	//sanitize le path
-	// 	tmp_uri = _sanitizeUri(tmp_uri);
-	// 	//convertir les %hex en ascii
-	// 	while ((i = tmp_uri.find("%", i)) != std::string::npos)
-	// 	{
-	// 		hexcode = tmp_uri.substr(i, i + 2);
-	// 		ascii = static_cast<int>(std::strtol(hexcode.c_str(), NULL, 16));
-	// 		//replace '%' by hexcode
-	// 		tmp_uri[i] = static_cast<char>(ascii);
-	// 		j = i + 1;
-	// 		//todo: remove the hex value
-	// 		while (j + 2 < tmp_uri.length())
-	// 		{
-	// 			tmp_uri[j] = tmp_uri[j + 2];
-	// 			j++;
-	// 		}
-	// 		tmp_uri[j] = '\0';
-	// 		//remove the processed part to prevent infinite loop
-	// 		i++;
-	// 	}
-	// 	//mettre la string en lowercase
-	// 	return tmp_uri;
-	// }
-
-	// void        Request::_parsePath(std::string line)
-	// {
-	// 	size_t j ;
-	// 	std::string str;
-
-	// 	j = line.find_first_of(' ');
-	// 	str = line.substr(j + 1, line.size() - j + 1);
-	// 	j = str.find_first_of(' ');
-	// 	str = str.substr(0, j);
-	// 	_uri = str;
-	// 	_uri = _decodeUri(_uri);
-	// }
-
-	// void        Request::_parseMethod(std::string line)
-	// {
-	// 	size_t  i;
-	// 	std::string str;
-
-	// 	i = line.find_first_of(' ');
-	// 	_method.assign(line, 0, i);
-	// 	_parsePath(line);
-	// 	_checkVersion(line);
-	// }
-
-	// //Check Request HTTP Version (accept 1.0 and 1.1)
-	// void		Request::_checkVersion(std::string line)
-	// {
-	// 	size_t 		j;
-	// 	std::string	str;
-
-	// 	j = line.find_last_of(' ');
-	// 	str = line.substr(j + 1, line.size() - j + 1);
-	// 	size_t i = str.find("HTTP/");
-	// 	if (i != 0 || i == std::string::npos)
-	// 	{
-	// 		_code = 400;
-	// 		LOG_DEBUG("HTTP BAD VERSION" << std::endl);
-	// 		return ;
-	// 	}
-	// 	this->_version = str.substr(str.find_first_of('/') + 1, 3);
-	// }
-
 	bool	Request::_checkHeader(std::string str)
 	{
 		/*
@@ -232,13 +87,36 @@ namespace webserv
 
 		i = line.find_first_of(':');
 		if (i == std::string::npos)
+		{
+			_code = 400;
 			return "";
+		}
+		if (_isCtlCharacter(ret[i - 1]))
+		{
+			_code = 400;
+			return "";
+		}
 		ret = line.substr(0, i);
 		_checkHeader(ret);
 		return ret;
 	}
 
-	std::string        Request::_getValue(std::string line)
+	bool				Request::_isCtlCharacter(int c)
+	{
+		return ((c >= 0 && c <= 17) || c == 177);
+	}
+
+	bool				Request::_isNotCtlString(std::string s)
+	{
+		for (size_t i = 0; i < s.size(); i++)
+		{
+			if (_isCtlCharacter(s[i]))
+				return false;
+		}
+		return true;
+	}
+
+	std::string       	Request::_getValue(std::string line)
 	{
 		size_t i;
 		std::string ret;
@@ -254,6 +132,8 @@ namespace webserv
 		i = ret.find_first_of(" \t");
 		if (i != std::string::npos)
 			ret = ret.substr(0, i);
+		if (!_isNotCtlString(ret))
+			_code = 400;
 		return ret;
 	}
 
@@ -287,14 +167,12 @@ namespace webserv
 
 		//sanitize le path
 		tmp_uri = _sanitizeUri(tmp_uri);
-		std::cout << "urii: " << tmp_uri << std::endl;
 		//convertir les %hex en ascii
 		while ((i = tmp_uri.find("%", i)) != std::string::npos)
 		{
 			hexcode = tmp_uri.substr(i + 1, 2);
 			ascii = static_cast<int>(std::strtol(hexcode.c_str(), NULL, 16));
 			//replace '%' by hexcode
-			std::cout << "hexcode is : " << hexcode << std::endl;
 			tmp_uri[i] = static_cast<char>(ascii);
 			j = i + 1;
 			while (j + 2 < tmp_uri.length() + 1)
@@ -339,6 +217,11 @@ namespace webserv
 			_code = 400;
 			return ;
 		}
+		if (_raw_uri.length() > URI_MAX_LENGTH)
+		{
+			_code = 414;
+			return ;
+		}
 		_uri = _decodeUri(_raw_uri);
 	}
 
@@ -351,7 +234,6 @@ namespace webserv
 		_method.assign(line, 0, i);
 		_parsePath(line);
 		_checkVersion(line);
-		std::cout << "_code: " << _code << std::endl;
 	}
 
 	//Check Request HTTP Version (accept 1.0 and 1.1)
@@ -369,7 +251,6 @@ namespace webserv
 		str = line.substr(j + 1, line.size() - j + 1);
 		j = str.find_first_not_of(' ');
 		str = str.substr(j, 8);
-		std::cout << "version: " << str << std::endl;
 		size_t i = str.find("HTTP/");
 		if (i != 0 || i == std::string::npos)
 		{
@@ -390,11 +271,11 @@ namespace webserv
 		std::string key;
 		std::string value;
 
-		LOG_DEBUG("Raw buffer before at parsing: " << str);
 		_bufferIndex = 0;
 		_buffer = str;
 		_parseMethod(_readLine());
-		while((line = _readLine()) != "" && _bufferIndex != std::string::npos)
+		while((line = _readLine()) != "" && _code == 0 &&
+			_bufferIndex != std::string::npos)
 		{
 			key = _getKey(line);
 			if (key == "")
@@ -405,16 +286,15 @@ namespace webserv
 			if (_findHeader(key))
 				_setHeader(key, value);
 		}
-
 		if (_code != 0)
 			_hasReceivedHeaders = true;
-		LOG_DEBUG("method : " << _method);
-		LOG_DEBUG("_uri : " << _uri);
-		LOG_DEBUG("parsed headers : ");
+		LOG_INFO("method : " << _method);
+		LOG_INFO("_uri : " << _uri);
+		LOG_INFO("parsed Request headers : ");
 		for (_header_map::const_iterator it = _headers.begin();
 				it != _headers.end(); ++it)
 		{
-			LOG_DEBUG("[" << it->first << "]: " << it->second);
+			LOG_INFO("[" << it->first << "]: " << it->second);
 		}
 	}
 } //namespace webserv
