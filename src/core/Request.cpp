@@ -392,21 +392,23 @@ namespace	webserv
 								const server_configs& serverConfigs)
 	{
 
-		LOG_DEBUG("---PARSING REQUEST---");
 
 		//retrieving buffer from previous read
 		_buffer = (unprocessedBuffer + recvBuffer);
+		LOG_DEBUG("Request content : \n" << _buffer);
+		
 		if (_buffer.empty())
 			return (400);
 		//checking if the request is received in its entirety
 		size_t i = _fullRequestReceived();
-
 		if (i != std::string::npos)
 		{
+			LOG_INFO("---START PARSING REQUEST---");
 			if (_tmpFilename.empty())
 			{
 				if (_generateTmpFile() != 0)
 					return (500);
+				LOG_INFO("tmpfilename: " << _tmpFilename);
 			}
 			//If content length isn't specified, we should start
 			//parsing when all the headers are received (RFC)
