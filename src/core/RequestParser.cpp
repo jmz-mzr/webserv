@@ -247,10 +247,13 @@ namespace webserv
 		if (i == std::string::npos)
 			return "";
 		ret = line.substr(i + 1, line.size() - i + 1);
-		i = ret.find_first_not_of(' ');
+		i = ret.find_first_not_of(" \t");
 		if (i == std::string::npos)
 			return "";
 		ret = ret.substr(i, ret.size() - i);
+		i = ret.find_first_of(" \t");
+		if (i != std::string::npos)
+			ret = ret.substr(0, i);
 		return ret;
 	}
 
