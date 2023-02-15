@@ -103,7 +103,7 @@ namespace webserv
 
 	bool				Request::_isCtlCharacter(int c)
 	{
-		return ((c >= 0 && c <= 17) || c == 177);
+		return ((c >= 0 && c <= 31) || c == 127);
 	}
 
 	bool				Request::_isNotCtlString(std::string s)
