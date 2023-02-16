@@ -14,12 +14,15 @@
 # include "config/Location.hpp"
 # include "utils/utils.hpp"
 
+# define URI_MAX_LENGTH	2048
+
 namespace	webserv
 {
-	#define URI_MAX_LENGTH 2048 //arbitrary max length of an uri
 	class	Request {
 	public:
-		typedef std::vector<ServerConfig>	server_configs;
+		typedef std::vector<ServerConfig>				server_configs;
+		typedef std::map<std::string, std::string,
+							strcmp_icase>				header_map;
 
 		Request(const AcceptSocket& clientSocket);
 		Request(const Request& src);
@@ -43,6 +46,8 @@ namespace	webserv
 										{ return (_host); }
 		int64_t					getBodySize() const
 										{ return (_bodySize); }
+		const header_map&		getHeaders() const
+										{ return (_headers); }
 		std::fstream&			getTmpFile()
 										{ return (_tmpFile); }
 		const std::string&		getTmpFilename() const
@@ -68,8 +73,6 @@ namespace	webserv
 		void	clearRequest();
 	private:
 		typedef ServerConfig::location_map				_location_map;
-		typedef std::map<std::string, std::string,
-							strcmp_icase>				_header_map;
 
 		Request();
 
@@ -122,7 +125,7 @@ namespace	webserv
 		void	_logError(const char* errorAt) const;
 
 		// TO DO: Initialize them, and reset them in clearRequest()
-		_header_map							_headers;
+		header_map							_headers;
 		std::string							_body;
 		std::string							_buffer;
 		std::string							_method;

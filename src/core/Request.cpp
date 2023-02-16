@@ -349,7 +349,7 @@ namespace	webserv
 										+ strlen("Content-Length: ") , 10);
 		// HTTP Request body size
 		_bodySize = static_cast<int64_t>(std::atoi(body_size.c_str()));
-				
+
 		//	if Content-Length header is present, we wait to receive
 		//	the entire request body before processing
 		if (_bodySize > 0 && _buffer.size() >=
@@ -396,7 +396,7 @@ namespace	webserv
 		//retrieving buffer from previous read
 		_buffer = (unprocessedBuffer + recvBuffer);
 		LOG_DEBUG("Request content : \n" << _buffer);
-		
+
 		if (_buffer.empty())
 			return (400);
 		//checking if the request is received in its entirety
