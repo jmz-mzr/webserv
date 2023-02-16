@@ -91,11 +91,11 @@ namespace	webserv
 		return (_responseBuffer);
 	}
 
-	void	Response::setResponseCode(int responseCode)
+/*	void	Response::setResponseCode(int responseCode)
 	{
 		_responseCode = responseCode;
 	}
-
+*/
 	bool	Response::isKeepAlive() const
 	{
 		if (!_isKeepAlive)
@@ -115,20 +115,31 @@ namespace	webserv
 		return (false);
 	}
 
-	std::string	Response::_getETag() const
+	std::string	Response::_getETag(const struct stat* fileInfos) const
 	{
+		time_t					lastModified;
+		int64_t					size;
 		std::ostringstream		eTag;
 
+		if (fileInfos) {
+			lastModified = fileInfos->st_mtime;
+			size = fileInfos->st_size;
+		} else {
+			lastModified = _lastModifiedTime;
+			size = _contentLength;
+		}
+		if (lastModified < 0 || size < 0)
+			return ("");
 		eTag << std::hex << "\"";
-		if (static_cast<int64_t>(_lastModifiedTime) < 0)
-			eTag << "-" << static_cast<uint64_t>(-_lastModifiedTime);
+		if (static_cast<int64_t>(lastModified) < 0)
+			eTag << "-" << static_cast<uint64_t>(-lastModified);
 		else
-			eTag << static_cast<uint64_t>(_lastModifiedTime);
+			eTag << static_cast<uint64_t>(lastModified);
 		eTag << "-";
-		if (_contentLength < 0)
-			eTag << "-" << static_cast<uint64_t>(-_contentLength);
+		if (size < 0)
+			eTag << "-" << static_cast<uint64_t>(-size);
 		else
-			eTag << static_cast<uint64_t>(_contentLength);
+			eTag << static_cast<uint64_t>(size);
 		eTag << "\"";
 		return (eTag.str());
 	}
@@ -390,7 +401,7 @@ namespace	webserv
 			_responseBuffer += CRLF "0" CRLF CRLF;
 	}
 
-	int	Response::_loadAutoindexHtml(const Request& request)
+	void	Response::_loadAutoindexHtml(const Request& request)
 	{
 		std::string		escapedUri = _escapeHtml(request.getUri());
 
@@ -405,7 +416,6 @@ namespace	webserv
 		}
 		_responseBuffer += "</pre><hr></body>" CRLF "</html>" CRLF;
 		_loadChunkHeaderAndTrailer(true);
-		return (0);
 	}
 
 	void	Response::_prepareChunkedResponse(Request& request)
@@ -417,9 +427,7 @@ namespace	webserv
 			errorCode = _loadDirEntries(request);
 			if (errorCode != 0)
 				return (prepareErrorResponse(request, errorCode));
-			errorCode = _loadAutoindexHtml(request);
-			if (errorCode != 0)
-				return (prepareErrorResponse(request, errorCode));
+			_loadAutoindexHtml(request);
 			_isChunkedResponse = false;
 			_isResponseReady = true;
 			return ;
@@ -682,6 +690,138 @@ namespace	webserv
 		_contentType = _getContentType(_getFileExtension());
 	}
 
+	bool	Response::_findMatch(const std::string& value,
+									const std::string& eTag) const
+	{
+		std::string::const_iterator			c;
+
+		if (eTag.empty())
+			return (false);
+		static_cast<void>(value.c_str());
+		c = value.begin();
+		while (c != value.end()) {
+			if (eTag.size() > static_cast<size_t>(value.end() - c))
+				return (false);
+			if (eTag.find(&(*c), 0, eTag.size()) == 0) {
+				c += eTag.size();
+				while (*c == ' ' || *c == '\t')
+					++c;
+				if (c == value.end() || *c == ',')
+					return (true);
+			}
+			while (c != value.end() && *c != ',')
+				++c;
+			while (c != value.end()) {
+				if (*c != ' ' && *c != '\t' && *c != ',')
+					break ;
+				++c;
+			}
+		}
+		return (false);
+	}
+
+	int	Response::_checkIfMatch(const Request& request,
+								const struct stat* fileInfos,
+								bool ifNoneMatch) const
+	{
+		Request::header_map					headers = request.getHeaders();
+		std::string							name = ifNoneMatch ? "If-None-Match"
+																: "If-Match";
+		Request::header_map::const_iterator	it = headers.find(name);
+		std::string							value;
+		const std::string&					method = request.getRequestMethod();
+
+		if (it == headers.end())
+			return (0);
+		value = it->second;
+		LOG_DEBUG("HTTP " << name << ": \"" << value
+				<< "\" (ETag: \"" << _getETag(fileInfos) << "\")");
+		if (ifNoneMatch) {
+			if ((fileInfos->st_mode > 0 && value.size() == 1 && value == "*")
+					|| _findMatch(value, _getETag(fileInfos))) {
+				if (method == "GET" || method == "HEAD")
+					return (304);
+				return (412);
+			}
+			return (0);
+		}
+		if ((fileInfos->st_mode > 0 && value.size() == 1 && value == "*")
+				|| _findMatch(value, _getETag(fileInfos)))
+			return (0);
+		return (412);
+	}
+
+	time_t	Response::_parseTime(const char* timeStr) const
+	{
+		struct tm	time;
+		char*		converted;
+
+		memset(&time, 0, sizeof(time));
+		converted = strptime(timeStr, "%a, %d %b %Y %H:%M:%S GMT", &time);
+		if (!converted || *converted != '\0') {
+			memset(&time, 0, sizeof(time));
+			converted = strptime(timeStr, "%a, %d-%b-%y %H:%M:%S GMT", &time);
+		}
+		if (!converted || *converted != '\0') {
+			memset(&time, 0, sizeof(time));
+			converted = strptime(timeStr, "%a %b %d %H:%M:%S %Y", &time);
+		}
+		if (!converted || *converted != '\0')
+			return (-1);
+		return (std::mktime(&time));
+	}
+
+	int	Response::_checkIfModifiedSince(const Request& request,
+										const struct stat* fileInfos,
+										bool ifUnmodifiedSince) const
+	{
+		const std::string&					method = request.getRequestMethod();
+		Request::header_map					headers = request.getHeaders();
+		std::string							name = ifUnmodifiedSince ?
+													"If-Unmodified-Since"
+													: "If-Modified-Since";
+		std::string							match = ifUnmodifiedSince ?
+													"If-Match"
+													: "If-None-Match";
+		Request::header_map::const_iterator	it = headers.find(name);
+		time_t								time;
+
+		if ((!ifUnmodifiedSince && method != "GET" && method != "HEAD")
+				|| it == headers.end() || headers.find(match) != headers.end())
+			return (0);
+		time = _parseTime(it->second.c_str());
+		LOG_DEBUG("HTTP " << name << ": \"" << it->second << "\" [=" << time
+				<< "] (Last-Modified: " << fileInfos->st_mtime << ")");
+		if (ifUnmodifiedSince) {
+			if (fileInfos->st_mode && time >= 0 && time < fileInfos->st_mtime)
+				return (412);
+			return (0);
+		}
+		if (time < 0 || time < fileInfos->st_mtime)
+			return (0);
+		return (304);
+	}
+
+	int	Response::_checkConditionalHeaders(const Request& request,
+											const struct stat* fileInfos) const
+	{
+		int		responseCode;
+
+		responseCode = _checkIfMatch(request, fileInfos);
+		if (responseCode)
+			return (responseCode);
+		responseCode = _checkIfModifiedSince(request, fileInfos, true);
+		if (responseCode)
+			return (responseCode);
+		responseCode = _checkIfMatch(request, fileInfos, true);
+		if (responseCode)
+			return (responseCode);
+		responseCode = _checkIfModifiedSince(request, fileInfos);
+		if (responseCode)
+			return (responseCode);
+		return (0);
+	}
+
 	int	Response::_openRequestedFile(const Request& request)
 	{
 		// TO DO: Make sure the requested file search is case-insensitive
@@ -700,16 +840,14 @@ namespace	webserv
 			return (301);
 		} else if (!S_ISREG(fileInfos.st_mode)) {
 			_logError(request, "", "is not a regular file");
-			//_closeRequestedFile();
 			return (404);
-		} else if (request.getRequestMethod() == "POST") { // shouldn't get here??
-			//_closeRequestedFile();
+		} else if (request.getRequestMethod() == "POST") {
 			return (405);
 		}
 		_loadFileHeaders(&fileInfos);
 		if (_contentLength > 0)
 			_isFileResponse = true;
-		return (0);
+		return (_checkConditionalHeaders(request, &fileInfos));
 	}
 
 	void	Response::_deleteDirectory(const Request& request,
@@ -819,11 +957,27 @@ namespace	webserv
 		return (0);
 	}
 
+	int Response::_unlinkFile(const Request& request)
+	{
+		if (unlink(_requestedFilename.c_str()) < 0) {
+			_logError(request, "unlink()", "failed");
+			if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG)
+				return (404);
+			if (errno == EACCES || errno == EPERM || errno == EISDIR)
+				return (403);
+			return (500);
+		}
+		_responseCode = 204;
+		return (0);
+	}
+
 	int	Response::_removeRequestedFile(const Request& request)
 	{
 		struct stat		fileInfos;
+		int				responseCode;
 
 		LOG_DEBUG("HTTP delete filename: \"" << _requestedFilename << "\"");
+		memset(&fileInfos, 0, sizeof(fileInfos));
 		if (lstat(_requestedFilename.c_str(), &fileInfos) < 0) {
 			_logError(request, "lstat()", "failed");
 			if (errno == ENOTDIR)
@@ -834,18 +988,12 @@ namespace	webserv
 				return (403);
 			return (500);
 		}
+		responseCode = _checkConditionalHeaders(request, &fileInfos);
+		if (responseCode)
+			return (responseCode);
 		if (S_ISDIR(fileInfos.st_mode))
 			return (_removeRequestedDirectory(request));
-		else if (unlink(_requestedFilename.c_str()) < 0) {
-			_logError(request, "unlink()", "failed");
-			if (errno == ENOENT || errno == ENOTDIR || errno == ENAMETOOLONG)
-				return (404);
-			if (errno == EACCES || errno == EPERM || errno == EISDIR)
-				return (403);
-			return (500);
-		}
-		_responseCode = 204;
-		return (0);
+		return (_unlinkFile(request));
 	}
 
 	void	Response::_setPostHeaders(const Request& request)
@@ -863,10 +1011,15 @@ namespace	webserv
 		_location += _escapeUri(request.getUri());
 	}
 
-	int	Response::_moveRequestTmpFile(const Request& request)
+	int	Response::_moveRequestTmpFile(const Request& request,
+										const struct stat* fileInfos)
 	{
 		// TO DO: Add an option to create the full path if it doesn't exist ?
 
+		int		responseCode = _checkConditionalHeaders(request, fileInfos);
+
+		if (responseCode)
+			return (responseCode);
 		if (rename(request.getTmpFilename().c_str(),
 					_requestedFilename.c_str()) < 0) {
 			_logError(request, "rename()", "failed");
@@ -918,7 +1071,7 @@ namespace	webserv
 	int	Response::_postRequestBody(const Request& request)
 	{
 		// TO DO: Before loading the request body, check in request after having
-		// received the headers if there the POST request will be processed ?
+		// received the headers if the POST request will be processed ?
 		// (i.e. there is no return directive, there is a CGI, or after the
 		// root/alias translation, there is a filename that is not a directory,
 		// and that doesn't already exist)
@@ -933,7 +1086,7 @@ namespace	webserv
 		LOG_DEBUG("HTTP post filename: \"" << _requestedFilename << "\"");
 		memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0)
-			return (_moveRequestTmpFile(request));
+			return (_moveRequestTmpFile(request, &fileInfos));
 		if (S_ISDIR(fileInfos.st_mode)) {
 			errno = EISDIR;
 			_logError(request, "The file", "could not be created");
@@ -983,7 +1136,7 @@ namespace	webserv
 			_logError(request, "", "is not a regular file");
 			return (404);
 		}
-		return (0);
+		return (_checkConditionalHeaders(request, &fileInfos));
 	}
 
 	void	Response::_prepareCgiOutputParsing(FILE* cgiOutputFile)
@@ -1581,7 +1734,8 @@ namespace	webserv
 		_responseCode = responseCodeToKeep;
 		_contentType = "application/octet-stream";
 		_contentLength = -1;
-		_lastModifiedTime = -1;
+		if (responseCodeToKeep != 304)
+			_lastModifiedTime = -1;
 		_isKeepAlive = request.isKeepAlive();
 		if (responseCodeToKeep == 0)
 			_location.clear();
