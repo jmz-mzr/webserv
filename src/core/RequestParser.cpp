@@ -88,11 +88,14 @@ namespace webserv
 		i = line.find_first_of(':');
 		if (i == std::string::npos)
 		{
+			LOG_ERROR("Key parsing error no \' : \' at \'" << line << "\'");
 			_code = 400;
 			return "";
 		}
-		if (_isCtlCharacter(ret[i - 1]))
+		if (_isCtlCharacter(line[i - 1]))
 		{
+			LOG_ERROR("Key parsing error CTL at \'" << ret << "\'index " << i - 1
+			<< " : " << static_cast<int>(ret[i - 1]));
 			_code = 400;
 			return "";
 		}
@@ -108,10 +111,14 @@ namespace webserv
 
 	bool				Request::_isNotCtlString(std::string s)
 	{
-		for (size_t i = 0; i < s.size(); i++)
+		for (size_t i = 0; i < s.length() - 1; i++)
 		{
 			if (_isCtlCharacter(s[i]))
+			{
+				LOG_ERROR("CTL Character found at index " << i
+				<< ": " << static_cast<int>(s[i]));
 				return false;
+			}
 		}
 		return true;
 	}
@@ -133,7 +140,10 @@ namespace webserv
 		if (i != std::string::npos)
 			ret = ret.substr(0, i);
 		if (!_isNotCtlString(ret))
+		{
+			LOG_ERROR("CTL characters in value : " << ret);
 			_code = 400;
+		}
 		return ret;
 	}
 
@@ -201,12 +211,14 @@ namespace webserv
 
 		if((j = line.find_first_of(' ')) == std::string::npos)
 		{
+			LOG_ERROR("Path parsing error");
 			_code = 400;
 			return ;
 		}
 		str = line.substr(j + 1, line.size() - j + 1);
 		if ((j = str.find_first_not_of(' ')) == std::string::npos)
 		{
+			LOG_ERROR("Path parsing error");
 			_code = 400;
 			return ;
 		}
@@ -214,11 +226,13 @@ namespace webserv
 		_raw_uri = str;
 		if (_raw_uri.empty())
 		{
+			LOG_ERROR("Path parsing error");
 			_code = 400;
 			return ;
 		}
 		if (_raw_uri.length() > URI_MAX_LENGTH)
 		{
+			LOG_ERROR("Path parsing error : uri too long");
 			_code = 414;
 			return ;
 		}
@@ -245,6 +259,7 @@ namespace webserv
 		j = line.find_first_of(_raw_uri) + _raw_uri.size();
 		if (line.find("HTTP/", j) == std::string::npos)
 		{
+			LOG_ERROR("Version parsing error");
 			_code = 400;
 			return ;
 		}
@@ -254,12 +269,14 @@ namespace webserv
 		size_t i = str.find("HTTP/");
 		if (i != 0 || i == std::string::npos)
 		{
+			LOG_ERROR("Version parsing error");
 			_code = 400;
 			return ;
 		}
 		this->_version = str.substr(str.find_first_of('/') + 1, 3);
 		if (_version != "1.0" && _version != "1.1")
 		{
+			LOG_ERROR("Version parsing error");
 			_code = 400;
 			return ;
 		}
@@ -277,12 +294,17 @@ namespace webserv
 		while((line = _readLine()) != "" && _code == 0 &&
 			_bufferIndex != std::string::npos)
 		{
+			if (line == "\r")
+				break;
+			LOG_DEBUG("Parsing line : \'" << line << "\'");
 			key = _getKey(line);
+			LOG_DEBUG("key found : " << key);
 			if (key == "")
 				break ;
 			value = _getValue(line);
 			if (value == "")
 				break ;
+			LOG_DEBUG("value found : " << value);
 			if (_findHeader(key))
 				_setHeader(key, value);
 		}

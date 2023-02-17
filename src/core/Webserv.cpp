@@ -275,14 +275,20 @@ namespace	webserv
 
 		// TODO : Recv before returning 1
 		if (client.hasUnprocessedBuffer())
+		{
+			LOG_DEBUG("hasunprocessedBuffer, no recv");
 		   return (1);
+		}
 		if (client.isProcessingRequest()) {
 			LOG_DEBUG("Finish responding to the last request before receiving"
 					<< " this new client request (fd=" << clientFd << ")");
 			return (1);	// see "TO DO" for other options
 		}
-		if (!(pollFd->revents & POLLIN))
-		   return (1);
+		if ((pollFd->revents & POLLIN))
+		{
+			LOG_DEBUG("Nothing to read");
+		   	return (1);
+		}
 		received = recv(clientFd, _buffer, RECV_BUFFER_SIZE - 1, _ioFlags);
 		if (received > 0) {
 			_buffer[received] = '\0';
@@ -339,6 +345,7 @@ namespace	webserv
 		size_t			i = _servers.size();
 		pollFd_iter		pollFd;
 		ssize_t			received;
+
 
 		while (client != _clients.end()) {
 			pollFd = _findPollFd(client->getSocket().getFd(), i, CLIENT);

@@ -34,7 +34,8 @@ namespace	webserv
 		LOG_INFO("New Request instance");
 	}
 
-	Request::Request(const Request& src): _clientSocket(src._clientSocket),
+	Request::Request(const Request& src): 	_headers(src._headers),
+											_clientSocket(src._clientSocket),
 											_serverConfig(0),
 											_location(0),
 											_code(0),
@@ -296,11 +297,13 @@ namespace	webserv
 		size_t	i = 0;
 
 		//"CRLFCRLF" or "\r\n\r\n" pattern marks the end of the header section
+		LOG_DEBUG("index of request end : " << _buffer.find("\r\n\r\n"));
 		if ((i = _buffer.find("\r\n\r\n")) != std::string::npos
 			|| (i = _buffer.find("\r\n\n")) != std::string::npos
 			|| (i = _buffer.find("\n\r\n")) != std::string::npos
 			|| (i = _buffer.find("\n\n")) != std::string::npos)
 			return i;
+		LOG_INFO("Not received full request yet");
 		return std::string::npos;
 	}
 
@@ -336,8 +339,8 @@ namespace	webserv
 			_parseChunkedRequest(unprocessedBuffer, recvBuffer);
 			_tmpFileStream << _body;
 		}
-		else
-			unprocessedBuffer = _buffer;
+		//else
+		//	unprocessedBuffer = _buffer;
 		return (_code);
 	}
 
@@ -395,10 +398,13 @@ namespace	webserv
 
 		//retrieving buffer from previous read
 		_buffer = (unprocessedBuffer + recvBuffer);
-		LOG_DEBUG("Request content : \n" << _buffer);
+		LOG_DEBUG("Request content : \n[" << _buffer << "]");
 		
 		if (_buffer.empty())
+		{
+			LOG_ERROR("Nothing to parse");
 			return (400);
+		}
 		//checking if the request is received in its entirety
 		size_t i = _fullRequestReceived();
 		if (i != std::string::npos)
@@ -427,8 +433,11 @@ namespace	webserv
 		// we save the request in unprocessedBuffer
 		else
 		{
-			if (_buffer.length() < RECV_BUFFER_SIZE)
+			LOG_INFO("buffer received : " << recvBuffer);
+			LOG_INFO("max size receivable is : " << RECV_BUFFER_SIZE);
+			if (_buffer.length() < RECV_BUFFER_SIZE - 1 || !recvBuffer || !recvBuffer[0])
 			{
+				LOG_ERROR("Incomplete request");
 				_code = 400;
 				return (_code);
 			}

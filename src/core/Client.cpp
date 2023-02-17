@@ -15,7 +15,8 @@ namespace	webserv
 												_serverConfigs(serverConfigs),
 												_socket(serverFd),
 //												_isKeepAlive(true),
-												_request(_socket)
+												_request(_socket),
+												_response()
 	{
 		LOG_INFO("New Client instance");
 		LOG_DEBUG("serverFd=" << _serverFd << " ; "
@@ -28,7 +29,8 @@ namespace	webserv
 										_serverConfigs(src._serverConfigs),
 										_socket(src._socket),
 //										_isKeepAlive(true),
-										_request(src._request)
+										_request(src._request),
+										_response(src._response)
 	{
 		// NOTE: Except at Client creation (inserted in the client list),
 		// the Client should not be copied
@@ -85,6 +87,7 @@ namespace	webserv
 
 	bool	Client::isProcessingRequest() const
 	{
+		LOG_DEBUG("Request is terminated : " << hasRequestTerminated() << "Response Ready : " << hasResponseReady());
 		if (hasRequestTerminated() || hasResponseReady())
 			return (true);
 		return (false);

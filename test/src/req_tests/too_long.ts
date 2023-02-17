@@ -67,6 +67,7 @@ class Request extends Fixture {
 		if (this.body) {
 			this.message += this.body;
 		}
+		console.log(JSON.stringify(this.message));
 	}
 }
 
