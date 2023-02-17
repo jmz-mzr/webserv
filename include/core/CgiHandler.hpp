@@ -42,11 +42,13 @@ namespace	webserv
 		void	_logError(const Request& request, const char* errorAt,
 						const char* errorType, const char* filename = 0) const;
 
-		void	_loadEnvContainers();
-		void	_executeCgi(const Request& request, const char* workingDir);
-		int		_getChildStatus(const Request& request) const;
-		int		_waitChild(const Request& request, int* status) const;
-		void	_closeCgiFiles();
+		void		_loadEnv2(const Request& request);
+		std::string	_convertEnvVarName(const std::string& str) const;
+		void		_loadEnvContainers();
+		void		_executeCgi(const Request& request, const char* workingDir);
+		int			_getChildStatus(const Request& request) const;
+		int			_waitChild(const Request& request, int* status) const;
+		void		_closeCgiFiles();
 
 		const std::string&		_cgiPass;
 		const std::string&		_requestedFilename;

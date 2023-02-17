@@ -9,9 +9,11 @@
 #include <signal.h>
 #include <libgen.h>
 
-#include <sstream>
 #include <cstring>
 #include <cerrno>
+#include <cctype>
+
+#include <sstream>
 
 #define DUP2_ERROR			4
 #define CHDIR_ERROR			8
@@ -100,12 +102,48 @@ namespace	webserv
 		_envMap.clear();
 	}
 
+	std::string	CgiHandler::_convertEnvVarName(const std::string& str) const
+	{
+		std::string		name;
+
+		for (std::string::const_iterator c = str.begin(); c != str.end(); ++c) {
+			if (*c == '-')
+				name += '_';
+			else
+				name += std::toupper(*c);
+		}
+		return (name);
+	}
+
+	void	CgiHandler::_loadEnv2(const Request& request)
+	{
+		Request::header_map					headers = request.getHeaders();
+		Request::header_map::const_iterator	it = headers.begin();
+		std::string							fieldName;
+		size_t								found;
+
+		while (it != headers.end()) {
+			if (!ft_strcmp_icase(it->first, "Content-Length")
+					&& !ft_strcmp_icase(it->first, "Content-Type")
+					&& !ft_strcmp_icase(it->first, "Authorization")
+					&& !ft_strcmp_icase(it->first, "Proxy-Authorization")) {
+				fieldName = "HTTP_";
+				fieldName += _convertEnvVarName(it->first);
+				_envMap[fieldName] = it->second;
+			}
+			++it;
+		}
+		found = _requestedFilename.find_last_of('/');
+		found += (found == 0);
+		_envMap["DOCUMENT_ROOT"] = _requestedFilename.substr(0, found);
+		return (_loadEnvContainers());
+	}
+
 	void	CgiHandler::loadEnv(const Request& request,
 								const std::string& computedContentType)
 	{
 		//TO DO: Add "remote_ident/user" for sessions?
 		//		 And HTTP_COOKIE?
-		//		 And DOCUMENT_ROOT?
 
 		if (request.getRequestMethod() == "POST")
 			_envMap["CONTENT_LENGTH"] = to_string(request.getBodySize());
@@ -129,7 +167,7 @@ namespace	webserv
 		_envMap["SERVER_PORT"] = to_string(request.getClientSocket().getPort());
 		_envMap["SERVER_PROTOCOL"] = "HTTP/1.1";
 		_envMap["SERVER_SOFTWARE"] = "webserv";
-		return (_loadEnvContainers());
+		return (_loadEnv2(request));
 	}
 
 	void	CgiHandler::_closeCgiFiles()
