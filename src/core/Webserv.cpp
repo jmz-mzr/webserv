@@ -273,6 +273,8 @@ namespace	webserv
 
 		_buffer[0] = '\0';
 
+		if (client.hasTimedOut())
+			return (1);
 		// TODO : Recv before returning 1
 		if (client.hasUnprocessedBuffer())
 		   return (1);
@@ -286,6 +288,7 @@ namespace	webserv
 		received = recv(clientFd, _buffer, RECV_BUFFER_SIZE - 1, _ioFlags);
 		if (received > 0) {
 			_buffer[received] = '\0';
+			client.updateTimeout();
 			LOG_INFO("Received a client request (fd=" << clientFd << ")");
 			LOG_DEBUG("Request: " << _buffer);
 		} else if (received == -1)
@@ -298,6 +301,11 @@ namespace	webserv
 	{
 		int		errorCode;
 
+		if (client.hasTimedOut()) {
+			LOG_DEBUG("The client (fd=" << client.getSocket().getFd()
+					<< ") timed out");
+			return (client.prepareErrorResponse(408));
+		}
 		if (!client.hasRequestTerminated()) {
 			errorCode = client.parseRequest(_buffer);
 			if (errorCode != 0)
@@ -310,9 +318,8 @@ namespace	webserv
 
 	bool	Webserv::_handleClientResponse(Client& client, pollFd_iter pollFd)
 	{
-		// TO DO: 1) NGINX doesn't even send a response for the 408 code, it
-		// just closes the connection (because of "return"/"timeout" directive)
-		// 2) If needed, implement a timeout directive, or default timeout
+		// NOTE: NGINX doesn't even send a response for the 408 code, it just
+		// closes the connection (because of "return"/"timeout" directive)
 
 		const Response&		response = client.getResponse();
 
@@ -328,8 +335,8 @@ namespace	webserv
 			client.clearResponse();
 			client.clearRequest();	// not here?
 		}
-		if (!client.isKeepAlive())
-			return (false);
+//		if (!client.isKeepAlive())
+//			return (false);
 		return (true);
 	}
 

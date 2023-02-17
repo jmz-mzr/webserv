@@ -267,7 +267,7 @@ namespace	webserv
 			_logError(request, "Error with", "after fork()", "waitpid()");
 			return (500);
 		} else if (pid == 0) {
-			_logError(request, "The CGI timed-out while requesting", "");
+			_logError(request, "The CGI timed out while requesting", "");
 			return (504);
 		}
 		return (0);
