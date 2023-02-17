@@ -35,7 +35,7 @@ namespace	webserv
 		bool	isResponseReady() const { return (_isResponseReady); }
 		bool	isPartialResponse() const;
 
-		void	setResponseCode(int responseCode);
+//		void	setResponseCode(int responseCode);
 		void	prepareResponse(Request& request);
 		void	prepareErrorResponse(Request& request, int errorCode = 0);
 
@@ -62,6 +62,17 @@ namespace	webserv
 		void			_loadDirLocation(const Request& request);
 		void			_loadFileHeaders(const struct stat* fileInfos);
 		std::string		_getFileExtension();
+		int				_checkConditionalHeaders(const Request& request,
+											const struct stat* fileInfos) const;
+		int				_checkIfMatch(const Request& request,
+										const struct stat* fileInfos,
+										bool ifNoneMatch = false) const;
+		bool			_findMatch(const std::string& value,
+									const std::string& eTag) const;
+		int				_checkIfModifiedSince(const Request& request,
+										const struct stat* fileInfos,
+										bool ifUnmodifiedSince = false) const;
+		time_t			_parseTime(const char* timeStr) const;
 
 		int		_loadIndex(Request& request);
 		int		_loadInternalRedirect(Request& request,
@@ -76,7 +87,7 @@ namespace	webserv
 		int				_loadDirEntry(const Request& request,
 										const char* entryName);
 		void			_closeIndexDirectory();
-		int				_loadAutoindexHtml(const Request& request);
+		void			_loadAutoindexHtml(const Request& request);
 		void			_loadAutoindexEntry(const _dir_entry_pair& entry);
 		std::string		_escapeHtml(const std::string& str,
 									size_t maxLen = std::string::npos) const;
@@ -93,9 +104,11 @@ namespace	webserv
 								const char* entryName, bool* hasError);
 		void	_deleteFile(const Request& request, const char* filename);
 		void	_deleteDirectory(const Request& request, const char* dirname);
+		int 	_unlinkFile(const Request& request);
 
 		int				_postRequestBody(const Request& request);
-		int				_moveRequestTmpFile(const Request& request);
+		int				_moveRequestTmpFile(const Request& request,
+											const struct stat* fileInfos);
 		int				_handleRequestAlreadyExistingFile(const Request&
 										request, const struct stat* fileInfos);
 		void			_setPostHeaders(const Request& request);
@@ -140,7 +153,7 @@ namespace	webserv
 		bool			_handleBodyDrop(const Request& request);
 		void			_loadHeaders(const Request& request);
 		std::string		_getAllowedMethods(const Request& request) const;
-		std::string		_getETag() const;
+		std::string		_getETag(const struct stat* fileInfos = 0) const;
 
 		void	_clearBuffer();
 

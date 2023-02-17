@@ -1,6 +1,8 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
+# include <ctime>
+
 # include <string>
 # include <vector>
 
@@ -8,6 +10,8 @@
 # include "core/AcceptSocket.hpp"
 # include "core/Request.hpp"
 # include "core/Response.hpp"
+
+# define CLIENT_TIMEOUT		30.0
 
 namespace	webserv
 {
@@ -31,7 +35,9 @@ namespace	webserv
 		bool	isProcessingRequest() const;
 		bool	hasRequestTerminated() const;
 		bool	hasResponseReady() const;
-		bool	isKeepAlive() const;
+		bool	hasTimedOut() const;
+
+		void	updateTimeout() { _lastUpdateTime = std::time(0); }
 
 		bool	prepareResponse();
 		bool	prepareErrorResponse(int errorCode = 0);
@@ -54,7 +60,7 @@ namespace	webserv
 		// TO DO: Rather record the time of last action (connection/interaction),
 		// and check for a timeout (either by default or through directive) in
 		// "isKeepAlive()" to avoid too many idle clients
-//		bool					_isKeepAlive;
+		time_t					_lastUpdateTime;
 
 		std::string				_unprocessedBuffer;
 		Request					_request;

@@ -5,6 +5,7 @@
 
 namespace webserv
 {
+
 	void    Request::_initHeaders()
 	{
 		_headers["Accept"] = "";
@@ -313,10 +314,11 @@ namespace webserv
 		LOG_INFO("method : " << _method);
 		LOG_INFO("_uri : " << _uri);
 		LOG_INFO("parsed Request headers : ");
-		for (_header_map::const_iterator it = _headers.begin();
+		for (header_map::const_iterator it = _headers.begin();
 				it != _headers.end(); ++it)
 		{
 			LOG_INFO("[" << it->first << "]: " << it->second);
 		}
 	}
+
 } //namespace webserv

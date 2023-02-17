@@ -14,9 +14,8 @@ namespace	webserv
 												_serverFd(serverFd),
 												_serverConfigs(serverConfigs),
 												_socket(serverFd),
-//												_isKeepAlive(true),
-												_request(_socket),
-												_response()
+												_lastUpdateTime(std::time(0)),
+												_request(_socket)
 	{
 		LOG_INFO("New Client instance");
 		LOG_DEBUG("serverFd=" << _serverFd << " ; "
@@ -28,9 +27,8 @@ namespace	webserv
 	Client::Client(const Client& src): _serverFd(src._serverFd),
 										_serverConfigs(src._serverConfigs),
 										_socket(src._socket),
-//										_isKeepAlive(true),
-										_request(src._request),
-										_response(src._response)
+										_lastUpdateTime(std::time(0)),
+										_request(src._request)
 	{
 		// NOTE: Except at Client creation (inserted in the client list),
 		// the Client should not be copied
@@ -103,14 +101,11 @@ namespace	webserv
 		return (_response.isResponseReady());
 	}
 
-	bool	Client::isKeepAlive() const
+	bool	Client::hasTimedOut() const
 	{
-		// TO DO: Implement a timeout: setResponseCode(408) and return (false)
-		// si timeout pour ne pas clutter le server?
-		// If so, either implement a timeout directive, or a default timeout
-		// and update it when sending parts of a partial response
-
-		return (true);
+		if (std::difftime(std::time(0), _lastUpdateTime) > CLIENT_TIMEOUT)
+			return (true);
+		return (false);
 	}
 
 	bool	Client::prepareResponse()
@@ -142,6 +137,7 @@ namespace	webserv
 	{
 		int		clientFd = getSocket().getFd();
 
+		updateTimeout();
 		return (_response.sendResponse(_request, clientFd, ioFlags));
 	}
 
