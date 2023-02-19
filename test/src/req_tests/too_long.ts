@@ -81,7 +81,7 @@ function isNumber(value: string | number): boolean
 const workdir = process.env.INIT_CWD?.toString()
 let filePath: string;
 if (workdir) {
-	filePath = path.join(workdir, 'data/uritoolong.json');
+	filePath = path.join(workdir, 'data/debug.json');
 } else {
 	throw new Error('Cannot find test configuration file');
 }

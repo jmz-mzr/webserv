@@ -397,14 +397,20 @@ namespace	webserv
 
 
 		//retrieving buffer from previous read
+	
 		_buffer = (unprocessedBuffer + recvBuffer);
 		LOG_DEBUG("Request content : \n[" << _buffer << "]");
-		
+		if ((!recvBuffer || !recvBuffer[0]) && unprocessedBuffer.empty())
+		{
+			LOG_INFO("Nothing to parse : received nothing");
+			return (0);
+		}
 		if (_buffer.empty())
 		{
 			LOG_ERROR("Nothing to parse");
 			return (400);
 		}
+		unprocessedBuffer.clear();
 		//checking if the request is received in its entirety
 		size_t i = _fullRequestReceived();
 		if (i != std::string::npos)
@@ -441,7 +447,7 @@ namespace	webserv
 				_code = 400;
 				return (_code);
 			}
-			unprocessedBuffer += _buffer;
+			unprocessedBuffer = _buffer;
 		}
 		_buffer.clear();
 		return (_checkIfRequestEnded(serverConfigs));

@@ -23,7 +23,7 @@
 #  define WEBSERV_ROOT		/usr/local/var/www
 # endif
 
-# define RECV_BUFFER_SIZE	8192	// 8KB
+# define RECV_BUFFER_SIZE	2	// 8KB
 //# define RECV_BUFFER_SIZE	16384	// 16KB
 //# define RECV_BUFFER_SIZE	32768	// 32KB
 
