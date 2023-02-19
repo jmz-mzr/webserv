@@ -31,9 +31,9 @@ ConfigParser::ConfigParser(const std::string& path)
 			LOG_WARN("Cannot open \"" << _filePath << "\"");
 			THROW_LOGIC("Loading configuration failed");
 		}
-		// LOG_INFO("New ConfigParser instance with default configuration");
+		LOG_INFO("Default configuration file opened [" << _filePath << "]");
 	} else {
-		// LOG_INFO("New ConfigParser instance with provided configuration");
+		LOG_INFO("Provided configuration file opened [" << _filePath << "]");
 	}
 }
 
@@ -66,7 +66,7 @@ const uint32_t&						ConfigParser::getCurrentLineNb() const
 bool								ConfigParser::_readline()
 {
 	std::getline(_file, _lineBuffer);
-	if (_file.fail())
+	if (_file.bad())
 		THROW_FATAL("Error while reading configuration file");
 	_currentLineNb++;
 	return ((_lexer.isEof = _file.eof()) || !_lineBuffer.empty());

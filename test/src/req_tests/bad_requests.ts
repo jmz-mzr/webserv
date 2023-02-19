@@ -90,7 +90,6 @@ for (let param in testSuite.fixture) {
 	testFixture[param] = testSuite.fixture[param];
 }
 
-
 for (let testUnit of testSuite.units) {
 	for (let param in testUnit) {
 		testFixture[param] = testUnit[param];
@@ -98,7 +97,7 @@ for (let testUnit of testSuite.units) {
 
 	let socket: net.Socket;
 	if (testFixture.port) {
-		socket = net.connect(testFixture.port, testFixture.host);
+		socket = net.createConnection(testFixture.port, testFixture.host);
 	} else {
 		throw new Error('No port specified');
 	}
@@ -118,6 +117,7 @@ for (let testUnit of testSuite.units) {
 			output += `\x1b[31mFAIL\x1b[0m Expected: ${testUnit.expectedCode} | Actual: \x1b[31m${response.statusCode}\x1b[0m`;
 		}
 		console.log(output);
+		// console.log(data.toString());
 		socket.end();
 	});
 	socket.on('error', () => {

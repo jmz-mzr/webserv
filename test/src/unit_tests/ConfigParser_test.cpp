@@ -1,4 +1,5 @@
 #include "config/ConfigParser.hpp"
+#include "core/Webserv.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/global_defs.hpp"
 
@@ -12,8 +13,19 @@ TEST(ConfigParsingInit, ctorEmptyArgument) {
 }
 
 TEST(ConfigParsingInit, emptyFile) {
-	ConfigParser test("test/data/config/empty");
-	ASSERT_THROW(test.parseFile(), FatalErrorException);
+	webserv::Webserv	webserv;
+	int argc = 2;
+	char empty[] = "";
+	char file[] = "test/data/config/empty";
+	char *strs[2] = { empty, file };
+	char **argv = strs;
+
+	ASSERT_THROW(webserv.init(argc, argv), LogicErrorException);
+}
+
+TEST(ConfigParsingInit, emptyline) {
+	ConfigParser test("test/data/config/emptyline");
+	ASSERT_NO_THROW(test.parseFile());
 }
 
 class ConfigParsing : public testing::TestWithParam<std::string> {

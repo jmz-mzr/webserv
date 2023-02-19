@@ -92,5 +92,5 @@ bld/
 package-lock.json
 node_modules/
 .node_modules/
-built/*
+build/
 build.json

@@ -121,6 +121,8 @@ namespace	webserv
 	{
 		std::list<Config>::const_iterator	configIter;
 
+		if (config.empty())
+			THROW_LOGIC("No server defined");
 		configIter = config.begin();
 		while (configIter != config.end()) {
 			_addServer(*configIter);
