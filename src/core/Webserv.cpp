@@ -186,7 +186,7 @@ namespace	webserv
 
 	void	Webserv::_addClient(const int serverFd, const Server& server)
 	{
-		struct pollfd		newPollFd;
+		struct pollfd	newPollFd;
 
 		try {
 			_clients.push_back(Client(serverFd, server.getConfigs()));
@@ -196,7 +196,8 @@ namespace	webserv
 		}
 		try {
 			newPollFd.fd = _clients.back().getSocket().getFd();
-			newPollFd.events = POLLIN | POLLOUT;
+//			newPollFd.events = POLLIN | POLLOUT;
+			newPollFd.events = POLLIN;
 			newPollFd.revents = 0;
 			_pollFds.push_back(newPollFd);
 		} catch (const std::exception& e) {
@@ -329,16 +330,18 @@ namespace	webserv
 
 		if (response.getResponseCode() == 408)
 			return (false);
-		if ((pollFd->revents & POLLOUT) != 0 && client.hasResponseReady()) {
+		if (client.hasResponseReady() && (pollFd->revents & POLLOUT) != 0) {
 			if (!client.sendResponse(_ioFlags))
 				return (false);
 			if (response.isPartialResponse())
 				return (true);
 			if (!response.isKeepAlive())
 				return (false);
+			pollFd->events &= ~POLLOUT;
 			client.clearResponse();
 			client.clearRequest();	// not here?
-		}
+		} else if (client.hasResponseReady() && !(pollFd->events & POLLOUT))
+			pollFd->events |= POLLOUT;
 //		if (!client.isKeepAlive())
 //			return (false);
 		return (true);
