@@ -28,7 +28,7 @@ namespace	webserv
 		while (configIt != src.getConfigs().end()) {
 			_locations.insert(std::make_pair(configIt->first,
 								Location(*this, configIt->second,
-								configIt->first))).first->second;
+								configIt->first)));
 			configIt++;
 		}
 		LOG_INFO("New ServerConfig instance");

@@ -1183,11 +1183,11 @@ namespace	webserv
 				startValue = i;
 			++i;
 		}
-		if (buffer[i] && buffer[i] != '\n' && buffer[i] != '\r')
+		if ((buffer[i] && buffer[i] != '\n' && buffer[i] != '\r')
+				|| (buffer[i] == '\r' && buffer[i + 1] != '\n')) {
 			_logError(request, "Wrong character in CGI header:", "", buffer);
-		if (buffer[i] == '\r' && buffer[i + 1] != '\n')
 			return (false);
-		if (startValue) {
+		} else if (startValue) {
 			while (buffer[i - 1] == ' ' || buffer[i - 1] == '\t')
 				--i;
 			fieldValue.assign(&buffer[startValue], i - startValue);
@@ -1207,15 +1207,60 @@ namespace	webserv
 		return (true);
 	}
 
+	bool	Response::_parseCgiLocalLocation(const Request& request,
+												const std::string& fieldValue)
+	{
+		if (checkUriPathAbs(fieldValue.c_str()) == std::string::npos) {
+			_logError(request, "Incorrect CGI's Location header value:", "",
+					fieldValue.c_str());
+			return (false);
+		}
+		_location = fieldValue;
+		return (true);
+	}
+
+	bool	Response::_checkCgiClientLocation(const std::string& fieldValue)
+	{
+		const char*	str = fieldValue.c_str();
+		size_t		i = checkUriScheme(str, ":");
+
+		if (i == std::string::npos)
+			return (false);
+		str += i + 1;
+		i = checkUriAuthority(str, "/?");
+		if (i == std::string::npos)
+			return (false);
+		str += i;
+		i = checkUriPath(str, (i != 0), false, "?#");
+		if (i == std::string::npos)
+			return (false);
+		str += i;
+		if (*str == '?') {
+			i = checkUriQuery(++str, "#");
+			if (i == std::string::npos)
+				return (false);
+			str += i;
+		}
+		if (*str == '#')
+			i = checkUriFragment(++str, "");
+		if (i == std::string::npos)
+			return (false);
+		return (true);
+	}
+
 	bool	Response::_parseCgiLocation(const Request& request,
 										const std::string& fieldValue)
 	{
-		// TO DO: Check the Location parsing as with the request URI
-		// (see RFC 3875, RFC 3986)
-
 		if (!_location.empty()) {
 			_logError(request, "This CGI header was returned twice:", "",
 					"Location");
+			return (false);
+		}
+		if (fieldValue[0] == '/')
+			return (_parseCgiLocalLocation(request, fieldValue));
+		if (!_checkCgiClientLocation(fieldValue)) {
+			_logError(request, "Incorrect CGI's Location header value:", "",
+					fieldValue.c_str());
 			return (false);
 		}
 		_location = fieldValue;
