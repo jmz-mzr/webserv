@@ -332,6 +332,8 @@ namespace	webserv
 		_parse(_buffer);
 		if (_code != 0)
 			return (_code);
+		else
+			_hasReceivedHeaders = true;
 		// If the encoding is chunked, we parse the body
 		if (_headers["Transfer-Encoding"] == "chunked" && _isChunkEnd())
 		{
@@ -361,6 +363,8 @@ namespace	webserv
 			_parse(_buffer);
 			if (_code != 0)
 				return (_code);
+			else
+				_hasReceivedHeaders = true;
 			_body = _buffer.substr(_bufferIndex,
 					static_cast<unsigned long> (_bodySize));
 			_tmpFileStream << _body;
@@ -373,7 +377,6 @@ namespace	webserv
 
 	int	Request::_checkIfRequestEnded(const server_configs& serverConfigs)
 	{
-		LOG_DEBUG("values " << _hasBody << _hasReceivedBody << _hasReceivedHeaders);
 		if (( (_hasBody && _hasReceivedBody && _hasReceivedHeaders)
 		|| (!_hasBody && _hasReceivedHeaders) )
 		&& (!_serverConfig || !_location)) {
@@ -386,6 +389,7 @@ namespace	webserv
 			}
 			// After header sent, check content length header, etc
 			// And check them when _isTerminatedRequest?
+			_printRequestInfo();
 			return (_checkHeaders());
 		}
 		return (_code);
@@ -409,18 +413,15 @@ namespace	webserv
 			LOG_INFO("Nothing to parse : received nothing");
 			return (0);
 		}
-		if (_buffer.empty())
-		{
-			LOG_ERROR("Nothing to parse");
-			return (400);
-		}
 		//unprocessedBuffer.clear();
 		//checking if the request is received in its entirety
 		//return 0;
 		size_t i = _fullRequestReceived();
+		_parse(_buffer);
+		if (_code != 0)
+			return(_code);
 		if (i != std::string::npos)
 		{
-			LOG_INFO("---START PARSING REQUEST---");
 			if (_tmpFilename.empty())
 			{
 				if (_generateTmpFile() != 0)
@@ -431,13 +432,11 @@ namespace	webserv
 			//parsing when all the headers are received (RFC)
 			if (_buffer.find("Content-Length: ") == std::string::npos && !_hasBody)
 			{
-				LOG_INFO("No content length");
 				if (_parseNoCLen(unprocessedBuffer, i, recvBuffer) != 0)
 					return (_code);
 			}
 			else
 			{
-				LOG_INFO("With content length");
 				if (_parseWithCLen(unprocessedBuffer, i) != 0)
 					return (_code);
 			}
@@ -445,17 +444,7 @@ namespace	webserv
 		// if we don't have received all the headers yet
 		// we save the request in unprocessedBuffer
 		else
-		{
-			LOG_INFO("buffer received : " << recvBuffer);
-			LOG_INFO("max size receivable is : " << RECV_BUFFER_SIZE);
-			/*if (_buffer.length() < RECV_BUFFER_SIZE - 1 || !recvBuffer || !recvBuffer[0])
-			{
-				LOG_ERROR("Incomplete request");
-				_code = 400;
-				return (_code);
-			}*/
 			unprocessedBuffer = _buffer;
-		}
 		_buffer.clear();
 		return (_checkIfRequestEnded(serverConfigs));
 	}

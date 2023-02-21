@@ -121,7 +121,8 @@ namespace	webserv
 		int		_generateTmpFile();
 		void	_closeTmpFile();
 		void	_deleteTmpFile();
-
+	
+		void	_printRequestInfo();
 		void	_logError(const char* errorAt) const;
 
 		// TO DO: Initialize them, and reset them in clearRequest()

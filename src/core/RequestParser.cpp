@@ -245,6 +245,10 @@ namespace webserv
 		size_t  i;
 		std::string str;
 
+		if (line.empty())
+		{
+			return ;
+		}
 		i = line.find_first_of(' ');
 		_method.assign(line, 0, i);
 		_parsePath(line);
@@ -292,6 +296,7 @@ namespace webserv
 		_bufferIndex = 0;
 		_buffer = str;
 		_parseMethod(_readLine());
+		LOG_DEBUG("code : " << _code);
 		while((line = _readLine()) != "" && _code == 0 &&
 			_bufferIndex != std::string::npos)
 		{
@@ -309,8 +314,10 @@ namespace webserv
 			if (_findHeader(key))
 				_setHeader(key, value);
 		}
-		if (_code == 0)
-			_hasReceivedHeaders = true;
+	}
+
+	void Request::_printRequestInfo()
+	{
 		LOG_INFO("method : " << _method);
 		LOG_INFO("_uri : " << _uri);
 		LOG_INFO("parsed Request headers : ");
