@@ -295,7 +295,7 @@ namespace webserv
 		while((line = _readLine()) != "" && _code == 0 &&
 			_bufferIndex != std::string::npos)
 		{
-			if (line == "\r")
+			if (line == "\r" || line == "\n")
 				break;
 			LOG_DEBUG("Parsing line : \'" << line << "\'");
 			key = _getKey(line);
@@ -309,7 +309,7 @@ namespace webserv
 			if (_findHeader(key))
 				_setHeader(key, value);
 		}
-		if (_code != 0)
+		if (_code == 0)
 			_hasReceivedHeaders = true;
 		LOG_INFO("method : " << _method);
 		LOG_INFO("_uri : " << _uri);

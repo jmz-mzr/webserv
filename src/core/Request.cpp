@@ -373,6 +373,7 @@ namespace	webserv
 
 	int	Request::_checkIfRequestEnded(const server_configs& serverConfigs)
 	{
+		LOG_DEBUG("values " << _hasBody << _hasReceivedBody << _hasReceivedHeaders);
 		if (( (_hasBody && _hasReceivedBody && _hasReceivedHeaders)
 		|| (!_hasBody && _hasReceivedHeaders) )
 		&& (!_serverConfig || !_location)) {
@@ -398,8 +399,11 @@ namespace	webserv
 
 		//retrieving buffer from previous read
 	
-		_buffer = (unprocessedBuffer + recvBuffer);
+		_buffer = unprocessedBuffer; 
+		if (recvBuffer)
+			_buffer += recvBuffer;
 		LOG_DEBUG("Request content : \n[" << _buffer << "]");
+		unprocessedBuffer = _buffer;
 		if ((!recvBuffer || !recvBuffer[0]) && unprocessedBuffer.empty())
 		{
 			LOG_INFO("Nothing to parse : received nothing");
@@ -410,8 +414,9 @@ namespace	webserv
 			LOG_ERROR("Nothing to parse");
 			return (400);
 		}
-		unprocessedBuffer.clear();
+		//unprocessedBuffer.clear();
 		//checking if the request is received in its entirety
+		//return 0;
 		size_t i = _fullRequestReceived();
 		if (i != std::string::npos)
 		{
@@ -426,11 +431,13 @@ namespace	webserv
 			//parsing when all the headers are received (RFC)
 			if (_buffer.find("Content-Length: ") == std::string::npos && !_hasBody)
 			{
+				LOG_INFO("No content length");
 				if (_parseNoCLen(unprocessedBuffer, i, recvBuffer) != 0)
 					return (_code);
 			}
 			else
 			{
+				LOG_INFO("With content length");
 				if (_parseWithCLen(unprocessedBuffer, i) != 0)
 					return (_code);
 			}
@@ -441,12 +448,12 @@ namespace	webserv
 		{
 			LOG_INFO("buffer received : " << recvBuffer);
 			LOG_INFO("max size receivable is : " << RECV_BUFFER_SIZE);
-			if (_buffer.length() < RECV_BUFFER_SIZE - 1 || !recvBuffer || !recvBuffer[0])
+			/*if (_buffer.length() < RECV_BUFFER_SIZE - 1 || !recvBuffer || !recvBuffer[0])
 			{
 				LOG_ERROR("Incomplete request");
 				_code = 400;
 				return (_code);
-			}
+			}*/
 			unprocessedBuffer = _buffer;
 		}
 		_buffer.clear();
