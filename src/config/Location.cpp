@@ -9,18 +9,26 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Location::Location(const Location& src)
-			: _locationName(src._locationName)
-			, _maxBodySize(src._maxBodySize)
-			, _limitExcept(src._limitExcept)
-			, _return(src._return)
-			, _errorPages(src._errorPages)
-			, _root(src._root)
-			, _alias(src._alias)
-			, _index(src._index)
-			, _autoIndex(src._autoIndex)
-			, _cgiPass(src._cgiPass)
-			, _locations(src._locations)
+	Location::Location(const Location& src1, const Config& src2,
+						const std::string& path)
+			: _locationName(path)
+			, _maxBodySize(src1._maxBodySize)
+			, _limitExcept(src2.getLimitExcept().empty()
+							? src1._limitExcept
+							: src2.getLimitExcept())
+			, _return((src2.getReturnPair().first == -1)
+						? std::make_pair(src1._return.first,
+										src1._return.second)
+						: std::make_pair(src2.getReturnPair().first,
+										src2.getReturnPair().second))
+			, _errorPages(src1._errorPages)
+			, _root(src2.getRoot().empty() ? src1._root : src2.getRoot())
+			, _alias(src2.getAlias().empty() ? src1._alias : src2.getAlias())
+			, _index(src2.getIndex().empty() ? src1._index : src2.getIndex())
+			, _autoIndex(src2.isAutoIndex() || src1._autoIndex)
+			, _cgiPass(src2.getCgiPass().empty()
+						? src1._cgiPass
+						: src2.getCgiPass())
 	{ }
 
 	Location::Location(const ServerConfig& src1, const Config& src2,
@@ -35,7 +43,16 @@ namespace	webserv
 			, _index(src2.getIndex())
 			, _autoIndex(src2.isAutoIndex())
 			, _cgiPass(src2.getCgiPass())
-	{ }
+	{
+		typedef Config::config_map::const_iterator	map_it;
+		
+		map_it configIt = src2.getConfigs().begin();
+		while (configIt != src2.getConfigs().end()) {
+			_locations.insert(std::make_pair(configIt->first,
+						Location(*this, configIt->second, configIt->first)));
+			configIt++;
+		}
+	}
 
 	/**************************************************************************/
 	/*                            MEMBER FUNCTIONS                            */

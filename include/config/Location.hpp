@@ -24,7 +24,8 @@ namespace	webserv
 
 		Location(const ServerConfig& src1, const Config& src2,
 					const std::string& path);
-		Location(const Location& src);
+		Location(const Location& src1, const Config& src2,
+					const std::string& path);
 		~Location() { }
 
 		const std::string&		getLocationName() const

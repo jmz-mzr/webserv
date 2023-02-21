@@ -26,13 +26,9 @@ namespace	webserv
 			_serverNames.insert("");
 		map_it configIt = src.getConfigs().begin();
 		while (configIt != src.getConfigs().end()) {
-			map_it configIt2 = configIt->second.getConfigs().begin();
-			while (configIt2 != configIt->second.getConfigs().end()) {
-				_locations.insert(std::make_pair(configIt2->first,
-							Location(*this, configIt2->second,
-								configIt2->first)));
-				configIt2++;
-			}
+			_locations.insert(std::make_pair(configIt->first,
+								Location(*this, configIt->second,
+								configIt->first))).first->second;
 			configIt++;
 		}
 		LOG_INFO("New ServerConfig instance");

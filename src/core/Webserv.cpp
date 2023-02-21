@@ -135,24 +135,6 @@ namespace	webserv
 		std::cerr << "Usage: ./webserv [CONFIG FILE]" << std::endl;
 	}
 
-	// struct print {
-	// 	print() : depth(0) {}
-	// 	void operator()(const Config& confs)
-	// 	{
-	// 		for (int i = 0; i < depth; i++)
-	// 			std::cout << "\t";
-	// 		std::cout << confs;
-	// 		depth++;
-	// 		for (std::map<std::string, Config>::const_iterator it = confs.getConfigs().begin();
-	// 			it != confs.getConfigs().end();
-	// 			it++) {
-	// 			this->operator()(it->second);
-	// 			}
-	// 		depth--;
-	// 	}
-	// 	int depth;
-	// };
-
 	void	Webserv::init(int argc, char** argv)
 	{
 		std::string		webservRoot(XSTR(WEBSERV_ROOT));

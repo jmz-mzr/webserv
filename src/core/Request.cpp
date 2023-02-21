@@ -309,18 +309,18 @@ namespace	webserv
 
 	int	Request::_generateTmpFile()
 	{
-				std::stringstream ss;
-				struct timeval	time_now;
+		std::stringstream ss;
+		struct timeval	time_now;
 
-				ss << gettimeofday(&time_now, NULL);
-				_tmpFilename = "body_" + ss.str();
-				//TODO : figure out where to close the streams
-				_tmpFileStream.open(_tmpFilename.c_str(), std::ofstream::binary);
-				if (!_tmpFileStream.is_open())
-					return (500);
-				_requestFileStream.open(_tmpFilename.c_str(), std::ifstream::binary);
-				if (!_requestFileStream.is_open())
-					return (500);
+		ss << gettimeofday(&time_now, NULL);
+		_tmpFilename = "body_" + ss.str();
+		//TODO : figure out where to close the streams
+		_tmpFileStream.open(_tmpFilename.c_str(), std::ofstream::binary);
+		if (!_tmpFileStream.is_open())
+			return (500);
+		_requestFileStream.open(_tmpFilename.c_str(), std::ifstream::binary);
+		if (!_requestFileStream.is_open())
+			return (500);
 		return (0);
 	}
 
@@ -399,8 +399,6 @@ namespace	webserv
 								const char* recvBuffer,
 								const server_configs& serverConfigs)
 	{
-
-
 		//retrieving buffer from previous read
 	
 		_buffer = unprocessedBuffer; 
