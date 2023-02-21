@@ -46,15 +46,13 @@ CORE		=	AcceptSocket.cpp \
 				Socket.cpp \
 				Webserv.cpp
 UTILS		=	createRandomFilename.cpp \
-				ft_charcmp_icase.cpp \
 				ft_inet_ntoa.cpp \
 				ft_sleep.cpp \
-				ft_str_tolower.cpp \
-				ft_strcmp_icase.cpp \
-				sockaddr_in.cpp \
 				Logger.cpp \
+				sockaddr_in.cpp \
+				string_utils.cpp \
 				trim.cpp \
-				string_utils.cpp
+				checkUri.cpp
 SRC			=	main.cpp $(CORE) $(CONFIG) $(UTILS)
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)

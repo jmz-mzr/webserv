@@ -135,6 +135,9 @@ namespace	webserv
 										const std::string& fieldValue);
 		bool	_parseCgiLocation(const Request& request,
 									const std::string& fieldValue);
+		bool	_parseCgiLocalLocation(const Request& request,
+										const std::string& fieldValue);
+		bool	_checkCgiClientLocation(const std::string& fieldValue);
 		bool	_parseCgiStatus(const Request& request, CgiHandler& cgi,
 								const std::string& fieldValue) const;
 		bool	_parseCgiContentLength(const Request& request,
