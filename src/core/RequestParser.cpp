@@ -145,6 +145,11 @@ namespace webserv
 			LOG_ERROR("CTL characters in value : " << ret);
 			_code = 400;
 		}
+		if (ret.empty() || ret == "\r")
+		{
+			_code = 400;
+			LOG_ERROR("No header value");
+		}
 		return ret;
 	}
 
@@ -310,7 +315,7 @@ namespace webserv
 			value = _getValue(line);
 			if (value == "")
 				break ;
-			LOG_DEBUG("value found : " << value);
+			LOG_DEBUG("value found : [" << value << "]");
 			if (_findHeader(key))
 				_setHeader(key, value);
 		}
