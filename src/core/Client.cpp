@@ -28,7 +28,7 @@ namespace	webserv
 										_serverConfigs(src._serverConfigs),
 										_socket(src._socket),
 										_lastUpdateTime(std::time(0)),
-										_request(src._request)
+										_request(_socket)
 	{
 		// NOTE: Except at Client creation (inserted in the client list),
 		// the Client should not be copied
