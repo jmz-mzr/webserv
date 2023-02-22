@@ -21,10 +21,11 @@ namespace	webserv
 												_serverConfig(0),
 												_location(0),
 												_code(0),
-												_isKeepAlive(false),
+												_isKeepAlive(true),
 												_hasReceivedHeaders(false),
 												_hasReceivedBody(false),
 												_hasBody(false),
+												_waitNextRequest(false),
 												_bodySize(-1),
 												_isChunkedRequest(false),
 												_isTerminatedRequest(false),
@@ -39,7 +40,7 @@ namespace	webserv
 											_serverConfig(0),
 											_location(0),
 											_code(0),
-											_isKeepAlive(false),
+											_isKeepAlive(true),
 											_hasReceivedHeaders(false),
 											_hasReceivedBody(false),
 											_hasBody(false),
@@ -334,7 +335,7 @@ namespace	webserv
 		return (0);
 	}
 
-	int	Request::_parseNoCLen(std::string unprocessedBuffer, size_t lfpos,
+	int	Request::_parseNoCLen(std::string& unprocessedBuffer, size_t lfpos,
 							const char* recvBuffer)
 	{
 		//Discard excess buffer
@@ -356,7 +357,7 @@ namespace	webserv
 		return (_code);
 	}
 
-	int	Request::_parseWithCLen(std::string unprocessedBuffer, size_t lfpos)
+	int	Request::_parseWithCLen(std::string& unprocessedBuffer, size_t lfpos)
 	{
 		// the request has a body because Content Length header exists
 		_hasBody = true;
@@ -409,9 +410,10 @@ namespace	webserv
 								const char* recvBuffer,
 								const server_configs& serverConfigs)
 	{
-		if (_isKeepAlive && recvBuffer[0] == '\r')
+		if (_waitNextRequest && recvBuffer[0] == '\r')
 			return (0);
-		_isKeepAlive = false;
+		else if (_waitNextRequest)
+			_waitNextRequest = false;
 		//retrieving buffer from previous read
 		_buffer = unprocessedBuffer; 
 		if (recvBuffer)
@@ -455,7 +457,6 @@ namespace	webserv
 				_host = _headers["Host"];
 				_requestMethod = _method;
 				unprocessedBuffer.clear();
-				_isKeepAlive = true;
 			}
 		}
 		// if we don't have received all the headers yet
@@ -561,6 +562,7 @@ namespace	webserv
 		_contentType.clear();
 		_host.clear();
 		_isKeepAlive = true;
+		_waitNextRequest = true;
 		_initHeaders();
 		_hasReceivedHeaders = false;
 		_bodySize = -1;

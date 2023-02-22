@@ -79,28 +79,28 @@ namespace	webserv
 		Request&	operator=(const Request& rhs);
 
 		void			_initHeaders();
-		bool			_findHeader(std::string key);
-		void    		_setHeader(std::string key, std::string value);
-		void			_parse(std::string str);
-		void        	_parseMethod(std::string line);
-		void        	_parsePath(std::string line);
-		void			_checkVersion(std::string line);
+		bool			_findHeader(const std::string& key);
+		void    		_setHeader(const std::string& key, const std::string& value);
+		void			_parse(const std::string& str);
+		void        	_parseMethod(const std::string& line);
+		void        	_parsePath(const std::string& line);
+		void			_checkVersion(const std::string& line);
 		std::string		_readLine();
-		std::string		_getKey(std::string line);
-		std::string		_getValue(std::string line);
+		std::string		_getKey(const std::string& line);
+		std::string		_getValue(const std::string& line);
 //		std::string		_formatValue(std::string str);
-		std::string		_decodeUri(std::string uri);
-		std::string		_sanitizeUri(std::string uri);
-		bool			_checkHeader(std::string str);
+		std::string		_decodeUri(const std::string& uri);
+		std::string		_sanitizeUri(const std::string& uri);
+		bool			_checkHeader(const std::string& str);
 		void			_setLanguage();
 		bool			_isChunkEnd();
 		size_t			_fullRequestReceived();
 		int				_parseChunkedRequest(std::string& unprocessedBuffer,
 										const char* buffer);
 
-		bool			_strIsUpper(std::string str);
+		bool			_strIsUpper(const std::string& str);
 		bool			_isCtlCharacter(int c);
-		bool			_isNotCtlString(std::string s);
+		bool			_isNotCtlString(const std::string& s);
 
 		bool	_loadServerConfig(const server_configs& serverConfigs);
 		bool	_loadLocation(const ServerConfig& serverConfig);
@@ -116,9 +116,9 @@ namespace	webserv
 		bool	_parseRequestTarget(const std::string& requestTarget);
 		void	_parseInternalTarget(const std::string& redirectTo);
 
-		int		_parseNoCLen(std::string unprocessedBuffer, size_t lfpos,
+		int		_parseNoCLen(std::string& unprocessedBuffer, size_t lfpos,
 							const char* RecvBuffer);
-		int		_parseWithCLen(std::string unprocessedBuffer, size_t lfpos);
+		int		_parseWithCLen(std::string& unprocessedBuffer, size_t lfpos);
 		int		_checkIfRequestEnded(const server_configs& serverConfigs);
 
 		int		_generateTmpFile();
@@ -187,6 +187,7 @@ namespace	webserv
 		bool				_hasReceivedHeaders;
 		bool				_hasReceivedBody;
 		bool				_hasBody;
+		bool				_waitNextRequest;
 
 		std::ofstream		_tmpFileStream;
 		std::ifstream		_requestFileStream;

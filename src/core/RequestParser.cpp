@@ -25,14 +25,14 @@ namespace webserv
 		_headers["User-Agent"] = "";
 	}
 
-	bool    Request::_findHeader(std::string key)
+	bool    Request::_findHeader(const std::string& key)
 	{
 		if (_headers.count(key))
 			return true;
 		return false;
 	}
 
-	void    Request::_setHeader(std::string key, std::string value)
+	void    Request::_setHeader(const std::string& key, const std::string& value)
 	{
 		_headers[key] = value;
 	}
@@ -55,7 +55,7 @@ namespace webserv
 		return line;
 	}
 
-	bool	Request::_checkHeader(std::string str)
+	bool	Request::_checkHeader(const std::string& str)
 	{
 		/*
 		The value of the HTTP request header you want to set can only contain:
@@ -81,7 +81,7 @@ namespace webserv
 		return	true;
 	}
 
-	std::string        Request::_getKey(std::string line)
+	std::string        Request::_getKey(const std::string& line)
 	{
 		size_t i;
 		std::string ret;
@@ -110,7 +110,7 @@ namespace webserv
 		return ((c >= 0 && c <= 31) || c == 127);
 	}
 
-	bool				Request::_isNotCtlString(std::string s)
+	bool				Request::_isNotCtlString(const std::string& s)
 	{
 		for (size_t i = 0; i < s.length() - 1; i++)
 		{
@@ -124,7 +124,7 @@ namespace webserv
 		return true;
 	}
 
-	bool				Request::_strIsUpper(std::string str)
+	bool				Request::_strIsUpper(const std::string& str)
 	{
 		for (size_t i = 0; i < str.length() - 1; i++)
 		{
@@ -134,7 +134,7 @@ namespace webserv
 		return true;
 	}
 
-	std::string       	Request::_getValue(std::string line)
+	std::string       	Request::_getValue(const std::string& line)
 	{
 		size_t i;
 		std::string ret;
@@ -163,7 +163,7 @@ namespace webserv
 		return ret;
 	}
 
-	std::string		Request::_sanitizeUri(std::string uri)
+	std::string		Request::_sanitizeUri(const std::string& uri)
 	{
 		size_t		i = 0;
 		size_t		j = 0;
@@ -183,7 +183,7 @@ namespace webserv
 		return	res_uri;
 	}
 
-	std::string		Request::_decodeUri(std::string uri)
+	std::string		Request::_decodeUri(const std::string& uri)
 	{
 		size_t i = 0;
 		size_t j = 0;
@@ -220,7 +220,7 @@ namespace webserv
 		return tmp_uri;
 	}
 
-	void        Request::_parsePath(std::string line)
+	void        Request::_parsePath(const std::string& line)
 	{
 		size_t j ;
 		std::string str;
@@ -255,7 +255,7 @@ namespace webserv
 		_uri = _decodeUri(_raw_uri);
 	}
 
-	void        Request::_parseMethod(std::string line)
+	void        Request::_parseMethod(const std::string& line)
 	{
 		size_t  i;
 		std::string str;
@@ -277,7 +277,7 @@ namespace webserv
 	}
 
 	//Check Request HTTP Version (accept 1.0 and 1.1)
-	void		Request::_checkVersion(std::string line)
+	void		Request::_checkVersion(const std::string& line)
 	{
 		size_t 		j;
 		std::string	str;
@@ -308,7 +308,7 @@ namespace webserv
 		}
 	}
 
-	void        Request::_parse(std::string str)
+	void        Request::_parse(const std::string& str)
 	{
 		std::string line;
 		std::string key;
