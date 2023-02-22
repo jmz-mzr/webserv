@@ -21,7 +21,7 @@ namespace	webserv
 												_serverConfig(0),
 												_location(0),
 												_code(0),
-												_isKeepAlive(true),
+												_isKeepAlive(false),
 												_hasReceivedHeaders(false),
 												_hasReceivedBody(false),
 												_hasBody(false),
@@ -39,7 +39,7 @@ namespace	webserv
 											_serverConfig(0),
 											_location(0),
 											_code(0),
-											_isKeepAlive(true),
+											_isKeepAlive(false),
 											_hasReceivedHeaders(false),
 											_hasReceivedBody(false),
 											_hasBody(false),
@@ -82,6 +82,7 @@ namespace	webserv
 
 	void	Request::_logError(const char* errorAt) const
 	{
+		return ;
 		LOG_ERROR(errorAt << ", client: " << _clientSocket.getIpAddr()
 				<< ":" << _clientSocket.getPort() << ", server: "
 				<< ft_inet_ntoa(_serverConfig->getListenPair().sin_addr)
@@ -111,9 +112,18 @@ namespace	webserv
 		return (0);
 	}
 
+	bool	Request::_methodIsAllowed() const
+	{
+		if (_requestMethod.empty() || 
+		(_requestMethod != "GET" && _requestMethod != "DELETE"
+		&& _requestMethod != "POST" && _requestMethod != "HEAD"))
+			return false;
+		return true;
+	}
+
 	int	Request::_checkMethod() const
 	{
-		if (_requestMethod.empty())
+		if (!(_methodIsAllowed()))
 			return (405);
 		if (!_location->getLimitExcept().empty()
 				&& !_location->getLimitExcept().count(_requestMethod)) {
@@ -399,8 +409,10 @@ namespace	webserv
 								const char* recvBuffer,
 								const server_configs& serverConfigs)
 	{
+		if (_isKeepAlive && recvBuffer[0] == '\r')
+			return (0);
+		_isKeepAlive = false;
 		//retrieving buffer from previous read
-	
 		_buffer = unprocessedBuffer; 
 		if (recvBuffer)
 			_buffer += recvBuffer;
@@ -437,6 +449,13 @@ namespace	webserv
 			{
 				if (_parseWithCLen(unprocessedBuffer, i) != 0)
 					return (_code);
+			}
+			if (_hasReceivedHeaders)
+			{
+				_host = _headers["Host"];
+				_requestMethod = _method;
+				unprocessedBuffer.clear();
+				_isKeepAlive = true;
 			}
 		}
 		// if we don't have received all the headers yet
@@ -535,12 +554,14 @@ namespace	webserv
 		_location = 0;
 		_requestLine.clear();
 		_requestMethod.clear();
+		_buffer.clear();
 		_uri.clear();
 		_query.clear();
 		_extension.clear();
 		_contentType.clear();
 		_host.clear();
 		_isKeepAlive = true;
+		_initHeaders();
 		_hasReceivedHeaders = false;
 		_bodySize = -1;
 		_isChunkedRequest = false;

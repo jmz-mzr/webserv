@@ -320,8 +320,8 @@ namespace	webserv
 			if (!response.isKeepAlive())
 				return (false);
 			pollFd->events &= ~POLLOUT;
-			client.clearResponse();
 			client.clearRequest();	// not here?
+			client.clearResponse();
 		} else if (client.hasResponseReady() && !(pollFd->events & POLLOUT))
 			pollFd->events |= POLLOUT;
 //		if (!client.isKeepAlive())

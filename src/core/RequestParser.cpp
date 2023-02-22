@@ -124,6 +124,16 @@ namespace webserv
 		return true;
 	}
 
+	bool				Request::_strIsUpper(std::string str)
+	{
+		for (size_t i = 0; i < str.length() - 1; i++)
+		{
+			if (str[i] < 'A' || str[i] > 'Z')
+				return false;
+		}
+		return true;
+	}
+
 	std::string       	Request::_getValue(std::string line)
 	{
 		size_t i;
@@ -256,6 +266,12 @@ namespace webserv
 		}
 		i = line.find_first_of(' ');
 		_method.assign(line, 0, i);
+		if (!_strIsUpper(_method))
+		{
+			LOG_ERROR("Bad method syntax : " << _method);
+			_code = 400;
+			return ;
+		}
 		_parsePath(line);
 		_checkVersion(line);
 	}

@@ -98,6 +98,7 @@ namespace	webserv
 		int				_parseChunkedRequest(std::string& unprocessedBuffer,
 										const char* buffer);
 
+		bool			_strIsUpper(std::string str);
 		bool			_isCtlCharacter(int c);
 		bool			_isNotCtlString(std::string s);
 
@@ -109,6 +110,8 @@ namespace	webserv
 		int		_checkHost() const;
 		int		_checkMaxBodySize() const;
 		int		_checkMethod() const;
+	
+		bool	_methodIsAllowed() const;
 
 		bool	_parseRequestTarget(const std::string& requestTarget);
 		void	_parseInternalTarget(const std::string& redirectTo);
