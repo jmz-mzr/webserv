@@ -85,8 +85,6 @@ namespace	webserv
 
 	bool	Client::isProcessingRequest() const
 	{
-		LOG_DEBUG("Request is terminated : " << hasRequestTerminated()
-		<< " Response Ready : " << hasResponseReady());
 		if (hasRequestTerminated() || hasResponseReady())
 			return (true);
 		return (false);

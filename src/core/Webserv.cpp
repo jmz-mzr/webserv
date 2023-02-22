@@ -256,22 +256,15 @@ namespace	webserv
 		int			clientFd = client.getSocket().getFd();
 		ssize_t		received;
 
-		_buffer[0] = '\0';
-
-		LOG_DEBUG("revents value : " << pollFd->revents
-		<< " POLLIN value :" << POLLIN);
 		if (client.hasTimedOut())
-			return (1);
+			return (-1);
 		if (client.isProcessingRequest()) {
 			LOG_DEBUG("Finish responding to the last request before receiving"
 					<< " this new client request (fd=" << clientFd << ")");
-			return (1);	// see "TO DO" for other options
+			return (0);	// see "TO DO" for other options
 		}
 		if (!(pollFd->revents & POLLIN))
-		{
-			LOG_DEBUG("Nothing to read");
-		   	return (1);
-		}
+			return (0);
 		received = recv(clientFd, _buffer, RECV_BUFFER_SIZE - 1, _ioFlags);
 		if (received > 0) {
 			_buffer[received] = '\0';
@@ -281,7 +274,7 @@ namespace	webserv
 		} else if (received == -1)
 			LOG_ERROR("Could not receive the client request "
 					<< " (fd=" << clientFd << "): " << strerror(errno));
-		return (received);
+		return (received > 0 ? received : -1);
 	}
 
 	bool	Webserv::_handleClientRequest(Client& client)
@@ -336,7 +329,6 @@ namespace	webserv
 		pollFd_iter		pollFd;
 		ssize_t			received;
 
-
 		while (client != _clients.end()) {
 			pollFd = _findPollFd(client->getSocket().getFd(), i, CLIENT);
 			if (pollFd != _pollFds.end()) {
@@ -346,7 +338,7 @@ namespace	webserv
 					client = _removeClient(client, pollFd);
 					continue ;
 				}
-				if (received <= 0 || !_handleClientResponse(*client, pollFd)) {
+				if (received < 0 || !_handleClientResponse(*client, pollFd)) {
 					client = _removeClient(client, pollFd);
 					continue ;
 				}
