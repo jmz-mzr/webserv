@@ -64,7 +64,7 @@ namespace	webserv
 		bool	isKeepAlive() const { return (_isKeepAlive); }
 		bool	isInternalRedirect() const { return (_isInternalRedirect); }
 
-		int		parseRequest(std::string& unprocessedBuffer, const char* buffer,
+		int		parseRequest(const char* buffer, 
 								const server_configs& serverConfigs);
 
 		void	setRequestMethod(const std::string& method);
@@ -95,9 +95,8 @@ namespace	webserv
 		void			_setLanguage();
 		bool			_isChunkEnd();
 		size_t			_fullRequestReceived();
-		int				_parseChunkedRequest(std::string& unprocessedBuffer,
-										const char* buffer);
-
+		int				_parseChunkedRequest();
+		
 		bool			_strIsUpper(const std::string& str);
 		bool			_isCtlCharacter(int c);
 		bool			_isNotCtlString(const std::string& s);
@@ -116,9 +115,8 @@ namespace	webserv
 		bool	_parseRequestTarget(const std::string& requestTarget);
 		void	_parseInternalTarget(const std::string& redirectTo);
 
-		int		_parseNoCLen(std::string& unprocessedBuffer, size_t lfpos,
-							const char* RecvBuffer);
-		int		_parseWithCLen(std::string& unprocessedBuffer, size_t lfpos);
+		int		_parseNoCLen(size_t lfpos);
+		int		_parseWithCLen(size_t lfpos);
 		int		_checkIfRequestEnded(const server_configs& serverConfigs);
 
 		int		_generateTmpFile();
