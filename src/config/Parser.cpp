@@ -59,7 +59,7 @@ Parser::Parser()
 		},
 		{
 			kMaxBodySize,
-			kDirective | kForbiddenDup | kArgcStrict | kServCtx,
+			kDirective | kForbiddenDup | kArgcStrict | kLocCtx | kServCtx,
 			1,
 			"client_max_body_size",
 			&Parser::_setMaxBodySize

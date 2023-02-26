@@ -1,0 +1,6 @@
+*.md
+.git*
+.editorconfig
+.vscode
+Dockerfile
+*.txt

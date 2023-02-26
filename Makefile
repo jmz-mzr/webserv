@@ -11,7 +11,7 @@ SUBDIR		=	config core utils
 INCLDIR		=	include
 BUILDIR		=	build/$(BUILD)
 DEPDIR		=	$(BUILDIR)/.deps
-TESTDIR		=	test
+TESTDIR		=	tests/cpp_gtest
 WORKDIR		:=	$(realpath .)
 
 ifeq ($(PREFIX),)

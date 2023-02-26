@@ -16,7 +16,7 @@
 # endif
 
 # ifndef CONF_FILE
-#  define CONF_FILE			/usr/local/etc/webserv/conf/test.conf
+#  define CONF_FILE			/usr/local/etc/webserv/default.conf
 # endif
 
 # ifndef WEBSERV_ROOT

@@ -1,5 +1,0 @@
-server {
-	location /error/ {
-		limit_except GET ERROR;
-	}
-}

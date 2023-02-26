@@ -1,6 +1,0 @@
-server {
-  location *.test {
-	location error {
-	}
-  }
-}
