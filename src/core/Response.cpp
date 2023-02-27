@@ -996,12 +996,12 @@ namespace	webserv
 		return (_unlinkFile(request));
 	}
 
-	void	Response::_setPostHeaders(const Request& request)
+	void	Response::_setPutPostHeaders(const Request& request)
 	{
 		struct stat		fileInfos;
 
 		_contentType = "text/html";
-		_contentLength = _getPostResponseBody(request).size();
+		_contentLength = _getPutPostResponseBody(request).size();
 		memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0)
 			_logError(request, "stat()", "failed");
@@ -1012,7 +1012,8 @@ namespace	webserv
 	}
 
 	int	Response::_moveRequestTmpFile(const Request& request,
-										const struct stat* fileInfos)
+										const struct stat* fileInfos,
+										bool fileExists)
 	{
 		// TO DO: Add an option to create the full path if it doesn't exist ?
 
@@ -1020,13 +1021,16 @@ namespace	webserv
 
 		if (responseCode)
 			return (responseCode);
-		if (rename(request.getTmpFilename().c_str(),
+		if (std::rename(request.getTmpFilename().c_str(),
 					_requestedFilename.c_str()) < 0) {
 			_logError(request, "rename()", "failed");
 			return (500);
 		}
-		_responseCode = 201;
-		_setPostHeaders(request);
+		if (!fileExists) {
+			_responseCode = 201;
+			_setPutPostHeaders(request);
+		} else
+			_responseCode = 204;
 		return (0);
 	}
 
@@ -1068,7 +1072,8 @@ namespace	webserv
 		return (409);
 	}
 
-	int	Response::_postRequestBody(const Request& request)
+	int	Response::_putPostRequestBody(const Request& request,
+										const char* method)
 	{
 		// TO DO: Before loading the request body, check in request after having
 		// received the headers if the POST request will be processed ?
@@ -1080,10 +1085,11 @@ namespace	webserv
 		struct stat		fileInfos;
 
 		if (*_requestedFilename.rbegin() == '/') {
-			_logError(request, "Cannot POST to a directory:", "");
+			_logError(request, "Cannot PUT/POST to a directory:", "");
 			return (409);
 		}
-		LOG_DEBUG("HTTP post filename: \"" << _requestedFilename << "\"");
+		LOG_DEBUG("HTTP " << method << " filename: \""
+				<< _requestedFilename << "\"");
 		memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0)
 			return (_moveRequestTmpFile(request, &fileInfos));
@@ -1097,6 +1103,8 @@ namespace	webserv
 			_logError(request, "stat()", "failed");
 			return (500);
 		}
+		if (request.getRequestMethod() == "PUT")
+			return (_moveRequestTmpFile(request, &fileInfos, true));
 		return (_handleRequestAlreadyExistingFile(request, &fileInfos));
 	}
 
@@ -1532,7 +1540,7 @@ namespace	webserv
 		_loadHeaders(request);
 		if (!cgi.headers.empty()) {
 			if (_responseBuffer.size() > 4 && (_responseBuffer.c_str()
-				   + (_responseBuffer.size() - 4) == std::string(CRLF CRLF)))
+					+ (_responseBuffer.size() - 4) == std::string(CRLF CRLF)))
 				_responseBuffer.erase(_responseBuffer.size() - 2);
 			_responseBuffer += cgi.headers + CRLF;
 			LOG_DEBUG("Added CGI Headers:\n" << cgi.headers << CRLF);
@@ -1601,23 +1609,27 @@ namespace	webserv
 				_requestedFilename.erase(_requestedFilename.end() - 1);
 			_requestedFilename += request.getUri();
 		}
-		if (request.getRequestMethod() == "DELETE")
-			return (_removeRequestedFile(request));
 		if (!request.getLocation()->getCgiPass().empty())
 			return (_loadCgiPass(request));
+		if (request.getRequestMethod() == "DELETE")
+			return (_removeRequestedFile(request));
+		if (request.getRequestMethod() == "PUT")
+			return (_putPostRequestBody(request, "PUT"));
 		if (request.getRequestMethod() == "POST")
-			return (_postRequestBody(request));
+			return (_putPostRequestBody(request, "POST"));
 		if (*_requestedFilename.rbegin() == '/')
 			return (_loadIndex(request));
 		return (_openRequestedFile(request));
 	}
 
-	std::string	Response::_getPostResponseBody(const Request& request)
+	std::string	Response::_getPutPostResponseBody(const Request& request)
 	{
-		std::ostringstream		postResponseBody;
+		std::ostringstream		responseBody;
 
-		if (_responseCode == 201 && request.getLocation()->getCgiPass().empty())
-			postResponseBody << "<html>" CRLF
+		if (_responseCode == 201 && request.getLocation()->getCgiPass().empty()
+				&& (request.getRequestMethod() == "PUT"
+					|| (request.getRequestMethod() == "POST")))
+			responseBody << "<html>" CRLF
 				"<head><title>Your file has been saved!</title></head>" CRLF
 				"<body>" CRLF
 				"<center><h1>Click <A href=\""
@@ -1626,7 +1638,7 @@ namespace	webserv
 				"<hr><center>webserv</center>" CRLF
 				"</body>" CRLF
 				"</html>" CRLF;
-		return (postResponseBody.str());
+		return (responseBody.str());
 	}
 
 	bool	Response::_handleBodyDrop(const Request& request)
@@ -1663,9 +1675,9 @@ namespace	webserv
 		if (responseCode != 0)
 			return (prepareErrorResponse(request, responseCode));
 		_loadHeaders(request);
-		if (!_handleBodyDrop(request) && request.getRequestMethod() == "POST"
-				&& request.getLocation()->getCgiPass().empty())
-			_responseBuffer += _getPostResponseBody(request);
+		if (!_handleBodyDrop(request) && (request.getRequestMethod() == "PUT"
+					|| request.getRequestMethod() == "POST"))
+			_responseBuffer += _getPutPostResponseBody(request);
 		_isResponseReady = true;
 	}
 
@@ -2127,11 +2139,11 @@ namespace	webserv
 			typeMap["ods"] = "application/vnd.oasis.opendocument.spreadsheet";
 			typeMap["odt"] = "application/vnd.oasis.opendocument.text";
 			typeMap["pptx"] =
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+	"application/vnd.openxmlformats-officedocument.presentationml.presentation";
 			typeMap["xlsx"] =
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 			typeMap["docx"] =
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 			typeMap["wmlc"] = "application/vnd.wap.wmlc";
 			typeMap["wasm"] = "application/wasm";
 			typeMap["7z"] = "application/x-7z-compressed";

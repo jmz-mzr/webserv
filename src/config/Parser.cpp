@@ -147,9 +147,9 @@ Parser::Parser()
 		_grammar.insert(std::make_pair(directives[i].str, directives[i]));
 	}
 	_methods.insert("get");
-//	_methods.insert("head");
+	_methods.insert("head");
 	_methods.insert("post");
-//	_methods.insert("put");
+	_methods.insert("put");
 	_methods.insert("delete");
 }
 

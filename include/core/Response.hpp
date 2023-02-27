@@ -106,13 +106,15 @@ namespace	webserv
 		void	_deleteDirectory(const Request& request, const char* dirname);
 		int 	_unlinkFile(const Request& request);
 
-		int				_postRequestBody(const Request& request);
+		int				_putPostRequestBody(const Request& request,
+											const char* method);
 		int				_moveRequestTmpFile(const Request& request,
-											const struct stat* fileInfos);
+											const struct stat* fileInfos,
+											bool fileExists = false);
 		int				_handleRequestAlreadyExistingFile(const Request&
 										request, const struct stat* fileInfos);
-		void			_setPostHeaders(const Request& request);
-		std::string		_getPostResponseBody(const Request& request);
+		void			_setPutPostHeaders(const Request& request);
+		std::string		_getPutPostResponseBody(const Request& request);
 
 		int		_loadCgiPass(Request& request);
 		int		_statCgiScript(const Request& request);

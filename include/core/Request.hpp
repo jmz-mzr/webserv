@@ -80,10 +80,10 @@ namespace	webserv
 
 		void			_initHeaders();
 		bool			_findHeader(const std::string& key);
-		void    		_setHeader(const std::string& key, const std::string& value);
+		void			_setHeader(const std::string& key, const std::string& value);
 		void			_parse(const std::string& str);
-		void        	_parseMethod(const std::string& line);
-		void        	_parsePath(const std::string& line);
+		void			_parseMethod(const std::string& line);
+		void			_parsePath(const std::string& line);
 		void			_checkVersion(const std::string& line);
 		std::string		_readLine();
 		std::string		_getKey(const std::string& line);
@@ -109,8 +109,6 @@ namespace	webserv
 		int		_checkHost() const;
 		int		_checkMaxBodySize() const;
 		int		_checkMethod() const;
-	
-		bool	_methodIsAllowed() const;
 
 		bool	_parseRequestTarget(const std::string& requestTarget);
 		void	_parseInternalTarget(const std::string& redirectTo);
@@ -148,7 +146,7 @@ namespace	webserv
 		// TO DO: 1) The uppercase letters, '_' and '-' are valid characters
 		// that must be accepted when parsing the method in the request line,
 		// that will lead to unallowed methods (like "_GET" or "P-OST")
-		// 2) If invalid return 400, if not allowed _checkHeaders will return 405,
+		// 2) If invalid return 400, if not allowed _checkHeaders will return 403,
 		// and if exist but is not implemented can return 501
 		std::string			_requestMethod;
 
