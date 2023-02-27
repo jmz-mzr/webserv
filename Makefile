@@ -113,7 +113,7 @@ ifeq (debug,$(BUILD))
 				-DLOG_LEVEL=webserv::Logger::kDebug \
 				-DCONF_FILE=conf/default.conf
 else
-  CPPFLAGS +=	-DNDEBUG \
+  CPPFLAGS +=	-DNO_DEBUG \
 				-DLOG_FILE=$(LOGDIR)/webserv.log \
 				-DLOG_LEVEL=webserv::Logger::kError \
 				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf
@@ -158,7 +158,8 @@ $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ))
 install:		$(BIN) $(LIB)
 				install -d $(BINDIR)
 				install -m 755 $(BIN) $(BINDIR)/$(NAME)
-				install -m 755 html/index.html /usr/local/var/www/index.html
+				ln -s $(WORKDIR)/html /usr/local/var/www/webserv
+				ln -s $(WORKDIR)/test/html /usr/local/var/www/webserv_test
 				cp -R conf $(SYSCONFDIR)/$(NAME)/
 
 uninstall:
