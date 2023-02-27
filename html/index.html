@@ -1,19 +1,7 @@
-<!-- *********************************************************************** -->
-<!--                                                                         -->
-<!--                                                      :::      ::::::::  -->
-<!-- index.html                                         :+:      :+:    :+:  -->
-<!--                                                  +:+ +:+         +:+    -->
-<!-- By: jmazoyer <jmazoyer@student.42.fr>          +#+  +:+       +#+       -->
-<!--                                              +#+#+#+#+#+   +#+          -->
-<!-- Created: 2022/08/28 12:34:32 by jmazoyer          #+#    #+#            -->
-<!-- Updated: 2022/10/11 11:34:02 by jmazoyer         ###   ########.fr      -->
-<!--                                                                         -->
-<!-- *********************************************************************** -->
-
 <!DOCTYPE html>
 <html>
 <head>
-<title>jmazoyer's Inception static website</title>
+<title>Webserv on fire!!</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
@@ -45,7 +33,9 @@ body, html {
 
 /* Second image (Portfolio) */
 .bgimg-2 {
-  background-image: url("https://www.radiofrance.fr/s3/cruiser-production/2022/05/e3214431-e963-4825-9105-3f7a828ed875/2048x640_gettyimages-1346022120.jpg");
+  /* https://images.ctfassets.net/k3n74unfin40/5zZ0QKQMLWu8hEChMpQsx4/3022a954f53ef7e79e1792e7d498f268/GettyImages-1346022120.jpg */
+  /* https://www.radiofrance.fr/s3/cruiser-production/2022/05/e3214431-e963-4825-9105-3f7a828ed875/2048x640_gettyimages-1346022120.jpg */
+  background-image: url("https://ic-cdn.flipboard.com/vox-cdn.com/212e5b215787c1f0d43c8d54180a39efa68167da/_xlarge.jpeg");
   min-height: 400px;
   opacity: 0.8;
 }
@@ -132,15 +122,15 @@ table-layout:fixed;
       <i class="fa fa-bars"></i>
     </a>
     <a href="#home" class="w3-bar-item w3-button"><i class="fa fa-home"></i> HOME</a>
-    <a href="#about" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-user"></i> ABOUT</a>
-    <a href="#portfolio" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-th"></i> PORTFOLIO</a>
+    <a href="#about" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-user"></i> WELCOME</a>
+    <a href="#portfolio" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-th"></i> SCRIPTS</a>
     <a href="#contact" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-envelope"></i> CONTACT</a>
   </div>
 
   <!-- Navbar on small screens -->
   <div id="navDemo" class="w3-bar-block w3-white w3-hide w3-hide-large w3-hide-medium">
-    <a href="#about" class="w3-bar-item w3-button" onclick="toggleFunction()">ABOUT</a>
-    <a href="#portfolio" class="w3-bar-item w3-button" onclick="toggleFunction()">PORTFOLIO</a>
+    <a href="#about" class="w3-bar-item w3-button" onclick="toggleFunction()">WELCOME</a>
+    <a href="#portfolio" class="w3-bar-item w3-button" onclick="toggleFunction()">SCRIPTS</a>
     <a href="#contact" class="w3-bar-item w3-button" onclick="toggleFunction()">CONTACT</a>
   </div>
 </div>
@@ -148,23 +138,38 @@ table-layout:fixed;
 <!-- First Parallax Image with Logo Text -->
 <div class="bgimg-1 w3-display-container w3-opacity-min" style="font-family:'Lato', sans-serif;" id="home">
   <div class="w3-display-middle" style="white-space:nowrap;">
-    <span class="w3-center w3-padding-large w3-black w3-xlarge w3-wide w3-animate-opacity">WELCOME <span class="w3-hide-small">TO THE</span> DOLOMITES</span>
+    <span class="w3-center w3-padding-large w3-black w3-xlarge w3-wide w3-animate-opacity">WELCOME <span class="w3-hide-small">TO</span> WEBSERV</span>
   </div>
 </div>
 
 <!-- Container (About Section) -->
 <div class="w3-content w3-container w3-padding-64" id="about">
-  <h3 class="w3-center w3-text-teal">ABOUT ME</h3>
-  <p class="w3-center"><em>I love the mountains.<br>Well, I also love surfing.</em></p>
+  <h3 class="w3-center w3-text-teal">WELCOME DEAR GUEST</h3>
+  <p class="w3-center"><em>Do you love surfing?</em></p>
   <div class="w3-row">
     <div class="w3-center w3-padding-large">
       <img src="https://lepetitjournal.com/sites/default/files/2020-02/Kelly%20Slater.jpg" class="w3-round w3-image w3-opacity w3-hover-opacity-off" alt="Photo of Me" width="500" height="333">
     </div>
     <div class="w3-center w3-padding-large">
-      <p>Hi everyone!<br>You're not in the Dolomites? I know the feeling. But I'm sure it's fine where you are too.<br>While it's true that I love the mountains, I also love surfing and mountain biking. But let's be honnest, I live in Paris and I'm neither the Kelly Slater you see here, nor the Reinhold Messner kind of guy. But who cares? We're here to talk about coding right? So let's dive into what you wanna know about me!</p>
+      <p>Well, since you're here we guess that you do young guest!<br><br>But you feel ignored and misunderstood as you're not the one pictured here?<br>Tell us then who you are right away!</p>
+       <form action="/action_page.php" target="_blank">
+       <!-- <form action="https://nohello.net/en/" target="_blank"> -->
+        <div class="w3-cell-row" style="margin:8 -16px 8px -16px">
+          <div class="w3-third">
+            <input class="w3-input" style="pointer-events:none; border-bottom:0px">
+          </div>
+          <div class="w3-third">
+            <input class="w3-input w3-border" type="text" placeholder="My name is ..." required name="name">
+          </div>
+        </div>
+        <button class="w3-button w3-black w3-center w3-section" type="submit">
+          <i class="fa fa-paper-plane"></i> UPDATE
+        </button>
+      </form>
     </div>
+    <!-- Insert form to enter a name, that should replace "GUEST"/"guest" above (when using cookies/sessions?) -->
   </div>
-  <p class="w3-large w3-center w3-padding-16 w3-text-teal">I'M REALLY GOOD AT:</p>
+  <p class="w3-large w3-center w3-padding-16 w3-text-teal">WE'RE REALLY GOOD AT:</p>
   <p style="letter-spacing:4px; white-space:pre-wrap"><i class="fa fa-code"></i> Imperative & Object-oriented programming</p>
   <div class="w3-light-grey">
     <div class="w3-container w3-padding-small w3-light-blue w3-center" style="width:95%">95%</div>
@@ -201,14 +206,14 @@ table-layout:fixed;
 <!-- Second Parallax Image with Portfolio Text -->
 <div class="bgimg-2 w3-display-container w3-opacity-min">
   <div class="w3-display-middle">
-    <span class="w3-xxlarge w3-text-white w3-wide">PORTFOLIO</span>
+    <span class="w3-xxlarge w3-text-white w3-wide">LET'S HAVE FUN</span>
   </div>
 </div>
 
 <!-- Container (Portfolio Section) -->
 <div class="w3-content w3-container w3-padding-64" id="portfolio">
-  <h3 class="w3-center w3-text-teal">MY WORK</h3>
-  <p class="w3-center"><em>Here are some of my latest projects.</em></p><br>
+  <h3 class="w3-center w3-text-teal">SCRIPTS</h3>
+  <p class="w3-center"><em>Here are some of our home-made recipes!</em></p><br>
 
   <!-- Responsive Grid. Four columns on tablets, laptops and desktops. Will stack on mobile devices/small screens (100% width) -->
   <div class="w3-row-padding w3-center">
@@ -318,7 +323,7 @@ table-layout:fixed;
 <!-- Container (Contact Section) -->
 <div class="w3-content w3-container w3-padding-64" id="contact">
   <h3 class="w3-center w3-text-teal">GET IN TOUCH</h3>
-  <p class="w3-center"><em>I'd love your feedback!</em></p>
+  <p class="w3-center"><em>We'd love your feedback!</em></p>
 
   <div class="w3-row w3-padding-32 w3-section">
     <div class="w3-col m4 w3-container">
@@ -328,10 +333,12 @@ table-layout:fixed;
     <div class="w3-col m8 w3-panel">
       <div class="w3-large w3-margin-bottom">
         <i class="fa fa-map-marker fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Paris, FR<br>
-        <i class="fa fa-phone fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Phone: +33 6 86 79 76 40<br>
-        <i class="fa fa-envelope fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Email: ju.mazoyer@gmail.com<br>
+        <i class="fa fa-phone fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Discord: jmazoyer#7419 / (⌐◉_◉)#1446 / Masylk#8775<br>
+        <i class="fa fa-envelope fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Email: jmazoyer/flohrel/mtogbe@student.42.fr<br>
       </div>
-      <p>Swing by for a cup of <i class="fa fa-coffee"></i>, or leave me a note:</p>
+      <p>Swing by 42 for a cup of <i class="fa fa-coffee"></i>, or leave us a loud & clear note:</p>
+      <!-- Create here a form to send a mail with the text typed (with "mailto:")? Or a simple screen printing the text? -->
+      <!-- And with "Name" already filled with name of the user if using cookies and/or sessions? -->
       <!-- <form action="/action_page.php" target="_blank"> -->
       <form action="https://nohello.net/en/" target="_blank">
         <div class="w3-row-padding" style="margin:0 -16px 8px -16px">
