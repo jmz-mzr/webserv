@@ -147,7 +147,9 @@ Parser::Parser()
 		_grammar.insert(std::make_pair(directives[i].str, directives[i]));
 	}
 	_methods.insert("get");
+	_methods.insert("head");
 	_methods.insert("post");
+	_methods.insert("put");
 	_methods.insert("delete");
 }
 
@@ -438,7 +440,7 @@ void	Parser::_setCgiPass(Directive& currDirective)
 	path += currDirective.argv[0];
 	errno = 0;
 	if (stat(path.c_str(), &fileInfos) < 0) {
-		THROW_FATAL("stat() error:" << strerror(errno));
+		THROW_FATAL("stat() error: " << strerror(errno));
 	} else if (!S_ISREG(fileInfos.st_mode)/* || !(sb.st_mode & S_IXUSR)*/) {
 		return (_errorHandler("\"" + path + "\" is not a regular file"));
 	}
@@ -552,7 +554,8 @@ void	Parser::_addListen(Directive& currDirective)
 			std::stringstream ss;
 			ss << "a duplicate listen " << ft_inet_ntoa(it->sin_addr)
 						<< ":" << ntohs(it->sin_port);
-			_errorHandler(ss.str().c_str());
+			LOG_INFO(ss.str().c_str() << ", ignored");
+//			_errorHandler(ss.str().c_str());
 		}
 	}
 }

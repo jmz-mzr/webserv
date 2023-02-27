@@ -113,19 +113,15 @@ namespace	webserv
 		return (0);
 	}
 
-	bool	Request::_methodIsAllowed() const
-	{
-		if (_requestMethod.empty() || 
-		(_requestMethod != "GET" && _requestMethod != "DELETE"
-		&& _requestMethod != "POST" && _requestMethod != "HEAD"))
-			return false;
-		return true;
-	}
-
 	int	Request::_checkMethod() const
 	{
-		if (!(_methodIsAllowed()))
+		if (_requestMethod == "CONNECT" || _requestMethod == "OPTIONS"
+				|| _requestMethod == "TRACE" || _requestMethod == "PATCH")
 			return (405);
+		if (_requestMethod != "GET" && _requestMethod != "HEAD"
+				&& _requestMethod != "POST" && _requestMethod != "PUT"
+				&& _requestMethod != "DELETE")
+			return (501);
 		if (!_location->getLimitExcept().empty()
 				&& !_location->getLimitExcept().count(_requestMethod)) {
 			_logError("Access forbidden by rule");
