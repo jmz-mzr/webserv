@@ -161,7 +161,7 @@ namespace	webserv
 					allowStr << ", ";
 			}
 		} else
-			allowStr << "GET, HEAD, POST, DELETE";
+			allowStr << "GET, HEAD, POST, PUT, DELETE";
 		return (allowStr.str());
 	}
 
@@ -600,7 +600,7 @@ namespace	webserv
 			}
 			return (_loadDirIndex(request, index.size()));
 		}
-		return (_loadInternalRedirect(request, _requestedFilename));
+		return (_loadInternalRedirect(request, (std::string("/") + index)));
 	}
 
 	void	Response::_closeRequestedFile()
@@ -1218,7 +1218,14 @@ namespace	webserv
 	bool	Response::_parseCgiLocalLocation(const Request& request,
 												const std::string& fieldValue)
 	{
-		if (checkUriPathAbs(fieldValue.c_str()) == std::string::npos) {
+		const char*	str = fieldValue.c_str();
+		size_t		i = checkUriPathAbs(str, "?");
+
+		if (i != std::string::npos && str[i] == '?') {
+			str += i;
+			i = checkUriQuery(++str, "");
+		}
+		if (i == std::string::npos) {
 			_logError(request, "Incorrect CGI's Location header value:", "",
 					fieldValue.c_str());
 			return (false);
