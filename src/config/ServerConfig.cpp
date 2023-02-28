@@ -18,6 +18,10 @@ namespace	webserv
 		: _serverNames(src.getServerNames().begin(), src.getServerNames().end())
 		, _errorPages(src.getErrorPages())
 		, _maxBodySize(src.getMaxBodySize())
+		, _return(src.getReturnPair())
+		, _root(src.getRoot())
+		, _autoIndex(src.isAutoIndex())
+		, _index(src.getIndex())
 	{
 		typedef Config::config_map::const_iterator	map_it;
 

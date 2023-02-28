@@ -57,7 +57,7 @@ export class Response {
 
 	parse(data: string): void {
 		let index: number = 0;
-		console.log(`\x1b[34m${data}\x1b[0m`);
+		// console.log(`\x1b[34m${data}\x1b[0m`);
 		while (this.state !== parseState.headers) {
 			index = data.indexOf('\r\n');
 			if (index === -1) {
@@ -66,7 +66,7 @@ export class Response {
 			let str = data.substring(0, index);
 			switch (this.state) {
 			case parseState.notParsed:
-				console.log(`\x1b[35m${str}\x1b[0m`);
+				// console.log(`\x1b[35m${str}\x1b[0m`);
 				this.parseStartline(str);
 				this.state = parseState.startLine;
 				break;

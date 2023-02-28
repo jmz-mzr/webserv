@@ -52,7 +52,7 @@ Parser::Parser()
 	DirectiveSyntax	directives[Parser::kDirectiveNb] = {
 		{
 			kErrorPage,
-			kDirective | kIgnoreDup | kServCtx,
+			kDirective | kIgnoreDup | kServCtx | kLocCtx,
 			2,
 			"error_page",
 			&Parser::_addErrorPage
@@ -73,14 +73,14 @@ Parser::Parser()
 		},
 		{
 			kReturn,
-			kDirective | kIgnoreDup | kLocCtx,
+			kDirective | kIgnoreDup | kLocCtx | kServCtx,
 			1,
 			"return",
 			&Parser::_setReturnPair
 		},
 		{
 			kRoot,
-			kDirective | kForbiddenDup | kArgcStrict | kLocCtx,
+			kDirective | kForbiddenDup | kArgcStrict | kLocCtx | kServCtx,
 			1,
 			"root",
 			&Parser::_setRoot
@@ -94,14 +94,14 @@ Parser::Parser()
 		},
 		{
 			kAutoindex,
-			kDirective | kForbiddenDup | kArgcStrict | kLocCtx,
+			kDirective | kForbiddenDup | kArgcStrict | kLocCtx | kServCtx,
 			1,
 			"autoindex",
 			&Parser::_setAutoIndex
 		},
 		{
 			kIndex,
-			kDirective | kAcceptDup | kArgcStrict | kLocCtx,
+			kDirective | kAcceptDup | kArgcStrict | kLocCtx | kServCtx,
 			1,
 			"index",
 			&Parser::_setIndex

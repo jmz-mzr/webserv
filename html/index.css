@@ -1,0 +1,105 @@
+.b1, .b2 {
+	background-attachment:fixed;
+	background-position:center;
+	background-repeat:no-repeat;
+	background-size:cover;
+	position:relative;
+	min-height:100%
+}
+
+.about-col img, .lang-col img {margin:2vh 4vw}
+
+body, html {
+	margin:0;
+	font-family:Verdana,sans-serif;
+	font-size:15px;
+	height:100%;
+	color:#777;
+	line-height:1.8
+}
+
+html {overflow-x:hidden;}
+
+h1 {font-size:36px}
+h2 {font-size:30px}
+h3 {font-size:24px}
+h4 {font-size:20px}
+h5 {font-size:18px}
+h6 {font-size:16px}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family:"Segoe UI",Arial,sans-serif;
+	font-weight:400;
+	margin:10px 0
+}
+
+.wide {letter-spacing:4px}
+
+.b1 {background-image:url('papillon.jpg')}
+
+.b2 {background-image:url('cocci.jpg')}
+
+.footer, .title {
+	position:absolute;
+	left:50%;
+	transform:translate(-50%,-50%);
+	text-align:center;
+	border-radius:8px;
+	color:#fff
+}
+
+.title {
+	font-family:Lato,sans-serif;
+	background:rgba(0,0,0,.5);
+	font-size:6vw;
+	font-weight:700;
+	margin:0 auto;
+	padding-left:80px;
+	padding-right:80px;
+	top:50%;
+	mix-blend-mode:multiply
+}
+
+.centered {
+	text-align:center
+}
+
+.content {
+	position:relative;
+	padding-top:16px!important;
+	padding-bottom:16px!important;
+	background-color:#fff
+}
+
+.row {
+	width:100%;
+	display:flex;
+	flex-wrap:wrap;
+	justify-content:center;
+	align-items:center
+}
+
+.lang-col img {
+	width:100px;
+	height:100px
+}
+
+@media (max-width:600px) {
+	.about-col img {width:80%}
+}
+
+.footer {
+	bottom:0;
+	margin-bottom:2vh;
+	background:rgba(0,0,0,.4)
+}
+
+.footer a {margin:2vh 2vw}
+
+a {
+	text-decoration:none;
+	font-size:42px;
+	color:#fff
+}
+
+a:hover {color:#a9a9a9}

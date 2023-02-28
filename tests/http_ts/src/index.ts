@@ -6,7 +6,7 @@ const workdir = process.env.INIT_CWD?.toString();
 if (!workdir) {
 	throw new Error('Cannot find current working directory');
 }
-let testDir = path.join(workdir, 'build/tests/');
+let testDir = path.join(workdir, 'build/modules/');
 
 readdirSync(testDir).forEach(file => {
 	if (!file.endsWith('.js')) return;

@@ -22,6 +22,7 @@ namespace	webserv
 	class	ServerConfig {
 	public:
 		typedef std::map<int, std::string>					error_page_map;
+		typedef std::pair<const int, std::string>			return_pair;
 		typedef std::map<std::string, Location,
 							location_compare>				location_map;
 		typedef std::set<std::string, strcmp_icase>			hostname_set;
@@ -37,6 +38,14 @@ namespace	webserv
 													{ return (_errorPages); }
 		const int64_t&					getMaxBodySize() const
 													{ return (_maxBodySize); }
+		const return_pair&				getReturnPair() const
+													{ return (_return); }
+		const std::string&				getRoot() const
+													{ return (_root); }
+		bool							isAutoIndex() const
+													{ return (_autoIndex); }
+		const std::string&				getIndex() const
+													{ return (_index); }
 		const location_map&				getLocations() const
 													{ return (_locations); }
 
@@ -52,6 +61,10 @@ namespace	webserv
 		hostname_set				_serverNames;
 		error_page_map				_errorPages;
 		int64_t						_maxBodySize;
+		return_pair					_return;
+		std::string					_root;
+		bool						_autoIndex;
+		std::string					_index;
 		location_map				_locations;
 	};
 

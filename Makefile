@@ -22,8 +22,7 @@ EXEC_PREFIX	=	$(PREFIX)
 BINDIR		=	$(PREFIX)/bin
 SYSCONFDIR	=	$(PREFIX)/etc
 LIBDIR		=	$(PREFIX)/lib
-DATAROOTDIR	=	$(PREFIX)/share
-DATADIR		=	$(DATAROOTDIR)
+DATADIR		=	$(PREFIX)/var
 LOGDIR		=	/var/log
 
 #>	FILES
@@ -113,8 +112,7 @@ ifeq (debug,$(BUILD))
 				-DLOG_LEVEL=webserv::Logger::kDebug \
 				-DCONF_FILE=conf/default.conf
 else
-  CPPFLAGS +=	-DNO_DEBUG \
-				-DLOG_FILE=$(LOGDIR)/webserv.log \
+  CPPFLAGS +=	-DLOG_FILE=$(LOGDIR)/webserv.log \
 				-DLOG_LEVEL=webserv::Logger::kError \
 				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf
   CXXFLAGS +=	-O3
@@ -158,12 +156,14 @@ $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ))
 install:		$(BIN) $(LIB)
 				install -d $(BINDIR)
 				install -m 755 $(BIN) $(BINDIR)/$(NAME)
-				ln -s $(WORKDIR)/html /usr/local/var/www/webserv
-				ln -s $(WORKDIR)/test/html /usr/local/var/www/webserv_test
+				ln -s $(WORKDIR)/html $(DATADIR)/www/webserv
+				ln -s $(WORKDIR)/tests/42/html $(DATADIR)/www/webserv_test
 				cp -R conf $(SYSCONFDIR)/$(NAME)/
 
 uninstall:
 				$(RM) $(BINDIR)/$(NAME)
+				$(RM) -rf $(DATADIR)/www/webserv
+				$(RM) -rf $(DATADIR)/www/webserv_test
 				$(RM) -rf $(SYSCONFDIR)/$(NAME)
 
 test:			$(LIB)

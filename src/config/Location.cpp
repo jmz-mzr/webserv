@@ -12,7 +12,9 @@ namespace	webserv
 	Location::Location(const Location& src1, const Config& src2,
 						const std::string& path)
 			: _locationName(path)
-			, _maxBodySize(src1._maxBodySize)
+			, _maxBodySize(src2.getMaxBodySize()
+							? src2.getMaxBodySize()
+							: src1._maxBodySize)
 			, _limitExcept(src2.getLimitExcept().empty()
 							? src1._limitExcept
 							: src2.getLimitExcept())
@@ -21,7 +23,9 @@ namespace	webserv
 										src1._return.second)
 						: std::make_pair(src2.getReturnPair().first,
 										src2.getReturnPair().second))
-			, _errorPages(src1._errorPages)
+			, _errorPages(src2.getErrorPages().empty()
+							? src1._errorPages
+							: src2.getErrorPages())
 			, _root(src2.getRoot().empty() ? src1._root : src2.getRoot())
 			, _alias(src2.getAlias().empty() ? src1._alias : src2.getAlias())
 			, _index(src2.getIndex().empty() ? src1._index : src2.getIndex())
@@ -34,14 +38,22 @@ namespace	webserv
 	Location::Location(const ServerConfig& src1, const Config& src2,
 						const std::string& path)
 			: _locationName(path)
-			, _maxBodySize(src1.getMaxBodySize())
+			, _maxBodySize(src2.getMaxBodySize()
+							? src2.getMaxBodySize()
+							: src1.getMaxBodySize())
 			, _limitExcept(src2.getLimitExcept())
-			, _return(src2.getReturnPair())
-			, _errorPages(src1.getErrorPages())
-			, _root(src2.getRoot())
+			, _return((src2.getReturnPair().first == -1)
+						? std::make_pair(src1.getReturnPair().first,
+										src1.getReturnPair().second)
+						: std::make_pair(src2.getReturnPair().first,
+										src2.getReturnPair().second))
+			, _errorPages(src2.getErrorPages().empty()
+							? src1.getErrorPages()
+							: src2.getErrorPages())
+			, _root(src2.getRoot().empty() ? src1.getRoot() : src2.getRoot())
 			, _alias(src2.getAlias())
-			, _index(src2.getIndex())
-			, _autoIndex(src2.isAutoIndex())
+			, _index(src2.getIndex().empty() ? src1.getIndex() : src2.getIndex())
+			, _autoIndex(src2.isAutoIndex() || src1.isAutoIndex())
 			, _cgiPass(src2.getCgiPass())
 	{
 		typedef Config::config_map::const_iterator	map_it;
