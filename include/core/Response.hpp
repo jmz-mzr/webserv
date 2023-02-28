@@ -31,7 +31,7 @@ namespace	webserv
 		const std::string&	getResponseBuffer() const;
 		int					getResponseCode() const { return (_responseCode); }
 
-		bool	isKeepAlive() const;
+		bool	isKeepAlive(const Request& request) const;
 		bool	isResponseReady() const { return (_isResponseReady); }
 		bool	isPartialResponse() const;
 

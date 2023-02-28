@@ -310,7 +310,7 @@ namespace	webserv
 				return (false);
 			if (response.isPartialResponse())
 				return (true);
-			if (!response.isKeepAlive())
+			if (!response.isKeepAlive(client.getRequest()))
 				return (false);
 			pollFd->events &= ~POLLOUT;
 			client.clearRequest();	// not here?

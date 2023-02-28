@@ -96,9 +96,9 @@ namespace	webserv
 		_responseCode = responseCode;
 	}
 */
-	bool	Response::isKeepAlive() const
+	bool	Response::isKeepAlive(const Request& request) const
 	{
-		if (!_isKeepAlive)
+		if (!_isKeepAlive || !request.isKeepAlive())
 			return (false);
 		if (_responseCode == 400 || _responseCode == 408 || _responseCode == 413
 				|| _responseCode == 414 || _responseCode == 495
@@ -1674,6 +1674,7 @@ namespace	webserv
 			return ;
 		if (responseCode != 0)
 			return (prepareErrorResponse(request, responseCode));
+		_isKeepAlive = isKeepAlive(request);
 		_loadHeaders(request);
 		if (!_handleBodyDrop(request) && (request.getRequestMethod() == "PUT"
 					|| request.getRequestMethod() == "POST"))
@@ -1756,7 +1757,6 @@ namespace	webserv
 		clearResponse(request, errorCode);
 		if (request.getLocation() && _loadReturn(request))
 			return ;
-		_isKeepAlive = isKeepAlive();
 		if (request.getLocation() && _loadErrorPage(request))
 			return ;
 		specialBody = &(Response::_getSpecialResponseBody(_responseCode));
