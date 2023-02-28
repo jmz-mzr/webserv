@@ -12,9 +12,6 @@ Config::Config()
 		: _lType(Config::kNone)
 		, _maxBodySize(0)
 		, _return(-1, "")
-		, _root("html")
-		, _alias("")
-		, _index("index.html")
 		, _autoIndex(false)
 { }
 
