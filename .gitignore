@@ -44,6 +44,7 @@ webser*
 .DS_Store
 
 # Log files
+log/
 *.log
 
 [Bb]uild/*
@@ -88,9 +89,30 @@ bld/
 [Oo]bj/
 [Ll]og/
 
-# Typescript / node.js
+# TS/JS
 package-lock.json
 node_modules/
 .node_modules/
 build/
 build.json
+
+# Python
+#  Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+#  Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Other
+lighttpd.conf
+.dockerignore
+Dockerfile
+docker-compose.yml
+locust/

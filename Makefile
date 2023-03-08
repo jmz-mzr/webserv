@@ -23,7 +23,7 @@ BINDIR		=	$(PREFIX)/bin
 SYSCONFDIR	=	$(PREFIX)/etc
 LIBDIR		=	$(PREFIX)/lib
 DATADIR		=	$(PREFIX)/var
-LOGDIR		=	/var/log
+LOGDIR		=	$(PREFIX)/log
 
 #>	FILES
 VPATH		:=	$(addprefix $(SRCDIR)/,$(SUBDIR)) $(SRCDIR)
@@ -110,7 +110,7 @@ ifeq (debug,$(BUILD))
 # endif
   CPPFLAGS +=	-DLOG_FILE=/tmp/webserv.log \
 				-DLOG_LEVEL=webserv::Logger::kDebug \
-				-DCONF_FILE=conf/default.conf
+				-DCONF_FILE=$(WORKDIR)/default.conf
 else
   CPPFLAGS +=	-DLOG_FILE=$(LOGDIR)/webserv.log \
 				-DLOG_LEVEL=webserv::Logger::kError \
@@ -153,17 +153,17 @@ $(BIN):			$(OBJ)
 $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ))
 				$(AR) rcs $@ $?
 
-install:		$(BIN) $(LIB)
-				install -d $(BINDIR)
+installdirs:
+				install -d $(BINDIR) $(DATADIR) $(SYSCONFDIR)/$(NAME) $(LOGDIR)
+
+install:		$(BIN) $(LIB) installdirs
 				install -m 755 $(BIN) $(BINDIR)/$(NAME)
-				ln -s $(WORKDIR)/html $(DATADIR)/www/webserv
-				ln -s $(WORKDIR)/tests/42/html $(DATADIR)/www/webserv_test
-				cp -R conf $(SYSCONFDIR)/$(NAME)/
+				ln -s $(WORKDIR)/www $(DATADIR)/
+				cp default.conf $(SYSCONFDIR)/$(NAME)/
 
 uninstall:
 				$(RM) $(BINDIR)/$(NAME)
-				$(RM) -rf $(DATADIR)/www/webserv
-				$(RM) -rf $(DATADIR)/www/webserv_test
+				$(RM) -rf $(DATADIR)/www
 				$(RM) -rf $(SYSCONFDIR)/$(NAME)
 
 test:			$(LIB)

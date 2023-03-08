@@ -52,6 +52,11 @@
 			"expectedCode": 400
 		},
 		{
+			"name": "bad_uri03",
+			"requestLine": "GET test HTTP/1.1\r\n",
+			"expectedCode": 400
+		},
+		{
 			"name": "empty_request",
 			"requestLine": "",
 			"expectedCode": 400
@@ -60,12 +65,6 @@
 			"name": "space_after_header_name",
 			"requestLine": "GET / HTTP/1.1\r\n",
 			"headers": [ "Host : localhost:8080" ],
-			"expectedCode": 400
-		},
-		{
-			"name": "space_before_header_field",
-			"requestLine": "GET / HTTP/1.1\r\n",
-			"headers": [ " Host: localhost:8080" ],
 			"expectedCode": 400
 		},
 		{

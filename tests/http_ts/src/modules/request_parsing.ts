@@ -40,6 +40,7 @@ export const TestSuite: ITestSuite = {
 			}
 
 			socket = net.createConnection(currTest.port, currTest.host);
+			socket.setTimeout(3000);
 
 			const request = new Request(currTest.requestLine, currTest.headers, currTest.body);
 			let response = new Response();
@@ -49,25 +50,29 @@ export const TestSuite: ITestSuite = {
 			});
 			socket.on('data', (data) => {
 				try {
-					console.log(`\x1b[33m${data}\x1b[0m`);
+					process.stdout.write(`${testCase.name}: `);
 					response.parse(data.toString());
 				} catch (error) {
 					console.error(`\x1b[31m${(error as Error).message}\x1b[0m`);
 				} finally {
 					if (response.state === parseState.parsed) {
-						let output = `${testCase.name}: `;
+						let output;
 						if (testCase.expectedCode === response.statusCode) {
-							output += `\x1b[32mSUCCESS\x1b[0m`;
+							output = `\x1b[32mSUCCESS\x1b[0m`;
 						} else {
-							output += `\x1b[31mFAIL\x1b[0m Expected: ${testCase.expectedCode} | Actual: \x1b[31m${response.statusCode}\x1b[0m`;
+							output = `\x1b[31mFAIL\x1b[0m Expected: ${testCase.expectedCode} | Actual: \x1b[31m${response.statusCode}\x1b[0m`;
 						}
 						console.log(output);
 					}
 					socket.end();
 				}
 			});
+			socket.on('timeout', () => {
+				console.log(`\x1b[31mTIMEOUT\x1b[0m`);
+				socket.end();
+			  });
 			socket.on('error', () => {
-				console.error(`${currTest.name}: \x1b[31mERROR\x1b[0m`)
+				console.error(`\x1b[31mERROR\x1b[0m`)
 			});
 			socket.on('end', () => {
 				// console.log('disconnected from server');

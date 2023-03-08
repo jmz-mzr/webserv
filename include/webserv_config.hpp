@@ -1,8 +1,6 @@
 #ifndef WEBSERV_CONFIG_HPP
 # define WEBSERV_CONFIG_HPP
 
-//TODO:	use configure and autoheader to populate this file
-
 # ifndef LOG_LEVEL
 #  define LOG_LEVEL			webserv::Logger::kDebug
 # endif

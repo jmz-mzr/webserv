@@ -1,7 +1,7 @@
 import { stringify } from "querystring";
 import { isWhiteSpaceLike } from "typescript";
 
-export enum parseState {
+export const enum parseState {
 	notParsed,
 	startLine,
 	headers,
@@ -83,7 +83,7 @@ export class Response {
 			data = data.substring(index + 2);
 			this.buffer = data;
 		}
-		console.log(this.buffer);
+		// console.log(this.buffer);
 		if (this.buffer)
 			this.parseBody(this.buffer);
 		this.state = parseState.parsed;

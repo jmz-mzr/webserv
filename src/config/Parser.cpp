@@ -440,7 +440,7 @@ void	Parser::_setCgiPass(Directive& currDirective)
 	path += currDirective.argv[0];
 	errno = 0;
 	if (stat(path.c_str(), &fileInfos) < 0) {
-		THROW_FATAL("stat() error: " << strerror(errno));
+		THROW_FATAL("stat() error: " << path << ": " << strerror(errno));
 	} else if (!S_ISREG(fileInfos.st_mode)/* || !(sb.st_mode & S_IXUSR)*/) {
 		return (_errorHandler("\"" + path + "\" is not a regular file"));
 	}
