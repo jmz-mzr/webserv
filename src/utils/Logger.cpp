@@ -25,7 +25,7 @@ namespace	webserv
 		_cc[4].str = "DEBUG", _cc[4].color = HCYN;
 
 		if (_ostream & kFile) {
-			_logfile.open(XSTR(LOG_FILE));
+			_logfile.open(XSTR(LOG_FILE), std::iostream::ate);
 			if ( !(_logfile.good()) ) {
 				_ostream &= ~kFile;
 				if ((_ostream & kConsole) && (kWarn <= _threshold)) {

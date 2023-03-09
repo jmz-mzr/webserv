@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { readdirSync } from 'fs';
+import * as fs from 'fs';
 import { ITestSuite } from './types'
 
 const workdir = process.env.INIT_CWD?.toString();
@@ -8,12 +8,15 @@ if (!workdir) {
 }
 let testDir = path.join(workdir, 'build/modules/');
 
-readdirSync(testDir).forEach(file => {
-	if (!file.endsWith('.js')) return;
+let files = fs.readdirSync(testDir);
+for (let file of files) {
+	if (!file.endsWith('.js')) continue;
 	
 	const testSuite: ITestSuite = require(`${testDir}/${file}`).TestSuite;
+
 	console.log(`${testSuite.name}`);
 	console.log(new Array(42).join('='));
+
 	testSuite.init();
 	testSuite.execute();
-});
+}

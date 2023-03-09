@@ -17,7 +17,7 @@
       unset($_POST);
     }
     // POST/Redirect/GET to avoid form resubmission
-    header("Location: {$_SERVER['REQUEST_URI']}", true, 303 );
+    header("Location: {$_SERVER['REQUEST_URI']}", true, 303);
     exit();
   }
 
@@ -402,11 +402,12 @@ table-layout:fixed;
               <option value="jmazoyer@student.42.fr">jmazoyer@student.42.fr</option>
               <option value="flohrel@student.42.fr">flohrel@student.42.fr</option>
               <option value="mtogbe@student.42.fr">mtogbe@student.42.fr</option>
+              <option value="flohrel@student.42.fr;jmazoyer@student.42.fr;mtogbe@student.42.fr">To all</option>
             </select>
           </div>
         </div>
         <textarea class="w3-input w3-border" style="resize:none" placeholder="Message" name="body"></textarea>
-        <button class="w3-button w3-black w3-right w3-section" type="submit" name="mailbtn">
+        <button class="w3-button w3-black w3-right w3-section" type="submit">
           <i class="fa fa-paper-plane"></i> SEND MESSAGE
         </button>
       </form>

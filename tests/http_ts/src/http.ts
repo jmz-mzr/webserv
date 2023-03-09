@@ -94,15 +94,15 @@ export class Request {
 	message: string = '';
 
 	constructor(public requestLine?: string,
-				public headers?: string[],
+				public headers?: { [key: string]: string },
 				public body?: string) {
 		if (this.requestLine) {
 			this.message = this.requestLine;
 		}
 		if (this.headers) {
-			for (let header of this.headers) {
-				this.message += header;
-				this.message += '\r\n';
+			for (let header in this.headers) {
+				let line = header + ": " + this.headers[header] + '\r\n';
+				this.message += line;
 			}
 		} else {
 			this.message += '\r\n';

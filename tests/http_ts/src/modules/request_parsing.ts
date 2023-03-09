@@ -1,9 +1,7 @@
-import * as fs from 'fs'
 import * as path from 'path'
 import * as net from 'net'
 import { parseState, Request, Response } from '../http'
 import { TestData, ITestSuite } from '../types'
-import test from 'node:test'
 
 export const TestSuite: ITestSuite = {
 	name: "request_parsing",
@@ -44,23 +42,22 @@ export const TestSuite: ITestSuite = {
 
 			const request = new Request(currTest.requestLine, currTest.headers, currTest.body);
 			let response = new Response();
+			let output: string = `${testCase.name}: `;
 
 			socket.on('connect', () => {
 				socket.write(request.message);
 			});
 			socket.on('data', (data) => {
 				try {
-					process.stdout.write(`${testCase.name}: `);
 					response.parse(data.toString());
 				} catch (error) {
 					console.error(`\x1b[31m${(error as Error).message}\x1b[0m`);
 				} finally {
 					if (response.state === parseState.parsed) {
-						let output;
 						if (testCase.expectedCode === response.statusCode) {
-							output = `\x1b[32mSUCCESS\x1b[0m`;
+							output += '\x1b[32mSUCCESS\x1b[0m';
 						} else {
-							output = `\x1b[31mFAIL\x1b[0m Expected: ${testCase.expectedCode} | Actual: \x1b[31m${response.statusCode}\x1b[0m`;
+							output += `\x1b[31mFAIL\x1b[0m Expected: ${testCase.expectedCode} | Actual: \x1b[31m${response.statusCode}\x1b[0m`;
 						}
 						console.log(output);
 					}
@@ -68,11 +65,13 @@ export const TestSuite: ITestSuite = {
 				}
 			});
 			socket.on('timeout', () => {
-				console.log(`\x1b[31mTIMEOUT\x1b[0m`);
+				output += '\x1b[31mTIMEOUT\x1b[0m';
+				console.log(output);
 				socket.end();
 			  });
 			socket.on('error', () => {
-				console.error(`\x1b[31mERROR\x1b[0m`)
+				output += '\x1b[31mERROR\x1b[0m';
+				console.log(output);
 			});
 			socket.on('end', () => {
 				// console.log('disconnected from server');

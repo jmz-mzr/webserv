@@ -3,7 +3,7 @@
 	"suiteFixture": {
 		"host": "localhost",
 		"port": 8080,
-		"headers": [ "Host: localhost:8080" ]
+		"headers": { "Host": "localhost:8080" }
 	},
 	"testCases": [
 		{
