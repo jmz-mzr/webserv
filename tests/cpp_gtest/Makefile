@@ -11,8 +11,7 @@ VPATH		=	src
 #>	FILES
 BIN			=	$(WORKDIR)/$(NAME)_test
 SRC			=	ConfigParser_test.cpp \
-				trim_test.cpp \
-				Logger_test.cpp
+				trim_test.cpp
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
 LIB			:=	$(addprefix $(WORKDIR)/,$(LIB))

@@ -2,11 +2,11 @@
 # define WEBSERV_CONFIG_HPP
 
 # ifndef LOG_LEVEL
-#  define LOG_LEVEL			webserv::Logger::kDebug
+#  define LOG_LEVEL			webserv::LogLevel::kDebug
 # endif
 
 # ifndef LOG_OSTREAM
-#  define LOG_OSTREAM		webserv::Logger::kBoth
+#  define LOG_OSTREAM		webserv::LogOutput::kBoth
 # endif
 
 # ifndef LOG_FILE

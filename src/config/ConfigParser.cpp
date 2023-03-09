@@ -86,7 +86,7 @@ const std::list<Config>&			ConfigParser::parseFile()
 		return (_parser.getConfigs());
 	} catch (const SyntaxErrorException& e) {
 		Logger::getInstance().log(_filePath, _currentLineNb,
-										Logger::kEmerg, e.what());
+												LogLevel::kEmerg, e.what());
 		throw ;
 	} catch (...) {
 		throw ;

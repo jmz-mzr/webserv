@@ -77,10 +77,10 @@ endif
 
 ifeq (test,$(strip $(MAKECMDGOALS)))
   CXXFLAGS +=	-std=c++11
-  CPPFLAGS +=	-DLOG_OSTREAM=webserv::Logger::kNone
+  CPPFLAGS +=	-DLOG_OSTREAM=webserv::LogOutput::kNone
 else
   CXXFLAGS +=	-std=c++98
-  CPPFLAGS +=	-DLOG_OSTREAM=webserv::Logger::kBoth
+  CPPFLAGS +=	-DLOG_OSTREAM=webserv::LogOutput::kBoth
 endif
 
 ifneq ($(filter install, $(strip $(MAKECMDGOALS))),)
@@ -109,11 +109,11 @@ ifeq (debug,$(BUILD))
 # 				-Wuseless-cast
 # endif
   CPPFLAGS +=	-DLOG_FILE=/tmp/webserv.log \
-				-DLOG_LEVEL=webserv::Logger::kDebug \
+				-DLOG_LEVEL=webserv::LogLevel::kDebug \
 				-DCONF_FILE=$(WORKDIR)/default.conf
 else
   CPPFLAGS +=	-DLOG_FILE=$(LOGDIR)/webserv.log \
-				-DLOG_LEVEL=webserv::Logger::kError \
+				-DLOG_LEVEL=webserv::LogLevel::kError \
 				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf
   CXXFLAGS +=	-O3
 endif

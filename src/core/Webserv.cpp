@@ -144,8 +144,7 @@ namespace	webserv
 			LOG_DEBUG("argc=" << argc);
 			THROW_LOGIC("Bad number of arguments");
 		} else {
-			ConfigParser config(
-				(argc == 2) ? argv[1] : XSTR(CONF_FILE) );
+			ConfigParser config( (argc == 2) ? argv[1] : XSTR(CONF_FILE) );
 			_loadServers(config.parseFile());
 		}
 		if (webservRoot.size() == 0)
