@@ -32,6 +32,7 @@
 *.out
 *.app
 webser*
+!webser*/
 
 # Makefile tmp
 .title
