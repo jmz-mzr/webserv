@@ -4,7 +4,7 @@
 #include <cstring>
 
 #include "config/ConfigParser.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include "utils/utils.hpp"
 
 namespace	webserv

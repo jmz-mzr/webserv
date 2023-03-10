@@ -2,15 +2,19 @@
 # define WEBSERV_CONFIG_HPP
 
 # ifndef LOG_LEVEL
-#  define LOG_LEVEL			webserv::LogLevel::kDebug
+#  define LOG_LEVEL			Log::Level::kDebug
 # endif
 
 # ifndef LOG_OSTREAM
-#  define LOG_OSTREAM		webserv::LogOutput::kBoth
+#  define LOG_OSTREAM		Log::OutputStream::kBoth
 # endif
 
 # ifndef LOG_FILE
 #  define LOG_FILE			/tmp/webserv.log
+# endif
+
+# ifndef LOGFILE_SIZE_MAX
+#  define LOGFILE_SIZE_MAX	(1 << 10) * 20
 # endif
 
 # ifndef CONF_FILE

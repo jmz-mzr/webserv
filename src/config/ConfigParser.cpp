@@ -4,7 +4,7 @@
 #include "config/ConfigParser.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/global_defs.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include "utils/utils.hpp"
 #include "webserv_config.hpp"
 
@@ -85,8 +85,8 @@ const std::list<Config>&			ConfigParser::parseFile()
 		} while (_file.good());
 		return (_parser.getConfigs());
 	} catch (const SyntaxErrorException& e) {
-		Logger::getInstance().log(_filePath, _currentLineNb,
-												LogLevel::kEmerg, e.what());
+		Log::Core::get().filter(Log::ContextInfo(_filePath, _currentLineNb,
+												Log::Level::kEmerg), e.what());
 		throw ;
 	} catch (...) {
 		throw ;

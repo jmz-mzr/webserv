@@ -14,7 +14,7 @@
 #include "core/Response.hpp"
 #include "webserv_config.hpp"
 #include "utils/global_defs.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include "utils/utils.hpp"
 
 #define INTERNAL_REDIRECT	-1

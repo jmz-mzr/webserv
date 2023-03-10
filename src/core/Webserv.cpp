@@ -12,7 +12,7 @@
 #include "config/ConfigParser.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/global_defs.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include "utils/utils.hpp"
 
 namespace	webserv
@@ -151,7 +151,7 @@ namespace	webserv
 			THROW_FATAL("WEBSERV_ROOT cannot be an empty path");
 		if (webservRoot[0] != '/')
 			THROW_FATAL("WEBSERV_ROOT must start at root ('/')");
-		(void)Logger::getInstance();
+		(void)Log::Core::get();
 		Response::initResponseMaps();
 	}
 

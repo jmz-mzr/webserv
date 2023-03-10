@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 
 namespace webserv {
 

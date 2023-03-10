@@ -6,7 +6,7 @@
 
 #include "core/Request.hpp"
 #include "webserv_config.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include "utils/utils.hpp"
 
 namespace	webserv

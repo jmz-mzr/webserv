@@ -9,7 +9,7 @@
 #include <netinet/in.h>
 
 #include "core/Socket.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include "utils/utils.hpp"
 
 namespace webserv {

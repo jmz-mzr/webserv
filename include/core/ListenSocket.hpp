@@ -7,7 +7,6 @@
 
 namespace	webserv
 {
-
 	class	ListenSocket: public Socket {
 	public:
 		ListenSocket(const sockaddr_in& address);

@@ -6,7 +6,7 @@
 #include <fcntl.h>
 
 #include "utils/exceptions.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include "webserv_config.hpp"
 
 namespace	webserv

@@ -1,6 +1,6 @@
 #include "core/Request.hpp"
 #include "utils/utils.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include <iostream>
 
 namespace webserv

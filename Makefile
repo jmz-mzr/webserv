@@ -45,9 +45,10 @@ CORE		=	AcceptSocket.cpp \
 				Socket.cpp \
 				Webserv.cpp
 UTILS		=	createRandomFilename.cpp \
+				file_utils.cpp \
 				ft_inet_ntoa.cpp \
 				ft_sleep.cpp \
-				Logger.cpp \
+				log.cpp \
 				sockaddr_in.cpp \
 				string_utils.cpp \
 				trim.cpp \
@@ -77,10 +78,10 @@ endif
 
 ifeq (test,$(strip $(MAKECMDGOALS)))
   CXXFLAGS +=	-std=c++11
-  CPPFLAGS +=	-DLOG_OSTREAM=webserv::LogOutput::kNone
+  CPPFLAGS +=	-DLOG_OSTREAM=Log::OutputStream::kNone
 else
   CXXFLAGS +=	-std=c++98
-  CPPFLAGS +=	-DLOG_OSTREAM=webserv::LogOutput::kBoth
+  CPPFLAGS +=	-DLOG_OSTREAM=Log::OutputStream::kBoth
 endif
 
 ifneq ($(filter install, $(strip $(MAKECMDGOALS))),)
@@ -109,11 +110,11 @@ ifeq (debug,$(BUILD))
 # 				-Wuseless-cast
 # endif
   CPPFLAGS +=	-DLOG_FILE=/tmp/webserv.log \
-				-DLOG_LEVEL=webserv::LogLevel::kDebug \
+				-DLOG_LEVEL=Log::Level::kDebug \
 				-DCONF_FILE=$(WORKDIR)/default.conf
 else
   CPPFLAGS +=	-DLOG_FILE=$(LOGDIR)/webserv.log \
-				-DLOG_LEVEL=webserv::LogLevel::kError \
+				-DLOG_LEVEL=Log::Level::kError \
 				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf
   CXXFLAGS +=	-O3
 endif

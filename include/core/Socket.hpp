@@ -10,7 +10,7 @@
 # include <netinet/in.h>	// inet_addr
 # include <arpa/inet.h>		// inet_addr
 
-# include "utils/Logger.hpp"
+# include "utils/log.hpp"
 # include "utils/utils.hpp"
 
 namespace	webserv

@@ -1,5 +1,5 @@
 #include "core/Client.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 
 #include <exception>
 

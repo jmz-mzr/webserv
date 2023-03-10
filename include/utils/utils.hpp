@@ -72,6 +72,7 @@ namespace	webserv
 								const std::string& delim = "?# ");
 	size_t	checkUriQuery(const char* str, const std::string& delim = "# ");
 	size_t	checkUriFragment(const char* str, const std::string& delim = " ");
+	long	getFileSize(const std::string& filename);
 
 	struct dir_entry_compare {
 		bool	operator()(const std::pair<std::string, struct stat>& p1,

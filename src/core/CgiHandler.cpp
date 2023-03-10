@@ -1,5 +1,5 @@
 #include "core/CgiHandler.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include "utils/utils.hpp"
 
 #include <fcntl.h>

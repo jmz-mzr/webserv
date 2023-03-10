@@ -2,7 +2,7 @@
 
 #include <cerrno>
 
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/utils.hpp"
 

@@ -2,7 +2,7 @@
 #include <cerrno>
 #include <stdexcept>
 
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 
 #define THROW_FATAL(msg)	{												\
 	LOG_ERROR(msg);															\

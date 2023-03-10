@@ -7,7 +7,7 @@
 #include "config/ConfigParser.hpp"
 #include "utils/ansi_colors.hpp"
 #include "utils/exceptions.hpp"
-#include "utils/Logger.hpp"
+#include "utils/log.hpp"
 #include "utils/utils.hpp"
 
 namespace webserv {
