@@ -1,17 +1,16 @@
 #ifndef UTILS_HPP
 # define UTILS_HPP
 
-# include <netinet/in.h>
-# include <arpa/inet.h>
-# include <sys/stat.h>
+# include <netinet/in.h>	// in_addr_t, sockaddr_in, struct in_addr
+# include <sys/stat.h>		// stat, S_ISDIR
+# include <stddef.h>		// size_t
+# include <stdint.h>		// uint16_t, uint64_t
 
-# include <stddef.h>
-# include <sys/types.h>
-
+# include <algorithm>		// lexicographical_compare
+# include <utility>			// pair
+# include <sstream>
 # include <string>
 # include <vector>
-# include <utility>
-# include <algorithm>
 
 # include "core/Socket.hpp"
 
@@ -36,16 +35,22 @@ namespace	webserv
 								const std::string& str2);
 	std::string	ft_str_tolower(const std::string& str);
 
+	std::string	strHexDump(const std::string& str);
+
 	std::vector<std::string>	ft_string_split(const std::string& str,
 												const std::string& delim);
-	std::string					ft_string_remove(std::string src, char token);
+	std::string					ft_string_remove(const std::string& str,
+													const char token);
 
 	std::string trimLeft(const std::string& str);
 	std::string trimRight(const std::string& str);
 	std::string	trim(const std::string& str);
 
+	long		getFileSize(const std::string& filename);
+    long		fdGetFileSize(int fd);
 	std::string	createRandomFilename(const std::string& path = "/tmp/",
 										const std::string& prefix = "");
+	std::string	getFileExtension(const std::string& path);
 
 	bool	isUriPChar(const char* c);
 	bool	isUriUnreserved(const char c);
@@ -72,7 +77,6 @@ namespace	webserv
 								const std::string& delim = "?# ");
 	size_t	checkUriQuery(const char* str, const std::string& delim = "# ");
 	size_t	checkUriFragment(const char* str, const std::string& delim = " ");
-	long	getFileSize(const std::string& filename);
 
 	struct dir_entry_compare {
 		bool	operator()(const std::pair<std::string, struct stat>& p1,

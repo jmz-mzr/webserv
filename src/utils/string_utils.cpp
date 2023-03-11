@@ -1,6 +1,9 @@
-#include <cctype>
+#include <cctype>		// isprint, tolower
+
+#include <algorithm>	// equal, transform
+#include <iostream>		// hex, uppercase
+#include <sstream>
 #include <string>
-#include <algorithm>
 #include <vector>
 
 namespace	webserv
@@ -39,6 +42,27 @@ namespace	webserv
 		return (strToLower);
 	}
 
+	std::string	strHexDump(const std::string& str)
+	{
+		std::string::const_iterator	c = str.begin();
+		std::ostringstream			stream;
+
+		stream << std::hex << std::uppercase;
+		while (c != str.end()) {
+			if (std::isprint(*c))
+				stream << *c;
+			else {
+				if (*c < 16)
+					stream << "\\x0";
+				else
+					stream << "\\x";
+				stream << static_cast<int>(*c);
+			}
+			++c;
+		}
+		return (stream.str());
+	}
+
 	std::vector<std::string>	ft_string_split(const std::string& str,
 												const std::string& delim)
 	{
@@ -55,17 +79,17 @@ namespace	webserv
 		return (strVector);
 	}
 
-	std::string	ft_string_remove(std::string str, const char token)
+	std::string	ft_string_remove(const std::string& str, const char token)
 	{
-		std::string::iterator	c = str.begin();
+		std::string::const_iterator	c = str.begin();
+		std::string					result;
 
 		while (c != str.end()) {
-			if (*c == token)
-				c = str.erase(c);
-			else
-				++c;
+			if (*c != token)
+				result += *c;
+			++c;
 		}
-		return (str);
+		return (result);
 	}
 
 }	// namespace webserv
