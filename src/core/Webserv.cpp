@@ -1,17 +1,25 @@
+#include <netinet/in.h>	// sockaddr_in
+#include <poll.h>		// poll, struct pollfd
+#include <stddef.h>		// size_t
+#include <stdint.h>		// uint32_t
+#include <sys/socket.h> // recv
+
+#include <cerrno>		// errno
+#include <csignal>		// sig_atomic_t
+#include <cstring>		// strerror
+
+#include <exception>
+#include <iostream>		// cerr, endl
+#include <list>
+#include <vector>
+#include <string>
+
 #include "core/Webserv.hpp"
-#include "core/Response.hpp"
-
-#include <cerrno>
-#include <cstring>
-#include <iostream>
-
-#include <unistd.h>
-#include <stddef.h>
-#include <sys/socket.h>
-
 #include "config/ConfigParser.hpp"
-#include "utils/exceptions.hpp"
+#include "config/ServerConfig.hpp"
+#include "core/Response.hpp"
 #include "utils/global_defs.hpp"
+#include "utils/exceptions.hpp"
 #include "utils/log.hpp"
 #include "utils/utils.hpp"
 
@@ -177,7 +185,6 @@ namespace	webserv
 		}
 		try {
 			newPollFd.fd = _clients.back().getSocket().getFd();
-//			newPollFd.events = POLLIN | POLLOUT;
 			newPollFd.events = POLLIN;
 			newPollFd.revents = 0;
 			_pollFds.push_back(newPollFd);
@@ -242,15 +249,10 @@ namespace	webserv
 
 	ssize_t	Webserv::_receiveClientRequest(Client& client, pollFd_iter pollFd)
 	{
-		// TO DO: 1) What if a request comes while last one is not terminated?
-		// 		  Or while the last response has not been (fully) sent yet?
-		// 		  Wait before the next recv? Ignore it?
-		// 		  Drop previous request? prepareErrorResponse(...)?
-		// 		  Implement request pipelining? Create a queue of responses?
-		// 		  Or handle this in "_handleClientRequest()"?
-		// 		  2) How to keep the client able to interact with the server
+		// TO DO: How to keep the client able to interact with the server
 		// 		  while the server sends a large file to the client?
-		// 		  Send it through a new socket connected to the client?
+		// 		  The user agent (browser) handles it itself? Or should we
+		// 		  send it through a new socket connected to the client?
 
 		int			clientFd = client.getSocket().getFd();
 		ssize_t		received;
@@ -258,9 +260,9 @@ namespace	webserv
 		if (client.hasTimedOut())
 			return (-1);
 		if (client.isProcessingRequest()) {
-			LOG_DEBUG("Finish responding to the last request before receiving"
-					<< " this new client request (fd=" << clientFd << ")");
-			return (0);	// see "TO DO" for other options
+			LOG_DEBUG("Finish responding to the last request before listening"
+					<< " to this client (fd=" << clientFd << ")");
+			return (1);
 		}
 		if (!(pollFd->revents & POLLIN))
 			return (0);
@@ -272,7 +274,7 @@ namespace	webserv
 			LOG_DEBUG("Request: " << _buffer);
 		} else if (received == -1)
 			LOG_ERROR("Could not receive the client request "
-					<< " (fd=" << clientFd << "): " << strerror(errno));
+					<< " (fd=" << clientFd << "): " << std::strerror(errno));
 		return (received > 0 ? received : -1);
 	}
 
@@ -280,11 +282,6 @@ namespace	webserv
 	{
 		int		errorCode;
 
-		if (client.hasTimedOut()) {
-			LOG_DEBUG("The client (fd=" << client.getSocket().getFd()
-					<< ") timed out");
-			return (client.prepareErrorResponse(408));
-		}
 		if (!client.hasRequestTerminated()) {
 			errorCode = client.parseRequest(_buffer);
 			if (errorCode != 0)
@@ -297,9 +294,6 @@ namespace	webserv
 
 	bool	Webserv::_handleClientResponse(Client& client, pollFd_iter pollFd)
 	{
-		// NOTE: NGINX doesn't even send a response for the 408 code, it just
-		// closes the connection (because of "return"/"timeout" directive)
-
 		const Response&		response = client.getResponse();
 
 		if (response.getResponseCode() == 408)
@@ -307,17 +301,16 @@ namespace	webserv
 		if (client.hasResponseReady() && (pollFd->revents & POLLOUT) != 0) {
 			if (!client.sendResponse(_ioFlags))
 				return (false);
-			if (response.isPartialResponse())
+			if (response.isPartialResponse() || client.hasResponseReady())
 				return (true);
 			if (!response.isKeepAlive(client.getRequest()))
 				return (false);
 			pollFd->events &= ~POLLOUT;
-			client.clearRequest();	// not here?
+			client.clearRequest();
 			client.clearResponse();
-		} else if (client.hasResponseReady() && !(pollFd->events & POLLOUT))
+		}
+		else if (client.hasResponseReady() && !(pollFd->events & POLLOUT))
 			pollFd->events |= POLLOUT;
-//		if (!client.isKeepAlive())
-//			return (false);
 		return (true);
 	}
 
@@ -351,7 +344,7 @@ namespace	webserv
 	{
 		while (!Webserv::receivedSigInt) {
 			if (poll(_pollFds.data(),
-						static_cast<uint32_t>(_pollFds.size()), -1) == -1) {
+						static_cast<uint32_t>(_pollFds.size()), 500) == -1) {
 				LOG_WARN("poll() error: " << strerror(errno));
 				continue ;
 			}

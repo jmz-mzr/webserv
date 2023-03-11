@@ -1,7 +1,9 @@
-#include "core/Client.hpp"
-#include "utils/log.hpp"
+#include <ctime>	// difftime, time
 
 #include <exception>
+
+#include "core/Client.hpp"
+#include "utils/log.hpp"
 
 namespace	webserv
 {
@@ -66,10 +68,8 @@ namespace	webserv
 	{
 		int		errorCode;
 
-// Pas correct
 		try {
 			errorCode = _request.parseRequest(recvBuffer, _serverConfigs);
-			LOG_DEBUG("errorCode = " << errorCode);
 		} catch (const std::exception& e) {
 			_logError("Unable to parse the client request", e.what());
 			errorCode = 500;
@@ -101,8 +101,13 @@ namespace	webserv
 
 	bool	Client::hasTimedOut() const
 	{
-		if (std::difftime(std::time(0), _lastUpdateTime) > CLIENT_TIMEOUT)
+		double	elapsedTime = std::difftime(std::time(0), _lastUpdateTime);
+
+		if (elapsedTime > CLIENT_TIMEOUT) {
+			LOG_DEBUG("The client (fd=" << _socket.getFd() << ") timed out"
+					<< " (" << elapsedTime << "s)");
 			return (true);
+		}
 		return (false);
 	}
 
@@ -110,8 +115,6 @@ namespace	webserv
 	{
 		try {
 			_response.prepareResponse(_request);
-//			if (!_response.isPartialResponse())
-//				_request.clearRequest();	// not here?
 		} catch (const std::exception& e) {
 			_logError("Unable to prepare the request's response", e.what());
 			return (false);
@@ -123,7 +126,6 @@ namespace	webserv
 	{
 		try {
 			_response.prepareErrorResponse(_request, errorCode);
-//			_request.clearRequest();	// not here?
 		} catch (const std::exception& e) {
 			_logError("Unable to prepare the error response", e.what());
 			return (false);
