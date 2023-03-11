@@ -1,21 +1,22 @@
 #ifndef RESPONSE_HPP
 # define RESPONSE_HPP
 
-# include <sys/stat.h>
-# include <sys/types.h>
-# include <dirent.h>
+# include <stddef.h>	// size_t
+# include <stdint.h>	// int64_t
+# include <stdio.h>		// FILE
+# include <dirent.h>	// DIR
+# include <sys/stat.h>	// struct stat
 
-# include <ctime>
-# include <cstdio>
+# include <ctime>		// time_t
 
-# include <string>
-# include <utility>
-# include <set>
 # include <fstream>
+# include <set>
+# include <string>
+# include <utility>		// pair
 
 # include "core/Request.hpp"
-# include "utils/utils.hpp"
 # include "core/CgiHandler.hpp"
+# include "utils/utils.hpp"
 
 namespace	webserv
 {
@@ -35,7 +36,6 @@ namespace	webserv
 		bool	isResponseReady() const { return (_isResponseReady); }
 		bool	isPartialResponse() const;
 
-//		void	setResponseCode(int responseCode);
 		void	prepareResponse(Request& request);
 		void	prepareErrorResponse(Request& request, int errorCode = 0);
 

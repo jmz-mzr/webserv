@@ -1,11 +1,12 @@
 #ifndef LEXER_HPP
-#define LEXER_HPP
-
-#include <deque>
-#include <map>
-#include <string>
+# define LEXER_HPP
 
 # include <stdint.h>
+
+# include <deque>
+# include <iostream>
+# include <map>
+# include <string>
 
 namespace	webserv {
 
@@ -45,7 +46,6 @@ namespace	config {
 		static bool				isNotWord(Lexer::Token tk);
 
 		bool	isEof;
-
 	private:
 		Lexer(const Lexer& src);
 
@@ -59,11 +59,10 @@ namespace	config {
 		std::string		_delimiters;
 		token_queue		_tokens;
 		unsigned		_nestedBlockCount;
-
 	};
 
 }	// namespace config
 
 }	// namespace webserv
 
-#endif /* LEXER_HPP */
+#endif	// LEXER_HPP

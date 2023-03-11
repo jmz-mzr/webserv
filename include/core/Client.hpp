@@ -1,7 +1,7 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# include <ctime>
+# include <ctime>	// time_t
 
 # include <string>
 # include <vector>
@@ -11,7 +11,7 @@
 # include "core/Request.hpp"
 # include "core/Response.hpp"
 
-# define CLIENT_TIMEOUT		30.0
+# define CLIENT_TIMEOUT		15.0
 
 namespace	webserv
 {
@@ -57,9 +57,6 @@ namespace	webserv
 		const server_configs&	_serverConfigs;
 		AcceptSocket			_socket;
 
-		// TO DO: Rather record the time of last action (connection/interaction),
-		// and check for a timeout (either by default or through directive) in
-		// "isKeepAlive()" to avoid too many idle clients
 		time_t					_lastUpdateTime;
 
 		std::string				_unprocessedBuffer;

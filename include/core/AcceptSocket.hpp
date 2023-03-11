@@ -1,8 +1,6 @@
 #ifndef ACCEPTSOCKET_HPP
 # define ACCEPTSOCKET_HPP
 
-# include <cerrno>
-
 # include "core/Socket.hpp"
 
 namespace	webserv

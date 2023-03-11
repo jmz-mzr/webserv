@@ -1,17 +1,12 @@
 #ifndef SOCKET_HPP
 # define SOCKET_HPP
 
-# include <cstring>
+# include <netinet/in.h>	// sockaddr_in
+# include <stdint.h>		// uint16_t
+# include <sys/socket.h>	// socklen_t
+
 # include <string>
-
-# include <sys/types.h>		// getaddrinfo & co
-# include <sys/socket.h>	// inet_addr, getaddrinfo & co
-# include <netdb.h>			// getaddrinfo & co
-# include <netinet/in.h>	// inet_addr
-# include <arpa/inet.h>		// inet_addr
-
-# include "utils/log.hpp"
-# include "utils/utils.hpp"
+# include <iostream>
 
 namespace	webserv
 {
@@ -44,7 +39,6 @@ namespace	webserv
 		void					closeFd();
 
 		friend std::ostream&	operator<<(std::ostream&, const Socket&);
-
 	protected:
 		explicit Socket(const Type t);
 		Socket(const Type t, const sockaddr_in& addr);
@@ -55,7 +49,6 @@ namespace	webserv
 		socklen_t				_addrLen;
 		std::string				_ip;
 		uint16_t				_port;
-
 	private:
 		Socket();
 		Socket&	operator=(const Socket& rhs);

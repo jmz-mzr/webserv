@@ -1,27 +1,28 @@
-#include "config/Parser.hpp"
+#include <arpa/inet.h>		// ntohs
+#include <netdb.h>			// freeaddrinfo, gai_strerror, getaddrinfo
+#include <netinet/in.h>		// in_port_t, sockaddr_in
+#include <stddef.h>			// size_t
+#include <stdint.h>			// int64_t, uint16_t
+#include <sys/types.h>		// freeaddrinfo, gai_strerror, getaddrinfo
+#include <sys/socket.h>		// freeaddrinfo, gai_strerror, getaddrinfo
+#include <sys/stat.h>		// stat, struct stat
 
-#include <algorithm>
-#include <cctype>
-#include <cerrno>
-#include <climits>
-#include <cstdlib>
-#include <cstring>
-#include <limits>
+#include <cctype>			// isalpha, isdigit, tolower
+#include <cerrno>			// errno
+#include <cstdlib>			// strtol, strtoll, strtoul
+#include <cstring>			// memset, strerror, strlen
+
+#include <algorithm>		// find_if, fill
 #include <map>
+#include <limits>			// numeric_limits
+#include <list>
 #include <set>
 #include <sstream>
 #include <string>
+#include <utility>			// make_pair
 #include <vector>
 
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "core/Socket.hpp"
+#include "config/Parser.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/global_defs.hpp"
 #include "utils/log.hpp"
@@ -259,7 +260,8 @@ void	Parser::_parseDirective(it_t nameToken, it_t ctrlToken)
 		if (currDirective.syntax.rules & Parser::kForbiddenDup)
 			_parseDup(currDirective);
 		_parseArgc(currDirective);
-		if ((currDirective.syntax.rules & ~Parser::kIgnoreDup) //! MUST be checked first or could check empty stack
+		// TODO: MUST be checked first or could check empty stack !
+		if ((currDirective.syntax.rules & ~Parser::kIgnoreDup)
 			|| !(_configStack.top().isDefined[currDirective.syntax.type])) {
 			errno = 0;
 			(this->*(currDirective.syntax.parseFn))(currDirective);
@@ -304,9 +306,9 @@ void	Parser::_addErrorPage(Directive& currDirective)
 			it++) {
 		if (std::find_if(it->begin(), it->end(), &isnotdigit) != it->end())
 			_errorHandler("invalid value \"" + *it + "\"");
-		errorCode = strtol(it->c_str(), NULL, 10);
+		errorCode = std::strtol(it->c_str(), NULL, 10);
 		if (errno)
-			THROW_LOGIC("strtol(): " << strerror(errno));
+			THROW_LOGIC("strtol(): " << std::strerror(errno));
 		if ((errorCode < 300) || (errorCode > 599)) {
 			_errorHandler("value \"" + *it + "\" must be between 300 and 599");
 		}
@@ -319,12 +321,12 @@ void	Parser::_setMaxBodySize(Directive& currDirective)
 	uint		shift = 0;
 	char*		unitPtr;
 	const char*	strPtr = currDirective.argv[0].c_str();
-	int64_t	size = strtoll(strPtr, &unitPtr, 10);
+	int64_t		size = std::strtoll(strPtr, &unitPtr, 10);
 
-	if ((unitPtr == strPtr) || (strlen(unitPtr) > 1) || (size < 0))
+	if ((unitPtr == strPtr) || (std::strlen(unitPtr) > 1) || (size < 0))
 		_errorHandler("\"client_max_body_size\" directive invalid value");
 	if (errno)
-		THROW_LOGIC("strtoll(): " << strerror(errno));
+		THROW_LOGIC("strtoll(): " << std::strerror(errno));
 	switch (std::tolower(*unitPtr)) {
 		case 'k': shift = 10; break;
 		case 'm': shift = 20; break;
@@ -374,7 +376,7 @@ void	Parser::_setReturnPair(Directive& currDirective)
 			_errorHandler("invalid return code \"" + arg1 + "\"");
 		errorCode = strtol(arg1.c_str(), NULL, 10);
 		if (errno)
-			THROW_LOGIC("strtol(): " << strerror(errno));
+			THROW_LOGIC("strtol(): " << std::strerror(errno));
 		if ((errorCode < 0) || (errorCode > 999))
 			_errorHandler("invalid return code \"" + arg1 + "\"");
 		if (currDirective.argv.size() > 1)
@@ -440,7 +442,7 @@ void	Parser::_setCgiPass(Directive& currDirective)
 	path += currDirective.argv[0];
 	errno = 0;
 	if (stat(path.c_str(), &fileInfos) < 0) {
-		THROW_FATAL("stat() error: " << path << ": " << strerror(errno));
+		THROW_FATAL("stat() error: " << path << ": " << std::strerror(errno));
 	} else if (!S_ISREG(fileInfos.st_mode)/* || !(sb.st_mode & S_IXUSR)*/) {
 		return (_errorHandler("\"" + path + "\" is not a regular file"));
 	}
@@ -479,12 +481,12 @@ void	Parser::_parseHost(const std::string& str,
 			|| str[0] == '-')
 		_errorHandler("invalid host in \"" + str
 											+ "\" of the listen directive");
-	memset(&hints, 0, sizeof(struct addrinfo));
+	std::memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_socktype = SOCK_STREAM;
 	error = getaddrinfo(str.c_str(), NULL, &hints, &result);
 	if (error) {
 		if (error == EAI_SYSTEM) {
-			THROW_FATAL("getaddrinfo() error: " << strerror(errno));
+			THROW_FATAL("getaddrinfo() error: " << std::strerror(errno));
 		} else
 			THROW_FATAL("getaddrinfo() error: " << gai_strerror(error));
 	}
@@ -497,6 +499,8 @@ void	Parser::_parseHost(const std::string& str,
 void	Parser::_parseAddress(const std::string& str,
 										std::list<sockaddr_in>& addrList)
 {
+	// TODO: change inet_addr with getaddrinfo
+
 	if (str.empty())
 		_listenError("no host", _currDirectivePtr->argv[0]);
 	if (str == "*") {
@@ -524,7 +528,7 @@ int		Parser::_parsePort(const std::string& str,
 		return (-1);
 	} else {
 		errno = 0;
-		port = strtoul(str.c_str(), NULL, 10);
+		port = std::strtoul(str.c_str(), NULL, 10);
 		if (errno == ERANGE)
 			return (-1);
 		if ((port == 0) || (port > portMax))
@@ -555,7 +559,6 @@ void	Parser::_addListen(Directive& currDirective)
 			ss << "a duplicate listen " << ft_inet_ntoa(it->sin_addr)
 						<< ":" << ntohs(it->sin_port);
 			LOG_INFO(ss.str().c_str() << ", ignored");
-//			_errorHandler(ss.str().c_str());
 		}
 	}
 }

@@ -1,20 +1,23 @@
 #ifndef CONFIG_CONFIG_HPP
-#define CONFIG_CONFIG_HPP
+# define CONFIG_CONFIG_HPP
 
-#include <map>
-#include <set>
-#include <string>
-#include <vector>
+# include <stdint.h>		// int64_t
+# include <netinet/in.h>	// sockaddr_in
 
-#include <netinet/in.h>
+# include <map>
+# include <iostream>
+# include <set>
+# include <string>
+# include <utility>			// pair
+# include <vector>
 
-#include "core/Socket.hpp"
-#include "utils/log.hpp"
-#include "utils/utils.hpp"
+# include "core/Socket.hpp"
+# include "utils/log.hpp"
+# include "utils/utils.hpp"
 
 namespace webserv {
 
-	class Config {
+	class	Config {
 	public:
 		typedef std::pair<int, std::string>					return_pair;
 		typedef std::set<std::string, strcmp_icase>			limit_except_set;
@@ -49,7 +52,7 @@ namespace webserv {
 		const error_page_map&	getErrorPages() const { return (_errorPages); }
 		const int64_t&			getMaxBodySize() const { return (_maxBodySize);}
 		const limit_except_set&	getLimitExcept() const { return (_limitExcept);}
-		const return_pair&		getReturnPair() const { return (_return); }
+		const return_pair&		getReturnPair() const { return (_returnPair); }
 		const std::string&		getRoot() const { return (_root); }
 		const std::string&		getAlias() const { return (_alias); }
 		bool					isAutoIndex() const { return (_autoIndex); }
@@ -60,8 +63,6 @@ namespace webserv {
 		friend std::ostream&	operator<<(std::ostream&, const Config&);
 	private:
 		LocationType				_lType;
-		// TO DO: In order, first check the _maxBodySize, then _limitExcept,
-		// then _return, _cgiPass, _index, _autoIndex when building Response
 
 		// 1) We must resolve the eventual localhost address
 		// (case-insensitively: it must work with "LOCalhOST:80")
@@ -97,8 +98,6 @@ namespace webserv {
 		// 5) Internal redirection must not check the _errorPages to avoid an
 		// infinite loop -> add variable indicating redirection? Or copy the location
 		// and delete the _errorPages there?
-		// 6) For the sake of simplicity, we don't reproduce the NGINX possibility
-		// of changing the response code with another ('code [=[response]] URI')
 		error_page_map				_errorPages;
 
 		// 1) Can only be defined once on a level, and if another
@@ -119,10 +118,6 @@ namespace webserv {
 		// 5) If the definition was inherited from the Config, the first
 		// definition line replaces it
 		int64_t						_maxBodySize;
-
-		// Same as with NGINX -> if the set is not empty, and the
-		// method is not in the set, we deny the access and return a 403
-		// error, keeping the connection alive
 		limit_except_set			_limitExcept;
 
 		// 1) Can only be defined once on a level, so the 2nd, 3rd...
@@ -147,7 +142,7 @@ namespace webserv {
 		// 6) For the 444 code, if nothing else is given, it closes the connection
 		// without sending a request, otherwise if some text is given, it is
 		// treated as other codes (the text goes in the response body)
-		return_pair					_return;
+		return_pair					_returnPair;
 
 		// 1) Can only be defined once, and if another definition line
 		// appears, it must throw an exception (like '"root" directive is
@@ -175,14 +170,12 @@ namespace webserv {
 		// already set when creating a Location class
 		// 3) Can be defined multiple times, and for the sake of simplicity,
 		// if another definition line appears, it replaces the previous one
-		// 4) For the response, it must be checked before _autoIndex
 		std::string					_index;
 
 		// 1) Can only be defined once, and if another
 		// definition line appears, it must throw an exception
 		// (like '"autoindex" directive is duplicate in
 		// /usr/local/etc/nginx/nginx.conf:37')
-		// 2) The index must be checked first, before _autoIndex
 		bool						_autoIndex;
 
 		// 1) Can only be defined once, and if another definition line
@@ -220,4 +213,4 @@ namespace webserv {
 
 }	// namespace webserv
 
-#endif // CONFIG_CONFIG_HPP
+#endif	// CONFIG_CONFIG_HPP

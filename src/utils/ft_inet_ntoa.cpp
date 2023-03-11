@@ -1,7 +1,7 @@
+#include <netinet/in.h>		// struct in_addr
+
 #include <sstream>
 #include <string>
-
-#include <netinet/in.h>
 
 namespace	webserv
 {
@@ -12,7 +12,8 @@ namespace	webserv
 		unsigned char*			bytes = reinterpret_cast<unsigned char*>(&in);
 		static std::string		str;
 
-		stream << static_cast<int>(bytes[0]) << "." << static_cast<int>(bytes[1])
+		stream << static_cast<int>(bytes[0])
+			<< "." << static_cast<int>(bytes[1])
 			<< "." << static_cast<int>(bytes[2])
 			<< "." << static_cast<int>(bytes[3]);
 		str = stream.str();

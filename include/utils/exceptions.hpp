@@ -1,24 +1,25 @@
-#include <cstring>
-#include <cerrno>
-#include <stdexcept>
+#ifndef EXCEPTIONS_HPP
+# define EXCEPTIONS_HPP
 
-#include "utils/log.hpp"
+# include <stdexcept>
+# include <string>
 
-#define THROW_FATAL(msg)	{												\
+# include "utils/log.hpp"
+
+# define THROW_FATAL(msg)	{												\
 	LOG_ERROR(msg);															\
 	throw FatalErrorException();											\
 }
 
-#define THROW_LOGIC(msg)	{												\
+# define THROW_LOGIC(msg)	{												\
 	LOG_EMERG(msg);															\
 	throw LogicErrorException();											\
 }
 
-#define THROW_SYNTAX(msg)	{												\
+# define THROW_SYNTAX(msg)	{												\
 	LOG_EMERG(msg);															\
 	throw SyntaxErrorException();											\
 }
-
 
 namespace webserv {
 
@@ -46,3 +47,5 @@ namespace webserv {
 	};
 
 }	// namespace webserv
+
+#endif	// EXCEPTIONS_HPP

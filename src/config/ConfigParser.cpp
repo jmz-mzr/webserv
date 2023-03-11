@@ -1,12 +1,14 @@
-#include <string>
-#include <iostream>
+#include <stdint.h>		// uint32_t
+
+#include <list>
+#include <string>		// getline
 
 #include "config/ConfigParser.hpp"
+#include "webserv_config.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/global_defs.hpp"
 #include "utils/log.hpp"
 #include "utils/utils.hpp"
-#include "webserv_config.hpp"
 
 namespace webserv {
 

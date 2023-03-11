@@ -1,7 +1,9 @@
+#include <sys/socket.h>		// bind, listen, setsockopt, struct sockaddr
+
+#include <cerrno>			// errno
+#include <cstring>			// strerror
+
 #include "core/ListenSocket.hpp"
-
-#include <cerrno>
-
 #include "utils/log.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/utils.hpp"
@@ -18,7 +20,8 @@ namespace	webserv
 	{
 		const int enable = 1;
 		setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
-		if (bind(_fd, reinterpret_cast<sockaddr*>(&_addr), _addrLen) < 0) {
+		if (bind(_fd,
+					reinterpret_cast<struct sockaddr*>(&_addr), _addrLen) < 0) {
 			closeFd();
 			LOG_DEBUG(*this);
 			THROW_FATAL("bind() error: " << strerror(errno));

@@ -1,11 +1,9 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include <utility>
-# include <string>
-# include <vector>
+# include <netinet/in.h>	// sockaddr_in
 
-# include <stdint.h>
+# include <vector>
 
 # include "config/ServerConfig.hpp"
 # include "core/ListenSocket.hpp"

@@ -1,7 +1,8 @@
 #include "config/ServerConfig.hpp"
 
-#include <algorithm>
-#include <cstring>
+#include <algorithm>	// find
+#include <string>
+#include <utility>		// make_pair
 
 #include "config/ConfigParser.hpp"
 #include "utils/log.hpp"
@@ -18,7 +19,7 @@ namespace	webserv
 		: _serverNames(src.getServerNames().begin(), src.getServerNames().end())
 		, _errorPages(src.getErrorPages())
 		, _maxBodySize(src.getMaxBodySize() ? src.getMaxBodySize() : (1 << 20))
-		, _return(src.getReturnPair())
+		, _returnPair(src.getReturnPair())
 		, _root(src.getRoot().empty() ? "html" : src.getRoot())
 		, _autoIndex(src.isAutoIndex())
 		, _index(src.getIndex().empty() ? "index.html" : src.getIndex())

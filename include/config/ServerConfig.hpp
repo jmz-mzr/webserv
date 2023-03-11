@@ -1,17 +1,17 @@
 #ifndef SERVERCONFIG_HPP
 # define SERVERCONFIG_HPP
 
+# include <netinet/in.h>	// sockaddr_in
+# include <stdint.h>		// int64_t
+
 # include <map>
 # include <set>
 # include <string>
-# include <utility>
+# include <utility>			// pair
 # include <vector>
-
-# include <stdint.h>
 
 # include "config/Config.hpp"
 # include "config/Location.hpp"
-# include "core/Socket.hpp"
 # include "utils/utils.hpp"
 
 namespace	webserv
@@ -39,7 +39,7 @@ namespace	webserv
 		const int64_t&					getMaxBodySize() const
 													{ return (_maxBodySize); }
 		const return_pair&				getReturnPair() const
-													{ return (_return); }
+													{ return (_returnPair); }
 		const std::string&				getRoot() const
 													{ return (_root); }
 		bool							isAutoIndex() const
@@ -61,7 +61,7 @@ namespace	webserv
 		hostname_set				_serverNames;
 		error_page_map				_errorPages;
 		int64_t						_maxBodySize;
-		return_pair					_return;
+		return_pair					_returnPair;
 		std::string					_root;
 		bool						_autoIndex;
 		std::string					_index;

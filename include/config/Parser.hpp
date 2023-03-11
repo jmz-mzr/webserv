@@ -1,26 +1,27 @@
 #ifndef PARSER_HPP
-#define PARSER_HPP
+# define PARSER_HPP
 
-#include <list>
-#include <map>
-#include <stack>
-#include <string>
+# include <netinet/in.h>	// sockaddr_in
+# include <stddef.h>		// size_t
 
-#include "config/Config.hpp"
-#include "config/Lexer.hpp"
-#include "config/Location.hpp"
-#include "config/ServerConfig.hpp"
-#include "core/Socket.hpp"
-#include "utils/utils.hpp"
+# include <list>
+# include <map>
+# include <set>
+# include <stack>
+# include <string>
+# include <vector>
+
+# include "config/Config.hpp"
+# include "config/Lexer.hpp"
+# include "utils/utils.hpp"
 
 namespace	webserv {
 
 namespace	config {
 
-
-	class Parser {
+	class	Parser {
 	public:
-		typedef Lexer::token_queue::iterator			it_t;
+		typedef Lexer::token_queue::iterator	it_t;
 
 		static const size_t		kDirectiveNb = 13;
 
@@ -90,7 +91,6 @@ namespace	config {
 		void						operator()(Lexer::token_queue& tokens);
 
 		const std::list<Config>&	getConfigs() const { return (_configs); }
-
 	private:
 		std::list<Config>						_configs;
 		std::stack<ConfigData>					_configStack;
@@ -125,11 +125,10 @@ namespace	config {
 		void	_addServerName(Directive& currDirective);
 		void	_addLocation(Directive& currDirective);
 		void	_addServer(Directive& currDirective);
-
 	};
 
 }	// namespace config
 
 }	// namespace webserv
 
-#endif // PARSER_HPP
+#endif	// PARSER_HPP

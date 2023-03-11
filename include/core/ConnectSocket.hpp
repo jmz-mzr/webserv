@@ -1,7 +1,7 @@
 #ifndef CONNECTSOCKET_HPP
 # define CONNECTSOCKET_HPP
 
-# include <cerrno>
+# include <netinet/in.h>	// sockaddr_in
 
 # include "core/Socket.hpp"
 

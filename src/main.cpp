@@ -1,12 +1,12 @@
-# include <csignal>
-# include <cstdlib>
-# include <iostream>
+#include <csignal>		// signal, SIGINT
+#include <cstdlib>		// EXIT_SUCCESS/FAILURE
 
-# include "core/Webserv.hpp"
-# include "utils/exceptions.hpp"
-# include "utils/log.hpp"
+#include <exception>
+#include <iostream>		// cout
 
-# include "utils/utils.hpp"
+#include "core/Webserv.hpp"
+#include "utils/log.hpp"
+#include "utils/utils.hpp"
 
 static void	handleSigInt(int signum)
 {
@@ -21,8 +21,6 @@ int	main(int argc, char** argv) try
 	webserv::Webserv	webserv;
 
 	webserv.init(argc, argv);
-	// From then on the server should never die: we must try-catch
-	// everything in "run()" so it never comes back here
 	std::signal(SIGINT, handleSigInt);
 	webserv.run();
 	return (EXIT_SUCCESS);

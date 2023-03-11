@@ -1,13 +1,12 @@
-#include <cstring>
+#include <netinet/in.h>		// in_addr_t, sockaddr_in
+#include <arpa/inet.h>		// htons
 
-# include <netdb.h>			// getaddrinfo & co
-# include <netinet/in.h>	// inet_addr
-# include <arpa/inet.h>		// inet_addr
+#include <cstring>			// memset
 
 namespace webserv {
 
 void		 initSockAddr(sockaddr_in& addr)
-{ memset(&addr, 0, sizeof(addr)); }
+{ std::memset(&addr, 0, sizeof(addr)); }
 
 void		 setSockAddr(sockaddr_in& addr, const in_addr_t ip,
 													const uint16_t port)

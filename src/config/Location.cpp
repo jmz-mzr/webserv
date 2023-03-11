@@ -1,6 +1,9 @@
+#include <string>
+#include <utility>	// make_pair
+
 #include "config/Location.hpp"
-#include "utils/log.hpp"
 #include "webserv_config.hpp"
+#include "utils/log.hpp"
 
 namespace	webserv
 {
@@ -18,9 +21,9 @@ namespace	webserv
 			, _limitExcept(src2.getLimitExcept().empty()
 							? src1._limitExcept
 							: src2.getLimitExcept())
-			, _return((src2.getReturnPair().first == -1)
-						? std::make_pair(src1._return.first,
-										src1._return.second)
+			, _returnPair((src2.getReturnPair().first == -1)
+						? std::make_pair(src1._returnPair.first,
+										src1._returnPair.second)
 						: std::make_pair(src2.getReturnPair().first,
 										src2.getReturnPair().second))
 			, _errorPages(src2.getErrorPages().empty()
@@ -42,7 +45,7 @@ namespace	webserv
 							? src2.getMaxBodySize()
 							: src1.getMaxBodySize())
 			, _limitExcept(src2.getLimitExcept())
-			, _return((src2.getReturnPair().first == -1)
+			, _returnPair((src2.getReturnPair().first == -1)
 						? std::make_pair(src1.getReturnPair().first,
 										src1.getReturnPair().second)
 						: std::make_pair(src2.getReturnPair().first,

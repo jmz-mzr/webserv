@@ -1,10 +1,16 @@
-#include "utils/log.hpp"
-
-#include <cstdio>
-#include <iostream>
+#include <stdio.h>		// rename
 #include <sys/stat.h>
+
+#include <cerrno>		// errno
+#include <cstring>		// strerror
+
+#include <ios>
+#include <iostream>
+#include <sstream>
+#include <string>
 #include <vector>
 
+#include "utils/log.hpp"
 #include "webserv_config.hpp"
 #include "utils/ansi_colors.hpp"
 #include "utils/bitwise_op.hpp"
@@ -71,7 +77,7 @@ namespace Log
 				<< _cc[Level::kWarn].color << _cc[Level::kWarn].str
 				<< RESET << "] " << BWHT << __FILE__ << ":"
 				<< __LINE__ << RESET << ": Cannot open \"" << filePath
-				<< "\", ignored" << std::endl;
+				<< "\" (" << std::strerror(errno) << "), ignored" << std::endl;
 			std::cerr << stream.str();
 		} else {
 			_fileSize = webserv::getFileSize(filePath);
@@ -79,8 +85,8 @@ namespace Log
 				std::ostringstream	stream;
 				stream << "webserv: ["
 					<< _cc[Level::kWarn].color << _cc[Level::kError].str
-					<< RESET << "] " << BWHT << __FILE__ << ":"
-					<< __LINE__ << RESET << ": " << strerror(errno) << std::endl;
+					<< RESET << "] " << BWHT << __FILE__ << ":" << __LINE__
+					<< RESET << ": " << std::strerror(errno) << std::endl;
 				std::cerr << stream.str();
 				throw (webserv::FatalErrorException());
 			}
@@ -123,8 +129,8 @@ namespace Log
 				std::ostringstream	stream;
 				stream << "webserv: ["
 					<< _cc[Level::kWarn].color << _cc[Level::kWarn].str
-					<< RESET << "] " << BWHT << __FILE__ << ":"
-					<< __LINE__ << RESET << ": " << strerror(errno) << std::endl;
+					<< RESET << "] " << BWHT << __FILE__ << ":" << __LINE__
+					<< RESET << ": " << std::strerror(errno) << std::endl;
 				std::cerr << stream.str();
 			} else {
 				_logfile.open(_filePath.c_str());
@@ -133,9 +139,8 @@ namespace Log
 					std::ostringstream	stream;
 					stream << "webserv: ["
 						<< _cc[Level::kError].color << _cc[Level::kError].str
-						<< RESET << "] " << BWHT << __FILE__ << ":"
-						<< __LINE__ << RESET << ": "
-						<< strerror(errno) << std::endl;
+						<< RESET << "] " << BWHT << __FILE__ << ":" << __LINE__
+						<< RESET << ": " << std::strerror(errno) << std::endl;
 					std::cerr << stream.str();
 					throw (webserv::FatalErrorException());
 				}

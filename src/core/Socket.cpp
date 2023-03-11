@@ -1,9 +1,11 @@
+#include <arpa/inet.h>		// ntohs
+#include <unistd.h>			// close
+
+#include <cstring>			// memset
+
 #include "core/Socket.hpp"
-
-#include <unistd.h>
-
-#include "utils/exceptions.hpp"
 #include "utils/log.hpp"
+#include "utils/exceptions.hpp"
 #include "utils/utils.hpp"
 
 namespace	webserv
@@ -17,14 +19,14 @@ namespace	webserv
 			: _type(t)
 			, _fd(-1)
 			, _addrLen(sizeof(_addr))
-	{ memset(&_addr, 0, _addrLen); }
+	{ std::memset(&_addr, 0, _addrLen); }
 
 	Socket::Socket(const Type t, const sockaddr_in& address)
 			: _type(t)
 			, _fd(-1)
 			, _addrLen(sizeof(address))
 	{
-		memset(&_addr, 0, _addrLen);
+		std::memset(&_addr, 0, _addrLen);
 		_addr.sin_addr.s_addr = address.sin_addr.s_addr;
 		_addr.sin_port = address.sin_port;
 		_addr.sin_family = address.sin_family;
@@ -33,7 +35,7 @@ namespace	webserv
 
 		if (_addr.sin_addr.s_addr == INADDR_NONE) {
 			LOG_DEBUG("ip=" << _ip << " port=" << _port);
-			THROW_FATAL("inet_addr() error: invalid IP address");
+			THROW_FATAL("Fatal error: invalid IP address");
 		}
 		if ((_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
 			LOG_DEBUG("ip=" << _ip << " port=" << _port);
@@ -65,6 +67,5 @@ namespace	webserv
 			}
 		}
 	}
-
 
 }	// namespace webserv

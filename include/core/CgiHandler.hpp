@@ -1,15 +1,15 @@
 #ifndef CGIHANDLER_HPP
 # define CGIHANDLER_HPP
 
-# include "core/Request.hpp"
+# include <stdio.h>			// FILE
+# include <sys/types.h>		// pid_t
 
-# include <unistd.h>
-
-# include <string>
 # include <list>
-# include <vector>
-# include <cstdio>
 # include <map>
+# include <string>
+# include <vector>
+
+# include "core/Request.hpp"
 
 namespace	webserv
 {

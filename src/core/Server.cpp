@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "core/Server.hpp"
 #include "utils/log.hpp"
 
@@ -8,7 +10,8 @@ namespace	webserv
 	/*                       CONSTRUCTORS / DESTRUCTORS                       */
 	/**************************************************************************/
 
-	Server::Server(const ServerConfig& serverConfig, const sockaddr_in& listenPair)
+	Server::Server(const ServerConfig& serverConfig,
+					const sockaddr_in& listenPair)
 			: _socket(listenPair)
 			, _configs(1, serverConfig)
 	{ }

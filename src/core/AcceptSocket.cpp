@@ -1,12 +1,15 @@
 #include "core/AcceptSocket.hpp"
 
-#include <cerrno>
-#include <cstring>
+#include <arpa/inet.h>		// ntohs
+#include <fcntl.h>			// fcntl
+#include <sys/socket.h>		// accept, setsockopt, struct sockaddr
 
-#include <fcntl.h>
+#include <cerrno>			// errno
+#include <cstring>			// strerror
 
 #include "utils/exceptions.hpp"
 #include "utils/log.hpp"
+#include "utils/utils.hpp"
 #include "webserv_config.hpp"
 
 namespace	webserv
@@ -24,7 +27,7 @@ namespace	webserv
 				reinterpret_cast<struct sockaddr*>(&_addr), &_addrLen);
 		if (_fd < 0) {
 			LOG_DEBUG("ip=" << _ip << " port=" << _port);
-			THROW_FATAL("accept() error: " << strerror(errno));
+			THROW_FATAL("accept() error: " << std::strerror(errno));
 		}
 #ifdef MACOS
 		fcntl(_fd, F_SETFL, O_NONBLOCK);

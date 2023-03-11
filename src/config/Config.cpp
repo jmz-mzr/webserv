@@ -1,9 +1,12 @@
-#include "config/Config.hpp"
+#include <arpa/inet.h>	// ntohs
 
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
+#include <utility>			// make_pair
 
+#include "config/Config.hpp"
 #include "utils/log.hpp"
 
 namespace webserv {
@@ -11,7 +14,7 @@ namespace webserv {
 Config::Config()
 		: _lType(Config::kNone)
 		, _maxBodySize(0)
-		, _return(-1, "")
+		, _returnPair(-1, "")
 		, _autoIndex(false)
 { }
 
@@ -22,7 +25,7 @@ Config::Config(const Config& src)
 		, _errorPages(src._errorPages)
 		, _maxBodySize(src._maxBodySize)
 		, _limitExcept(src._limitExcept)
-		, _return(src._return)
+		, _returnPair(src._returnPair)
 		, _root(src._root)
 		, _alias(src._alias)
 		, _index(src._index)
@@ -44,7 +47,7 @@ void	Config::addLimitExcept(const std::string& method)
 { _limitExcept.insert(method); }
 
 void	Config::setReturnPair(const return_pair& returnPair)
-{ _return = returnPair; }
+{ _returnPair = returnPair; }
 
 void	Config::setRoot(const std::string& path)
 { _root = path; }

@@ -1,11 +1,14 @@
 #ifndef LOCATION_HPP
 # define LOCATION_HPP
 
-# include <map>
-# include <string>
-# include <set>
-# include <utility>
+# include <stdint.h>	// int64_t
 
+# include <map>
+# include <set>
+# include <string>
+# include <utility>		// pair
+
+# include "config/Config.hpp"
 # include "config/ServerConfig.hpp"
 # include "utils/utils.hpp"
 
@@ -35,7 +38,7 @@ namespace	webserv
 		const limit_except_set&	getLimitExcept() const
 											{ return (_limitExcept); }
 		const return_pair&		getReturnPair() const
-											{ return (_return); }
+											{ return (_returnPair); }
 		const error_page_map&	getErrorPages() const
 											{ return (_errorPages); }
 		const std::string&		getRoot() const
@@ -58,7 +61,7 @@ namespace	webserv
 		std::string				_locationName;
 		int64_t					_maxBodySize;
 		limit_except_set		_limitExcept;
-		return_pair				_return;
+		return_pair				_returnPair;
 		error_page_map			_errorPages;
 		std::string				_root;
 		std::string				_alias;

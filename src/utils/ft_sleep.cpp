@@ -1,4 +1,4 @@
-#include <ctime>
+#include <ctime>	// clock
 
 namespace	webserv
 {
