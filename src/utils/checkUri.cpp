@@ -1,8 +1,19 @@
+#include <cctype>	// isalnum, isalpha, isdigit
+
 #include <string>
-#include <cctype>
 
 namespace	webserv
 {
+
+	bool	isToken(const char c)
+	{
+		if (std::isalnum(c) || c == '!' || c == '#' || c == '$' || c == '%'
+				|| c == '&' || c == '\'' || c == '*' || c == '+' || c == '-'
+				|| c == '.' || c == '^' || c == '_' || c == '`' || c == '|'
+				|| c == '~')
+			return (true);
+		return (false);
+	}
 
 	bool	isUriUnreserved(const char c)
 	{
@@ -13,8 +24,8 @@ namespace	webserv
 
 	bool	isUriPctEncoded(const char* firstOfThreeChar)
 	{
-		const char*			c = firstOfThreeChar;
-		const std::string	hex = "0123456789ABCDEFabcdef";
+		const char*					c = firstOfThreeChar;
+		static const std::string	hex = "0123456789ABCDEFabcdef";
 
 		if (c && *c == '%'
 				&& *(c + 1) && hex.find(*(c + 1)) != std::string::npos
@@ -25,7 +36,7 @@ namespace	webserv
 
 	bool	isUriSubDelim(const char c)
 	{
-		const std::string	subDelim = "!$&\'()*+,;=";
+		static const std::string	subDelim = "!$&\'()*+,;=";
 
 		if (subDelim.find(c) != std::string::npos)
 			return (true);
@@ -93,6 +104,8 @@ namespace	webserv
 			else if (delim.find(str[i]) != std::string::npos)
 				break ;
 			else
+				return (std::string::npos);
+			if (str[i] == '.' && str[i - 1] == '.')
 				return (std::string::npos);
 		}
 		return (i);

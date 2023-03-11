@@ -1,19 +1,25 @@
+#include <fcntl.h>		// open
+#include <libgen.h>		// dirname
+#include <signal.h>		// kill
+#include <stddef.h>		// size_t
+#include <stdio.h>		// fileno
+#include <stdlib.h>		// exit
+#include <sys/wait.h>	// waitpid
+#include <unistd.h>		// close, chdir, dup2, execve, fork, (u)sleep, STDIN/OUT
+
+#include <cerrno>		// errno
+#include <cstring>		// strerror
+#include <cstdio>		// clearerr, fclose
+#include <cctype>		// toupper
+
+#include <list>
+#include <map>
+#include <string>
+#include <sstream>
+
 #include "core/CgiHandler.hpp"
 #include "utils/log.hpp"
 #include "utils/utils.hpp"
-
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <libgen.h>
-
-#include <cstring>
-#include <cerrno>
-#include <cctype>
-
-#include <sstream>
 
 #define DUP2_ERROR			4
 #define CHDIR_ERROR			8
@@ -73,8 +79,8 @@ namespace	webserv
 			filename = _requestedFilename.c_str();
 		if (errorAt[0] != '\0' && errorType[0] != '\0') {
 			LOG_ERROR(errorAt << space1 << "\"" << filename << "\" "
-					<< errorType << " (" << errno << ": " << strerror(errno)
-					<< "), " << debugInfos.str());
+					<< errorType << " (" << errno << ": "
+					<< std::strerror(errno) << "), " << debugInfos.str());
 		} else
 			LOG_ERROR(errorAt << space1 << "\"" << filename << "\""
 					<< space2 << errorType << ", " << debugInfos.str());
@@ -120,7 +126,7 @@ namespace	webserv
 		Request::header_map					headers = request.getHeaders();
 		Request::header_map::const_iterator	it = headers.begin();
 		std::string							fieldName;
-		size_t								found;
+		size_t								dirPos;
 
 		while (it != headers.end()) {
 			if (!ft_strcmp_icase(it->first, "Content-Length")
@@ -133,9 +139,9 @@ namespace	webserv
 			}
 			++it;
 		}
-		found = _requestedFilename.find_last_of('/');
-		found += (found == 0);
-		_envMap["DOCUMENT_ROOT"] = _requestedFilename.substr(0, found);
+		dirPos = _requestedFilename.find_last_of('/');
+		dirPos += (dirPos == 0);
+		_envMap["DOCUMENT_ROOT"] = _requestedFilename.substr(0, dirPos);
 		return (_loadEnvContainers());
 	}
 
@@ -145,11 +151,13 @@ namespace	webserv
 		//TO DO: Add "remote_ident/user" for sessions?
 		//		 And HTTP_COOKIE?
 
-		if (request.getRequestMethod() == "POST")
-			_envMap["CONTENT_LENGTH"] = to_string(request.getBodySize());
-		if (!request.getContentType().empty())
-			_envMap["CONTENT_TYPE"] = request.getContentType();
-		else if (request.getRequestMethod() == "POST")
+		const std::string&	contentType = request.getContentType();
+		const std::string&	contentLength = (request.getContentLength() >= 0 ?
+									to_string(request.getContentLength()) : "");
+
+		_envMap["CONTENT_LENGTH"] = contentLength;
+		_envMap["CONTENT_TYPE"] = contentType;
+		if (contentType.empty() && request.getRequestMethod() == "POST")
 			_envMap["CONTENT_TYPE"] = computedContentType;
 		_envMap["GATEWAY_INTERFACE"] = "CGI/1.1";
 		_envMap["PATH_INFO"] = _requestedFilename;
@@ -174,13 +182,13 @@ namespace	webserv
 	{
 		if (_inputFd >= 0) {
 			if (close(_inputFd) < 0) {
-				LOG_ERROR("Bad fclose() on cgiInputFd");
+				LOG_ERROR("Bad close() on cgiInputFd");
 			} else
 				_inputFd = -1;
 		}
 		if (_outputFd >= 0) {
 			if (close(_outputFd) < 0) {
-				LOG_ERROR("Bad fclose() on cgiOutputFd");
+				LOG_ERROR("Bad close() on cgiOutputFd");
 			} else
 				_outputFd = -1;
 		}

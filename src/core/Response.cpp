@@ -1,18 +1,31 @@
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdio.h>
+#include <dirent.h>		// closedir, opendir, readdir, DIR
+#include <fcntl.h>		// open
+#include <stddef.h>		// size_t
+#include <stdint.h>		// int64_t
+#include <stdio.h>		// rename, rewind, FILE
+#include <sys/socket.h>	// send
+#include <sys/stat.h>	// lstat, stat, struct stat, S_ISDIR, S_ISREG
+#include <sys/types.h>	// closedir, opendir, ssize_t, ssize_t
+#include <time.h>		// strptime
+#include <unistd.h>		// rmdir, unlink
 
-#include <cerrno>
-#include <cstring>
-#include <cctype>
-#include <cstdlib>
+#include <cctype>		// isalnum, isdigit, isprint
+#include <cerrno>		// errno
+#include <cstdio>		// feof, ferror, fgetc, fgets, fread, ungetc
+#include <cstdlib>		// atoi, strtoll
+#include <cstring>		// memset, strerror
+#include <ctime>		// gmtime, mktime, strftime, struct tm, time_t
 
+#include <exception>
+#include <ios>			// hex, ios::app/beg/in/out/binary, uppercase
+#include <limits>		// numeric_limits
 #include <map>
+#include <string>
 #include <sstream>
-#include <limits>
+#include <utility>		// make_pair
 
-#include "core/Response.hpp"
 #include "webserv_config.hpp"
+#include "core/Response.hpp"
 #include "utils/global_defs.hpp"
 #include "utils/log.hpp"
 #include "utils/utils.hpp"
@@ -91,11 +104,6 @@ namespace	webserv
 		return (_responseBuffer);
 	}
 
-/*	void	Response::setResponseCode(int responseCode)
-	{
-		_responseCode = responseCode;
-	}
-*/
 	bool	Response::isKeepAlive(const Request& request) const
 	{
 		if (!_isKeepAlive || !request.isKeepAlive())
@@ -210,8 +218,8 @@ namespace	webserv
 			filename = _requestedFilename.c_str();
 		if (errorAt[0] != '\0' && errorType[0] != '\0') {
 			LOG_ERROR(errorAt << space1 << "\"" << filename << "\" "
-					<< errorType << " (" << errno << ": " << strerror(errno)
-					<< "), " << debugInfos.str());
+					<< errorType << " (" << errno << ": "
+					<< std::strerror(errno) << "), " << debugInfos.str());
 		} else
 			LOG_ERROR(errorAt << space1 << "\"" << filename << "\""
 					<< space2 << errorType << ", " << debugInfos.str());
@@ -227,7 +235,7 @@ namespace	webserv
 		LOG_DEBUG("HTTP autoindex file: " << entryName);
 		if (entryName[0] == '.')
 			return (0);
-		memset(&fileInfos, 0, sizeof(fileInfos));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0) {
 			if (errno != ENOENT && errno != ELOOP) {
 				_logError(request, "stat()", "failed");
@@ -476,8 +484,6 @@ namespace	webserv
 
 	void	Response::_prepareFileResponse(Request& request)
 	{
-		// TO DO: read while (size < SEND_BUF) && no exception raised?
-
 		if (_fileBuffer != 0 && (_bufferPos != _fileBufferSize)) {
 			_isResponseReady = true;
 			return ;
@@ -556,7 +562,7 @@ namespace	webserv
 		dirPos += (dirPos == 0);
 		_requestedFilename[dirPos] = '\0';
 		LOG_DEBUG("HTTP index check dir: \"" << _requestedFilename << "\"");
-		memset(&dirInfos, 0, sizeof(dirInfos));
+		std::memset(&dirInfos, 0, sizeof(dirInfos));
 		if (stat(_requestedFilename.c_str(), &dirInfos) < 0) {
 			if (errno != EACCES && errno != ENOENT) {
 				_logError(request, "stat()", "failed");
@@ -584,10 +590,10 @@ namespace	webserv
 			return (_loadInternalRedirect(request, index));
 		_requestedFilename += index;
 		LOG_DEBUG("Open index \"" << _requestedFilename << "\"");
-		memset(&fileInfos, 0, sizeof(fileInfos));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0) {
 			LOG_DEBUG("stat() \"" << _requestedFilename << "\" failed ("
-					<< errno << ": " << strerror(errno));
+					<< errno << ": " << std::strerror(errno));
 			if (errno == EACCES) {
 				_logError(request, "", "is forbidden");
 				return (403);
@@ -609,7 +615,8 @@ namespace	webserv
 //			LOG_ERROR("Bad close() on fd=" << _requestedFileFd);
 //		_requestedFileFd = -1;
 		_requestedFile.clear();
-		_requestedFile.close();
+		if (_requestedFile.is_open())
+			_requestedFile.close();
 		if (_requestedFile.fail()) {
 			if (!_tmpCgiBodyFilename.empty()) {
 				LOG_ERROR("Bad close() on \"" << _tmpCgiBodyFilename << "\"");
@@ -632,10 +639,9 @@ namespace	webserv
 			_logError(request, "open()", "failed");
 			return (false);
 		}
-		memset(fileInfos, 0, sizeof(*fileInfos));
+		std::memset(fileInfos, 0, sizeof(*fileInfos));
 		if (stat(_requestedFilename.c_str(), fileInfos) < 0) {
 			_logError(request, "stat()", "failed");
-			//_closeRequestedFile();
 			return (false);
 		} else if (S_ISDIR(fileInfos->st_mode))
 			_closeRequestedFile();
@@ -649,36 +655,10 @@ namespace	webserv
 	{
 		_loadRelativeLocationPrefix(request);
 		_location += _escapeUri(request.getUri());
+		if (*_location.rbegin() != '/')
+			_location += '/';
 		if (!request.getQuery().empty())
 			_location += std::string("?") + request.getQuery();
-	}
-
-	std::string	Response::_getFileExtension()
-	{
-		const char*		name = _requestedFilename.c_str();
-		int				i = static_cast<int>(_requestedFilename.size()) - 1;
-		int				ext = 0;
-
-		if (i <= 1 || !isprint(name[i]) || name[i] == '/' || name[i] == '.')
-			return ("");
-		while (--i > 0) {
-			if (!isprint(name[i]) || name[i] == '/')
-				return ("");
-			if (_requestedFilename[i] == '.') {
-				for (int j = i - 1; j >= 0; --j) {
-					if (!isprint(name[j]) || name[j] == '/')
-						return ("");
-					if (isprint(name[j]) && name[j] != '.') {
-						ext = i + 1;
-						break ;
-					}
-				}
-				break ;
-			}
-		}
-		if (ext != 0)
-			return (&name[ext]);
-		return ("");
 	}
 
 	void	Response::_loadFileHeaders(const struct stat* fileInfos)
@@ -687,13 +667,13 @@ namespace	webserv
 			_responseCode = 200;
 		_contentLength = fileInfos->st_size;
 		_lastModifiedTime = fileInfos->st_mtime;
-		_contentType = _getContentType(_getFileExtension());
+		_contentType = _getContentType(getFileExtension(_requestedFilename));
 	}
 
 	bool	Response::_findMatch(const std::string& value,
 									const std::string& eTag) const
 	{
-		std::string::const_iterator			c;
+		std::string::const_iterator		c;
 
 		if (eTag.empty())
 			return (false);
@@ -756,14 +736,14 @@ namespace	webserv
 		struct tm	time;
 		char*		converted;
 
-		memset(&time, 0, sizeof(time));
+		std::memset(&time, 0, sizeof(time));
 		converted = strptime(timeStr, "%a, %d %b %Y %H:%M:%S GMT", &time);
 		if (!converted || *converted != '\0') {
-			memset(&time, 0, sizeof(time));
+			std::memset(&time, 0, sizeof(time));
 			converted = strptime(timeStr, "%a, %d-%b-%y %H:%M:%S GMT", &time);
 		}
 		if (!converted || *converted != '\0') {
-			memset(&time, 0, sizeof(time));
+			std::memset(&time, 0, sizeof(time));
 			converted = strptime(timeStr, "%a %b %d %H:%M:%S %Y", &time);
 		}
 		if (!converted || *converted != '\0')
@@ -879,7 +859,7 @@ namespace	webserv
 			return (true);
 		filepath = std::string(dirPath) + "/" + entryName;
 		LOG_DEBUG("Tree element path: \"" << filepath << "\"");
-		memset(&fileInfos, 0, sizeof(fileInfos));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(filepath.c_str(), &fileInfos) < 0) {
 			_logError(request, "stat()", "failed", filepath.c_str());
 			return (true);
@@ -976,8 +956,12 @@ namespace	webserv
 		struct stat		fileInfos;
 		int				responseCode;
 
+		if (request.getContentLength() > 0 || request.isChunkedRequest()) {
+			_logError(request, "DELETE with body is unsupported", "");
+			return (415);
+		}
 		LOG_DEBUG("HTTP delete filename: \"" << _requestedFilename << "\"");
-		memset(&fileInfos, 0, sizeof(fileInfos));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (lstat(_requestedFilename.c_str(), &fileInfos) < 0) {
 			_logError(request, "lstat()", "failed");
 			if (errno == ENOTDIR)
@@ -1002,7 +986,7 @@ namespace	webserv
 
 		_contentType = "text/html";
 		_contentLength = _getPutPostResponseBody(request).size();
-		memset(&fileInfos, 0, sizeof(fileInfos));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0)
 			_logError(request, "stat()", "failed");
 		else
@@ -1062,6 +1046,8 @@ namespace	webserv
 	int	Response::_handleRequestAlreadyExistingFile(const Request& request,
 												const struct stat* fileInfos)
 	{
+		if (request.getRequestMethod() == "PUT")
+			return (_moveRequestTmpFile(request, fileInfos, true));
 		if (fileInfos->st_size == 0) {
 			_loadRelativeLocationPrefix(request);
 			_location += _escapeUri(request.getUri());
@@ -1081,16 +1067,21 @@ namespace	webserv
 		// root/alias translation, there is a filename that is not a directory,
 		// and that doesn't already exist)
 		// If so, just run this function with a dryRun parameter ?
+		// (The goal would be to avoid loading a large file, if it will be lost
+		// because of an error right afterwards)
 
 		struct stat		fileInfos;
 
 		if (*_requestedFilename.rbegin() == '/') {
 			_logError(request, "Cannot PUT/POST to a directory:", "");
 			return (409);
+		} else if (request.getTmpFilename().empty()) {
+			_logError(request, "PUT/POST body must be in a file", "", "");
+			return (500);
 		}
 		LOG_DEBUG("HTTP " << method << " filename: \""
 				<< _requestedFilename << "\"");
-		memset(&fileInfos, 0, sizeof(fileInfos));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0)
 			return (_moveRequestTmpFile(request, &fileInfos));
 		if (S_ISDIR(fileInfos.st_mode)) {
@@ -1098,13 +1089,11 @@ namespace	webserv
 			_logError(request, "The file", "could not be created");
 			return (409);
 		}
-		memset(&fileInfos, 0, sizeof(fileInfos));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(request.getTmpFilename().c_str(), &fileInfos) < 0) {
 			_logError(request, "stat()", "failed");
 			return (500);
 		}
-		if (request.getRequestMethod() == "PUT")
-			return (_moveRequestTmpFile(request, &fileInfos, true));
 		return (_handleRequestAlreadyExistingFile(request, &fileInfos));
 	}
 
@@ -1132,7 +1121,7 @@ namespace	webserv
 		struct stat		fileInfos;
 
 		LOG_DEBUG("CGI filename: \"" << _requestedFilename << "\"");
-		memset(&fileInfos, 0, sizeof(fileInfos));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0) {
 			_logError(request, "stat()", "failed");
 			return (500);
@@ -1176,8 +1165,8 @@ namespace	webserv
 											std::string& fieldName,
 											std::string& fieldValue) const
 	{
-		int				i = 0;
-		int				startValue = 0;
+		int		i = 0;
+		int		startValue = 0;
 
 		while (_isFieldName(buffer[i]))
 			++i;
@@ -1472,14 +1461,14 @@ namespace	webserv
 	bool	Response::_createTmpCgiBodyFile(const Request& request)
 	{
 		_tmpCgiBodyFilename = createRandomFilename();
-		LOG_DEBUG("CGI tmp body filename: \"" << _tmpCgiBodyFilename << "\"");
+		LOG_DEBUG("CGI body tmp filename: \"" << _tmpCgiBodyFilename << "\"");
 		_requestedFile.open(_tmpCgiBodyFilename.c_str(), std::ios::in
 				| std::ios::out | std::ios::binary);
 		if (_requestedFile.fail()) {
 			_logError(request, "open()", "failed", _tmpCgiBodyFilename.c_str());
 			return (false);
 		}
-		LOG_DEBUG("CGI tmp body file created");
+		LOG_DEBUG("CGI body tmp file created");
 		return (true);
 	}
 
@@ -1489,7 +1478,7 @@ namespace	webserv
 		struct stat		fileInfos;
 		int64_t			fileSize;
 
-		memset(&fileInfos, 0, sizeof(fileInfos));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(filename, &fileInfos) < 0) {
 			_logError(request, "stat()", "failed", filename);
 			return (false);
@@ -1663,8 +1652,6 @@ namespace	webserv
 
 	void	Response::prepareResponse(Request& request)
 	{
-		// TO DO: Evaluate If-xxx conditional headers
-
 		int		responseCode;
 
 		if (_isResponseReady)
