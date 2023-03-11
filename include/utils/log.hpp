@@ -1,13 +1,14 @@
 #ifndef LOGGER_HPP
 # define LOGGER_HPP
 
+# include <sys/stat.h>
+
 # include <algorithm>
 # include <exception>
 # include <fstream>
 # include <iostream>
 # include <string>
 # include <sstream>
-# include <sys/stat.h>
 # include <vector>
 
 # include "webserv_config.hpp"
@@ -15,9 +16,13 @@
 # define LOG(level, msg)	{												\
 	try {																	\
 		std::ostringstream	stream;											\
+		std::string			str;											\
 		stream << msg;														\
+		str = stream.str();													\
+		if (str.size() && *(str.rbegin()) == '\n')							\
+			str.erase(str.end() - 1);										\
 		Log::ContextInfo data(__FILE__, __LINE__, level);					\
-		Log::Core::get().filter(data, stream.str());						\
+		Log::Core::get().filter(data, str);									\
 	} catch (const std::exception& exception) {								\
 		std::cerr << "Logging error: " << exception.what() << std::endl;	\
 	}																		\
@@ -33,11 +38,11 @@ namespace Log
 {
 	struct Level {
 		enum l {
-			kEmerg,		// The system is in an unusable state and requires immediate attention
+			kEmerg,		// System in an unusable state, need immediate attention
 			kError, 	// Something was unsuccessful
-			kWarn,		// Something unexpected happened, however is not a cause for concern
-			kInfo,		// Informational messages that aren't necessary to read but may be good to know
-			kDebug		// Useful debugging information to help determine where the problem lies
+			kWarn,		// Something unexpected but not concerning happened
+			kInfo,		// Info messages, not necessary but good to know
+			kDebug		// Useful debugging info to help locate the problem
 		};
 	};
 	
@@ -79,7 +84,6 @@ namespace Log
 
 	private:
 		Level::l			_threshold;
-
 	};
 
 	class FileSink : public Sink {
