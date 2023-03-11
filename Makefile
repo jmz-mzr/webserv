@@ -23,7 +23,8 @@ BINDIR		=	$(PREFIX)/bin
 SYSCONFDIR	=	$(PREFIX)/etc
 LIBDIR		=	$(PREFIX)/lib
 DATADIR		=	$(PREFIX)/var
-LOGDIR		=	$(PREFIX)/log
+WWWDIR		=	$(DATADIR)/www
+LOGDIR		=	$(DATADIR)/log
 
 #>	FILES
 VPATH		:=	$(addprefix $(SRCDIR)/,$(SUBDIR)) $(SRCDIR)
@@ -44,7 +45,7 @@ CORE		=	AcceptSocket.cpp \
 				Server.cpp \
 				Socket.cpp \
 				Webserv.cpp
-UTILS		=	createRandomFilename.cpp \
+UTILS		=	checkUri.cpp \
 				file_utils.cpp \
 				ft_inet_ntoa.cpp \
 				ft_sleep.cpp \
@@ -52,7 +53,6 @@ UTILS		=	createRandomFilename.cpp \
 				sockaddr_in.cpp \
 				string_utils.cpp \
 				trim.cpp \
-				checkUri.cpp
 SRC			=	main.cpp $(CORE) $(CONFIG) $(UTILS)
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
@@ -136,7 +136,7 @@ export LIB
 .SUFFIXES:
 .SUFFIXES:		.cpp .hpp .o .d
 
-.PHONY:			all clean fclean test
+.PHONY:			all clean fclean install installdirs re test uninstall
 
 all:			$(BIN)
 
@@ -155,16 +155,18 @@ $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ))
 				$(AR) rcs $@ $?
 
 installdirs:
-				install -d $(BINDIR) $(DATADIR) $(SYSCONFDIR)/$(NAME) $(LOGDIR)
+				install -d $(BINDIR) $(DATADIR) $(SYSCONFDIR)/$(NAME) \
+					$(WWWDIR) $(LOGDIR)
 
 install:		$(BIN) $(LIB) installdirs
 				install -m 755 $(BIN) $(BINDIR)/$(NAME)
-				ln -s $(WORKDIR)/www $(DATADIR)/
+				rm -rf $(WWWDIR)/webserv
+				ln -si $(WORKDIR)/www $(WWWDIR)/webserv
 				cp default.conf $(SYSCONFDIR)/$(NAME)/
 
 uninstall:
 				$(RM) $(BINDIR)/$(NAME)
-				$(RM) -rf $(DATADIR)/www
+				$(RM) -rf $(WWWDIR)/webserv
 				$(RM) -rf $(SYSCONFDIR)/$(NAME)
 
 test:			$(LIB)
