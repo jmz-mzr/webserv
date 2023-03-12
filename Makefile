@@ -52,7 +52,7 @@ UTILS		=	checkUri.cpp \
 				log.cpp \
 				sockaddr_in.cpp \
 				string_utils.cpp \
-				trim.cpp \
+				trim.cpp
 SRC			=	main.cpp $(CORE) $(CONFIG) $(UTILS)
 OBJ			=	$(SRC:%.cpp=$(BUILDIR)/%.o)
 DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
