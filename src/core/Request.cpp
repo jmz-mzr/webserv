@@ -301,7 +301,7 @@ namespace	webserv
 		if (_requestMethod == "CONNECT" || _requestMethod == "OPTIONS"
 				|| _requestMethod == "TRACE" || _requestMethod == "PATCH")
 			_errorCode = 405;
-		if (_requestMethod != "GET" && _requestMethod != "HEAD"
+		else if (_requestMethod != "GET" && _requestMethod != "HEAD"
 				&& _requestMethod != "POST" && _requestMethod != "PUT"
 				&& _requestMethod != "DELETE")
 			_errorCode = 501;

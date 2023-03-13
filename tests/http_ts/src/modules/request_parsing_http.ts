@@ -73,8 +73,8 @@ export const TestSuite: ITestSuite = {
 			  console.log('No more data in response.');
 			});
 		  });
-		  
-		  req.on('error', (e) => {
+
+		  req.on('response', (e) => {
 			console.error(`problem with request: ${e.message}`);
 		  });
 		req.write(postData);
