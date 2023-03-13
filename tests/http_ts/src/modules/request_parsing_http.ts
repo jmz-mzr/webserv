@@ -52,10 +52,10 @@ export const TestSuite: ITestSuite = {
 		});
 
 		const options = {
-			hostname: 'www.google.com',
-			port: 80,
-			path: '/upload',
-			method: 'POST',
+			hostname: 'localhost',
+			port: 8080,
+			path: '/',
+			method: 'GET',
 			headers: {
 			  'Content-Type': 'application/json',
 			  'Content-Length': Buffer.byteLength(postData),
@@ -77,6 +77,8 @@ export const TestSuite: ITestSuite = {
 		  req.on('error', (e) => {
 			console.error(`problem with request: ${e.message}`);
 		  });
+		req.write(postData);
+		req.end();
 		console.log(req);
 	}
 }
