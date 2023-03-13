@@ -1,0 +1,16 @@
+
+{
+	"suiteFixture": {
+		"host": "localhost",
+		"defaultPort": 8080,
+		"headers": { "Host": "localhost:8080" }
+	},
+	"testCases": [
+		{
+			"name": "tab_sp",
+			"method": "GET",
+			"path": "/",
+			"expectedCode": 400
+		}
+	]
+}
