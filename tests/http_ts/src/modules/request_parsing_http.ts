@@ -5,7 +5,17 @@ import { parseState, Request, Response } from '../http'
 import { TestData, ITestSuite } from '../types'
 
 
-
+// Example of a request configuration
+// const options = {
+// 	hostname: 'localhost',
+// 	port: 8080,
+// 	path: '/',
+// 	method: 'GET',
+// 	headers: {
+// 	  'Content-Type': 'application/json',
+// 	  'Content-Length': Buffer.byteLength(postData),
+// 	},
+//   };
 export const TestSuite: ITestSuite = {
 	name: "request_parsing",
 	init() {
@@ -38,18 +48,8 @@ export const TestSuite: ITestSuite = {
 			const postData = JSON.stringify({
 				'msg': 'Hello World!',
 			});
-			const options = {
-				hostname: 'localhost',
-				port: 8080,
-				path: '/',
-				method: 'GET',
-				headers: {
-				  'Content-Type': 'application/json',
-				  'Content-Length': Buffer.byteLength(postData),
-				  'Host~': 'oui',
-				},
-			  };
-			const req = http.request(options, (res) => {
+		
+			const req = http.request(currTest, (res) => {
 				/* Print Headers
 					console.log(`HEADERS: ${JSON.stringify(res.headers)}`);*/
 				let output: string = `${testCase.name}: `;
