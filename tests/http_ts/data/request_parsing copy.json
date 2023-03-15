@@ -2,14 +2,95 @@
 {
 	"suiteFixture": {
 		"host": "localhost",
-		"defaultPort": 8080,
-		"headers": { "Host": "localhost:8080" }
+		"port": 8080,
+		"headers": { "Host": "localhost:8080" },
+		"throwHttpErrors": false
 	},
 	"testCases": [
+		{
+			"name": "Good request",
+			"method": "GET",
+			"path": "/",
+			"expectedCode": 200
+		},
+		{
+			"name": "bad_method_name01",
+			"method": "GeT",
+			"path" : "/",
+			"expectedCode": 400
+		},
+		{
+			"name": "bad_method_name02",
+			"method" : "LOREMIPSUM",
+			"path" : "/",
+			"expectedCode": 405
+		},
+		{
+			"name": "uri_too_long",
+			"method": "GET",
+			"path": "/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elitlorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit",
+			"expectedCode": 414
+		},
 		{
 			"name": "tab_sp",
 			"method": "GET",
 			"path": "/",
+			"expectedCode": 400
+		},
+		{
+			"name": "invalid_request_line01",
+			"method": "GET",
+			"path":  "error/",
+			"expectedCode": 400
+		},
+		{
+			"name": "invalid_request_line02",
+			"method": "GET",
+			"path": "/error",
+			"expectedCode": 400
+		},
+		{
+			"name": "invalid_request_line03",
+			"method": "GET",
+			"path": "HTTP/1.1",
+			"expectedCode": 400
+		},
+		{
+			"name": "version_not_supported",
+			"method": "GET",
+			"path": "/",
+			"version": "HTTP/5.2",
+			"expectedCode": 505
+		},
+		{
+			"name": "bad_uri01",
+			"method": "GET",
+			"path": "/../../../",
+			"expectedCode": 400
+		},
+		{
+			"name": "bad_uri02",
+			"method": "GET",
+			"path": "*",
+			"expectedCode": 400
+		},
+		{
+			"name": "bad_uri03",
+			"method": "GET",
+			"path": "test",
+			"expectedCode": 400
+		},
+		{
+			"name": "empty_request",
+			"method": "",
+			"path": "",
+			"expectedCode": 400
+		},
+		{
+			"name": "space_after_header_name",
+			"method": "GET",
+			"path":  "/",
+			"headers": { "Host": "localhost:8080" },
 			"expectedCode": 400
 		}
 	]
