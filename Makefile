@@ -18,13 +18,17 @@ ifeq ($(PREFIX),)
   PREFIX	=	/usr/local
 endif
 
-EXEC_PREFIX	=	$(PREFIX)
 BINDIR		=	$(PREFIX)/bin
 SYSCONFDIR	=	$(PREFIX)/etc
+CONFDIR		=	$(SYSCONFDIR)/$(NAME)
 LIBDIR		=	$(PREFIX)/lib
 DATADIR		=	$(PREFIX)/var
 WWWDIR		=	$(DATADIR)/www
 LOGDIR		=	$(DATADIR)/log
+
+INSTALLDIRS	=	$(BINDIR) $(CONFDIR) $(LIBDIR) $(DATADIR) $(LOGDIR)
+
+WEBSERVLNK	=	$(WWWDIR)/$(NAME)
 
 #>	FILES
 VPATH		:=	$(addprefix $(SRCDIR)/,$(SUBDIR)) $(SRCDIR)
@@ -63,7 +67,7 @@ LIB			:=	lib$(NAME).a
 #>	COMPILATION FLAGS
 CPPFLAGS	=	$(addprefix -I, $(INCLDIR))
 CXXFLAGS	=	-Wall -Wextra -Werror
-DEPFLAGS	=	-MT $@ -MMD -MP -MF $(DEPDIR)/$(*F).d
+DEPFLAGS	=	-MT "$@ $(DEPDIR)/$(*F).d" -MMD -MP -MF $(DEPDIR)/$(*F).d
 
 #>	ENVIRONMENT
 CXX			=	c++
@@ -73,7 +77,7 @@ SHELL		:=	$(shell which bash)
 UNAME		:=	$(shell uname -s)
 
 ifneq ($(filter-out debug release,$(BUILD)),)
-  $(error '$(BUILD)' is not a correct value. Build options are 'debug' or 'release')
+  $(error '$(BUILD)' is incorrect. Build options are 'debug' or 'release')
 endif
 
 ifeq (test,$(strip $(MAKECMDGOALS)))
@@ -89,7 +93,7 @@ ifneq ($(filter install, $(strip $(MAKECMDGOALS))),)
 endif
 
 ifeq (debug,$(BUILD))
-  CXXFLAGS +=	-fsanitize=address,undefined -Og
+  CXXFLAGS +=	-fsanitize=address,undefined -Og -g3 #-fno-omit-frame-pointer
 # 				-fstack-protector-all \
 # 				-Wpedantic \
 # 				-Wshadow \
@@ -146,28 +150,32 @@ $(BUILDIR)/%.o:	%.cpp | $(DEPDIR)
 $(DEPDIR):
 				mkdir -p $@
 
--include $(wildcard $(DEP))
+ifneq ($(MAKECMDGOALS),clean)
+  ifneq ($(MAKECMDGOALS),fclean)
+    -include $(wildcard $(DEP))
+  endif
+endif
 
-$(BIN):			$(OBJ)
+$(BIN):			$(OBJ) | $(INSTALLDIRS) $(WEBSERVLNK)
 				$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^
+
+$(INSTALLDIRS):
+				install -d $@
+
+$(WEBSERVLNK):
+				ln -s $(WORKDIR)/www $(WEBSERVLNK)
 
 $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ))
 				$(AR) rcs $@ $?
 
-installdirs:
-				install -d $(BINDIR) $(DATADIR) $(SYSCONFDIR)/$(NAME) \
-					$(WWWDIR) $(LOGDIR)
-
-install:		$(BIN) $(LIB) installdirs
+install:		$(BIN) $(LIB)
 				install -m 755 $(BIN) $(BINDIR)/$(NAME)
-				rm -rf $(WWWDIR)/webserv
-				ln -si $(WORKDIR)/www $(WWWDIR)/webserv
-				cp default.conf $(SYSCONFDIR)/$(NAME)/
+				cp default.conf $(CONFDIR)/
 
 uninstall:
-				$(RM) $(BINDIR)/$(NAME)
-				$(RM) -rf $(WWWDIR)/webserv
-				$(RM) -rf $(SYSCONFDIR)/$(NAME)
+				$(RM) -f $(BINDIR)/$(NAME)
+				$(RM) -rf $(WEBSERVLNK)
+				$(RM) -rf $(CONFDIR)
 
 test:			$(LIB)
 				$(MAKE) -C $(TESTDIR)
