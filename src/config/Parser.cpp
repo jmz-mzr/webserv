@@ -499,18 +499,12 @@ void	Parser::_parseHost(const std::string& str,
 void	Parser::_parseAddress(const std::string& str,
 										std::list<sockaddr_in>& addrList)
 {
-	// TODO: change inet_addr with getaddrinfo
-
 	if (str.empty())
 		_listenError("no host", _currDirectivePtr->argv[0]);
 	if (str == "*") {
 		addrList.back().sin_addr.s_addr = INADDR_ANY;
 	} else {
-		in_addr_t tmp = inet_addr(str.c_str());
-		if (tmp == unsigned(-1))
-			_parseHost(str, addrList);
-		else
-			addrList.back().sin_addr.s_addr = tmp;
+		_parseHost(str, addrList);
 	}
 }
 
