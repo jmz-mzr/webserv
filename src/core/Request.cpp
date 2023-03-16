@@ -296,6 +296,15 @@ namespace	webserv
 		return (true);
 	}
 
+	bool	Request::_checkReturn()
+	{
+		if (_location->getReturnPair().first >= 0) {
+			_isTerminatedRequest = true;
+			return (false);
+		}
+		return (true);
+	}
+
 	bool	Request::_checkMethod()
 	{
 		if (_requestMethod == "CONNECT" || _requestMethod == "OPTIONS"
@@ -315,15 +324,6 @@ namespace	webserv
 		return (true);
 	}
 
-	bool	Request::_checkReturn()
-	{
-		if (_location->getReturnPair().first >= 0) {
-			_isTerminatedRequest = true;
-			return (false);
-		}
-		return (true);
-	}
-
 	bool	Request::_checkConfig()
 	{
 		// TO DO: In case of PUT/POST, before loading the request body,
@@ -336,9 +336,9 @@ namespace	webserv
 
 		if (!_checkMaxBodySize())
 			return (false);
-		if (!_checkMethod())
-			return (false);
 		if (!_checkReturn())
+			return (false);
+		if (!_checkMethod())
 			return (false);
 		return (true);
 	}
