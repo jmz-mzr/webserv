@@ -70,11 +70,15 @@ namespace	webserv
 		std::vector<std::string>	strVector;
 		size_t						pos = str.find(delim);
 
-		while (pos != std::string::npos)
-		{
-			strPart = str.substr(0, pos);
-			strVector.push_back(strPart);
-			pos = str.find(delim, pos + 1);
+		if (pos == std::string::npos) {
+			strVector.push_back(str);
+		} else {
+			while (pos != std::string::npos)
+			{
+				strPart = str.substr(0, pos);
+				strVector.push_back(strPart);
+				pos = str.find(delim, pos + 1);
+			}
 		}
 		return (strVector);
 	}
