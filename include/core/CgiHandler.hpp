@@ -59,7 +59,7 @@ namespace	webserv
 		int						_inputFd;
 		FILE*					_outputFile;
 		int						_outputFd;
-		pid_t					_childPid;
+		pid_t					_pid;
 	};
 
 }	// namespace webserv

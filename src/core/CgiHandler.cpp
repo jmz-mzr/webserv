@@ -43,7 +43,7 @@ namespace	webserv
 										_inputFd(-1),
 										_outputFile(0),
 										_outputFd(-1),
-										_childPid(-1)
+										_pid(-1)
 	{
 		LOG_INFO("New CgiHandler instance");
 		LOG_DEBUG("cgiPass=" << cgiPass << " ; "
@@ -186,18 +186,14 @@ namespace	webserv
 			} else
 				_inputFd = -1;
 		}
-		if (_outputFd >= 0) {
-			if (close(_outputFd) < 0) {
-				LOG_ERROR("Bad close() on cgiOutputFd");
-			} else
-				_outputFd = -1;
-		}
 		if (_outputFile) {
 			if (std::fclose(_outputFile) != 0) {
 				LOG_ERROR("Bad fclose() on temporary cgiOutputFile");
 				std::clearerr(_outputFile);
-			} else
+			} else {
+				_outputFd = -1;
 				_outputFile = 0;
+			}
 		}
 	}
 
@@ -231,7 +227,6 @@ namespace	webserv
 	void	CgiHandler::_executeCgi(const Request& request,
 									const char* workingDir)
 	{
-		fclose(_outputFile);
 		if (request.getRequestMethod() == "POST") {
 			if (dup2(_inputFd, STDIN_FILENO) < 0) {
 				close(_inputFd);
@@ -256,16 +251,16 @@ namespace	webserv
 
 	int	CgiHandler::_waitChild(const Request& request, int* status) const
 	{
-		int		pid = waitpid(_childPid, status, WNOHANG);
+		int		pid = waitpid(_pid, status, WNOHANG);
 
 		if (pid == 0) {
 			sleep(1);
-			if ((pid = waitpid(_childPid, status, WNOHANG)) == 0) {
-				if (kill(_childPid, SIGTERM) < 0)
+			if ((pid = waitpid(_pid, status, WNOHANG)) == 0) {
+				if (kill(_pid, SIGTERM) < 0)
 					_logError(request, "Error with", "in CGI wait", "kill()");
 				usleep(10000);
-				if ((pid = waitpid(_childPid, status, WNOHANG)) == 0) {
-					if (kill(_childPid, SIGKILL) < 0)
+				if ((pid = waitpid(_pid, status, WNOHANG)) == 0) {
+					if (kill(_pid, SIGKILL) < 0)
 						_logError(request, "Error with", "in CGI wait",
 								"kill()");
 				}
@@ -316,14 +311,14 @@ namespace	webserv
 		std::string	filePath(_requestedFilename);
 		char*		workingDir = dirname(const_cast<char*>(filePath.c_str()));
 
-		_childPid = fork();
-		if (_childPid < 0) {
+		_pid = fork();
+		if (_pid < 0) {
 			_logError(request, "Error with", "while loading the CGI", "fork()");
 			_closeCgiFiles();
 			return (500);
-		} else if (_childPid == 0)
+		} else if (_pid == 0)
 			_executeCgi(request, workingDir);
-		LOG_DEBUG("CGI launch (pid=" << _childPid << ")");
+		LOG_DEBUG("CGI launch (pid=" << _pid << ")");
 		_env.clear();
 		_envp.clear();
 		errorCode = _getChildStatus(request);

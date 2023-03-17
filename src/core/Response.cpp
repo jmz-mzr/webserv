@@ -1463,7 +1463,7 @@ namespace	webserv
 		_tmpCgiBodyFilename = createRandomFilename();
 		LOG_DEBUG("CGI body tmp filename: \"" << _tmpCgiBodyFilename << "\"");
 		_requestedFile.open(_tmpCgiBodyFilename.c_str(), std::ios::in
-				| std::ios::out | std::ios::binary);
+				| std::ios::out | std::ios::binary | std::fstream::trunc);
 		if (_requestedFile.fail()) {
 			_logError(request, "open()", "failed", _tmpCgiBodyFilename.c_str());
 			return (false);
