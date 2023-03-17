@@ -41,9 +41,6 @@ static void	_listenError(const std::string& err, const std::string& arg)
 static bool isnotdigit(char c)
 { return (!bool(std::isdigit(c))); }
 
-static bool isnothostnamevalid(char c)
-{ return (!(bool(std::isdigit(c)) || bool(std::isalpha(c)) || (c == '-'))); }
-
 /******************************************************************************/
 /*                         CONSTRUCTORS / DESTRUCTORS                         */
 /******************************************************************************/
@@ -476,11 +473,6 @@ void	Parser::_parseHost(const std::string& str,
 	struct addrinfo*	result;
 	int					error;
 
-	if (std::find_if(str.begin(), str.end(), &isnothostnamevalid) != str.end()
-			|| (str.size() < 1 || str.size() > 63)
-			|| str[0] == '-')
-		_errorHandler("invalid host in \"" + str
-											+ "\" of the listen directive");
 	std::memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_socktype = SOCK_STREAM;
 	error = getaddrinfo(str.c_str(), NULL, &hints, &result);
