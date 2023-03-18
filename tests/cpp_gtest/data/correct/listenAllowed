@@ -1,0 +1,9 @@
+server {
+}
+
+server {
+	listen localhost;
+	listen lOcAlHoSt:8080;
+	listen 8081;
+	listen *:8082;
+}

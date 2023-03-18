@@ -16,22 +16,27 @@ TEST(ConfigParsingInit, emptyFile) {
 	webserv::Webserv	webserv;
 	int argc = 2;
 	char empty[] = "";
-	char file[] = "tests/cpp_gtest/data/empty";
+	char file[] = "tests/cpp_gtest/data/incorrect/emptyConf";
 	char *strs[2] = { empty, file };
 	char **argv = strs;
 
 	ASSERT_THROW(webserv.init(argc, argv), LogicErrorException);
 }
 
-TEST(ConfigParsingInit, emptyline) {
-	ConfigParser test("tests/cpp_gtest/data/emptyline");
+TEST(ConfigParsingInit, emptyLine) {
+	ConfigParser test("tests/cpp_gtest/data/correct/emptyLine");
+	ASSERT_NO_THROW(test.parseFile());
+}
+
+TEST(ConfigParsingInit, listenAllowed) {
+	ConfigParser test("tests/cpp_gtest/data/correct/listenAllowed");
 	ASSERT_NO_THROW(test.parseFile());
 }
 
 class ConfigParsing : public testing::TestWithParam<std::string> {
 protected:
 	void	SetUp() override {
-		confDir = "tests/cpp_gtest/data/";
+		confDir = "tests/cpp_gtest/data/incorrect/";
 		filePath = confDir + GetParam();
 	}
 
@@ -58,6 +63,7 @@ std::string files[] = {
 	"maxbodysize03",
 	"maxbodysize04",
 	"maxbodysize05",
+	"maxbodysize06",
 	"limitexcept00",
 	"limitexcept01",
 	"limitexcept02",
@@ -67,6 +73,14 @@ std::string files[] = {
 	"return03",
 	"return04",
 	"return05",
+	"root00",
+	"root01",
+	"root02",
+	"alias00",
+	"alias01",
+	"alias02",
+	"autoindex00",
+	"autoindex01",
 	"cgipass00",
 	"cgipass01",
 	"cgipass02",
@@ -83,7 +97,8 @@ std::string files[] = {
 	"location02",
 	"location03",
 	"location04",
-	"location05"
+	"location05",
+	"location06"
 };
 
 TEST_P(ConfigParsing, SyntaxErrorTest) {

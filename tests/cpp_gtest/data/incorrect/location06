@@ -1,0 +1,6 @@
+server {
+	location /error {
+	}
+	location /error {
+	}
+}

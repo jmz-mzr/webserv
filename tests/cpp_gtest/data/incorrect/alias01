@@ -1,0 +1,6 @@
+server {
+	location /error/ {
+		alias	html;
+		alias	webserv;
+	}
+}

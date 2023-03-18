@@ -1,0 +1,4 @@
+server {
+	root	html;
+	root	webserv;
+}

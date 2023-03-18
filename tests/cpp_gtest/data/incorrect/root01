@@ -1,0 +1,6 @@
+server {
+	location /error/ {
+		root	webserv;
+		root	html;
+	}
+}
