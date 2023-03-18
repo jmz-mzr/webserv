@@ -14,7 +14,7 @@ namespace	webserv
 
 	Location::Location(const Location& src1, const Config& src2,
 						const std::string& path)
-			: _locationName(path)
+			: _locationName(src1.getLocationName())
 			, _maxBodySize(src2.getMaxBodySize()
 							? src2.getMaxBodySize()
 							: src1._maxBodySize)
@@ -30,13 +30,26 @@ namespace	webserv
 							? src1._errorPages
 							: src2.getErrorPages())
 			, _root(src2.getRoot().empty() ? src1._root : src2.getRoot())
-			, _alias(src2.getAlias().empty() ? src1._alias : src2.getAlias())
+			, _alias(src2.getAlias().empty() && src2.getRoot().empty()
+							? src1._alias
+							: src2.getAlias())
 			, _index(src2.getIndex().empty() ? src1._index : src2.getIndex())
 			, _autoIndex(src2.isAutoIndex() || src1._autoIndex)
 			, _cgiPass(src2.getCgiPass().empty()
 						? src1._cgiPass
 						: src2.getCgiPass())
-	{ }
+	{
+		(void)path;
+		LOG_DEBUG("_locationName = " << _locationName
+			<< " (path = " << path << ")\n"
+			<< "loc.name = " << src1.getLocationName() << "\n"
+			<< "loc.root = " << src1._root
+			<< ", conf.root = " << src2.getRoot()
+			<< ", root = " << _root << "\n"
+			<< "loc.alias = " << src1._alias
+			<< ", conf.alias = " << src2.getAlias()
+			<< ", alias = " << _alias << "\n");
+	}
 
 	Location::Location(const ServerConfig& src1, const Config& src2,
 						const std::string& path)
@@ -67,6 +80,12 @@ namespace	webserv
 						Location(*this, configIt->second, configIt->first)));
 			configIt++;
 		}
+		LOG_DEBUG("_locationName = " << _locationName << "\n"
+			<< "serv.root = " << src1.getRoot()
+			<< ", conf.root = " << src2.getRoot()
+			<< ", root = " << _root << "\n"
+			<< "conf.alias = " << src2.getAlias()
+			<< ", alias = " << _alias << "\n");
 	}
 
 	/**************************************************************************/

@@ -39,7 +39,7 @@ void	Lexer::_syntaxError(const Token& token, const char* expected)
 {
 	std::stringstream	ss;
 
-	ss << "unexpected ";
+	ss << "Unexpected ";
 	if (token.type == Token::kEOF) {
 		ss << "end of file, expecting " << expected;
 	} else {

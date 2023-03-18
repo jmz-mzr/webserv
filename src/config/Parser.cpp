@@ -177,13 +177,13 @@ void	Parser::_parseType(const Directive& directive)
 	switch (directive.syntax.rules & Parser::kType) {
 		case Parser::kDirective :
 			if (directive.ctrlToken->type != Lexer::Token::kDirectiveEnd) {
-				_errorHandler("directive \"" + directive.name
+				_errorHandler("Directive \"" + directive.name
 											+ "\" is not terminated by \";\"");
 			}
 			break;
 		case Parser::kBlock :
 			if (directive.ctrlToken->type != Lexer::Token::kBlockStart) {
-				_errorHandler("directive \"" + directive.name
+				_errorHandler("Directive \"" + directive.name
 												+ "\" has no opening \"{\"");
 			}
 			break;
@@ -206,8 +206,8 @@ void	Parser::_parseContext(const Directive& directive)
 			|| (flag & Parser::kServCtx && _configStack.top().type == kServer))
 			return ;
 	}
-	_errorHandler("\"" + directive.syntax.str
-						+ "\" directive is not allowed here");
+	_errorHandler("Directive \"" + directive.syntax.str
+						+ "\" is not allowed here");
 }
 
 /**
@@ -224,7 +224,8 @@ void	Parser::_parseDup(const Directive& directive)
 			if (conf.find(directive.argv[0]) == conf.end())
 				return ;
 		}
-		_errorHandler("\"" + directive.syntax.str + "\" is duplicate");
+		_errorHandler("Directive \"" + directive.syntax.str
+				+ "\" is duplicated");
 	}
 }
 
@@ -238,7 +239,7 @@ void	Parser::_parseArgc(const Directive& directive)
 	if (((directive.syntax.rules & Parser::kArgcStrict)
 			&& (directive.argv.size() != directive.syntax.argc))
 		|| (directive.argv.size() < directive.syntax.argc))
-		_errorHandler("invalid number of arguments in \""
+		_errorHandler("Invalid number of arguments in \""
 						+ directive.syntax.str + "\" directive");
 }
 
@@ -247,7 +248,7 @@ void	Parser::_parseDirective(it_t nameToken, it_t ctrlToken)
 	std::map<std::string, DirectiveSyntax>::iterator syntaxIter;
 
 	if ((syntaxIter = _grammar.find(nameToken->value)) == _grammar.end()) {
-		_errorHandler("unknown directive \"" + nameToken->value + "\"");
+		_errorHandler("Unknown directive \"" + nameToken->value + "\"");
 	} else {
 		Directive currDirective(nameToken, ctrlToken, syntaxIter->second);
 		_currDirectivePtr = &currDirective;
@@ -302,12 +303,14 @@ void	Parser::_addErrorPage(Directive& currDirective)
 			it != currDirective.argv.end() - 1;
 			it++) {
 		if (std::find_if(it->begin(), it->end(), &isnotdigit) != it->end())
-			_errorHandler("invalid value \"" + *it + "\"");
+			_errorHandler("Directive \"error_page\" invalid value \""
+					+ *it + "\"");
 		errorCode = std::strtol(it->c_str(), NULL, 10);
 		if (errno)
 			THROW_LOGIC("strtol(): " << std::strerror(errno));
 		if ((errorCode < 300) || (errorCode > 599)) {
-			_errorHandler("value \"" + *it + "\" must be between 300 and 599");
+			_errorHandler("Directive \"error_page\" value \"" + *it
+					+ "\" must be between 300 and 599");
 		}
 		_currConfig->addErrorPage(static_cast<int>(errorCode), uri);
 	}
@@ -321,7 +324,8 @@ void	Parser::_setMaxBodySize(Directive& currDirective)
 	int64_t		size = std::strtoll(strPtr, &unitPtr, 10);
 
 	if ((unitPtr == strPtr) || (std::strlen(unitPtr) > 1) || (size < 0))
-		_errorHandler("\"client_max_body_size\" directive invalid value");
+		_errorHandler("Directive \"client_max_body_size\" invalid value \""
+				+ currDirective.argv[0] + "\"");
 	if (errno)
 		THROW_LOGIC("strtoll(): " << std::strerror(errno));
 	switch (std::tolower(*unitPtr)) {
@@ -330,10 +334,12 @@ void	Parser::_setMaxBodySize(Directive& currDirective)
 		case 'g': shift = 30; break;
 		case 0: shift = 0; break;
 		default:
-			_errorHandler("\"client_max_body_size\" directive invalid value");
+			_errorHandler("Directive \"client_max_body_size\" invalid value \""
+					+ currDirective.argv[0] + "\"");
 	}
 	if (size > (std::numeric_limits<int64_t>::max() >> shift))
-		_errorHandler("\"client_max_body_size\" directive invalid value");
+		_errorHandler("Directive \"client_max_body_size\" invalid value \""
+				+ currDirective.argv[0] + "\"");
 	size <<= shift;
 	_currConfig->setMaxBodySize(size);
 }
@@ -348,7 +354,7 @@ void	Parser::_setLimitExcept(Directive& currDirective)
 			argIt++) {
 		methodIter_t it = _methods.find(ft_str_tolower(*argIt));
 		if (it == _methods.end())
-			_errorHandler("invalid method \"" + (*argIt) + "\"");
+			_errorHandler("Invalid \"limit_except\" method \"" + *argIt + "\"");
 		_currConfig->addLimitExcept(*it);
 	}
 }
@@ -358,6 +364,8 @@ void	Parser::_setReturnPair(Directive& currDirective)
 	std::string		arg1(currDirective.argv[0]);
 	size_t			pos = arg1.find(':');
 
+	if (_currConfig->getReturnPair().first != -1)
+		return ;
 	if (pos != std::string::npos) {
 		std::string	scheme = arg1.substr(0, pos);
 
@@ -365,17 +373,17 @@ void	Parser::_setReturnPair(Directive& currDirective)
 				&& (arg1.compare(pos + 1, 2, "//") == 0))
 			_currConfig->setReturnPair(std::make_pair(302, arg1));
 		else
-			_errorHandler("invalid return code \"" + arg1 + "\"");
+			_errorHandler("Invalid \"return\" directive \"" + arg1 + "\"");
 	} else {
 		long	errorCode;
 
 		if (std::find_if(arg1.begin(), arg1.end(), &isnotdigit) != arg1.end())
-			_errorHandler("invalid return code \"" + arg1 + "\"");
+			_errorHandler("Invalid \"return\" directive \"" + arg1 + "\"");
 		errorCode = strtol(arg1.c_str(), NULL, 10);
 		if (errno)
 			THROW_LOGIC("strtol(): " << std::strerror(errno));
 		if ((errorCode < 0) || (errorCode > 999))
-			_errorHandler("invalid return code \"" + arg1 + "\"");
+			_errorHandler("Invalid \"return\" directive \"" + arg1 + "\"");
 		if (currDirective.argv.size() > 1)
 			_currConfig->setReturnPair(
 							std::make_pair(errorCode, currDirective.argv[1]));
@@ -394,8 +402,8 @@ void	Parser::_duplicateCheck(const std::string& currDirStr,
 								const std::string& otherDirStr)
 {
 	if (_configStack.top().isDefined[otherDirType])
-		_errorHandler(otherDirStr + " directive is duplicate, " +
-					currDirStr + " directive was specified earlier.");
+		_errorHandler("Directive \"" + otherDirStr + "\" is duplicated, \"" +
+					currDirStr + "\" directive was specified earlier");
 }
 
 void	Parser::_setRoot(Directive& currDirective)
@@ -417,8 +425,8 @@ void	Parser::_setAutoIndex(Directive& currDirective)
 	else if (currDirective.argv[0] == "off")
 		_currConfig->setAutoIndex(false);
 	else
-		_errorHandler("invalid value \"" + currDirective.argv[0]
-			+ "\" in \"autoindex\" directive, it must be \"on\" or \"off\"");
+		_errorHandler("Invalid \"autoindex\" value \"" + currDirective.argv[0]
+			+ "\", it must be \"on\" or \"off\"");
 }
 
 void	Parser::_setIndex(Directive& currDirective)
@@ -483,7 +491,7 @@ void	Parser::_parseHost(const std::string& str,
 			THROW_FATAL("getaddrinfo() error: " << gai_strerror(error));
 	}
 	if (result == NULL)
-		_listenError("host not found", _currDirectivePtr->argv[0]);
+		_listenError("Host not found", _currDirectivePtr->argv[0]);
 	_addAddress(result, addrList);
 	freeaddrinfo(result);
 }
@@ -492,7 +500,7 @@ void	Parser::_parseAddress(const std::string& str,
 										std::list<sockaddr_in>& addrList)
 {
 	if (str.empty())
-		_listenError("no host", _currDirectivePtr->argv[0]);
+		_listenError("No host", _currDirectivePtr->argv[0]);
 	if (str == "*") {
 		addrList.back().sin_addr.s_addr = INADDR_ANY;
 	} else {
@@ -533,7 +541,7 @@ void	Parser::_addListen(Directive& currDirective)
 
 	if (pos != std::string::npos) {
 		if (_parsePort(input.substr(pos + 1, input.size() - pos), addrList) < 0)
-			_listenError("invalid port", &currDirective.argv[0][pos + 1]);
+			_listenError("Invalid port", &currDirective.argv[0][pos + 1]);
 		_parseAddress(input.substr(0, pos), addrList);
 	} else if (_parsePort(input, addrList) < 0)
 		_parseAddress(input, addrList);
@@ -542,34 +550,44 @@ void	Parser::_addListen(Directive& currDirective)
 											it++) {
 		if (_currConfig->addListenPair(*it) == false) {
 			std::stringstream ss;
-			ss << "a duplicate listen " << ft_inet_ntoa(it->sin_addr)
+			ss << "Duplicated \"listen\" on \"" << ft_inet_ntoa(it->sin_addr)
 						<< ":" << ntohs(it->sin_port);
-			LOG_INFO(ss.str().c_str() << ", ignored");
+			LOG_INFO(ss.str().c_str() << "\", ignored");
 		}
 	}
 }
 
 void	Parser::_addServerName(Directive& currDirective)
 {
-	_currConfig->addServerName(ft_str_tolower(currDirective.argv[0]));
+	if (currDirective.argv[0] == "\"\"")
+		_currConfig->addServerName("");
+	else
+		_currConfig->addServerName(ft_str_tolower(currDirective.argv[0]));
 }
 
 void	Parser::_addLocation(Directive& currDirective)
 {
 	Config::LocationType	type;
 
-	if (currDirective.argv[0].find('*') != std::string::npos) {
+	if (currDirective.argv[0].find('*') == 0) {
 		type = Config::kFile;
-	} else {
+	} else
 		type = Config::kPath;
-	}
-
 	if ( ((_currConfig->getType() == Config::kPath) && (type == Config::kPath))
 			|| (_currConfig->getType() == Config::kFile)
 			|| (_configStack.size() > 2) )
-		_errorHandler("Location too deeply nested");
+		_errorHandler("Location \"" + currDirective.argv[0]
+				+ "\" is too deeply nested");
+	for (Config::config_map::const_iterator it = _currConfig->
+			getConfigs().begin(); it != _currConfig->getConfigs().end(); ++it) {
+		if (it->first == currDirective.argv[0]) {
+			LOG_DEBUG("it->first = " << it->first);
+			_errorHandler("Location \"" + currDirective.argv[0]
+					+ "\" is duplicated");
+		}
+	}
+	Config&	locConf = _currConfig->addConfig(currDirective.argv[0], Config());
 
-	Config& locConf = _currConfig->addConfig(currDirective.argv[0], Config());
 	locConf.setType(type);
 	_configStack.push(ConfigData(kLocation, locConf));
 	_currConfig = &locConf;
