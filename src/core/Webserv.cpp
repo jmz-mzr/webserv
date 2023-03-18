@@ -257,6 +257,7 @@ namespace	webserv
 		int			clientFd = client.getSocket().getFd();
 		ssize_t		received;
 
+		_buffer[0] = '\0';
 		if (client.hasTimedOut())
 			return (-1);
 		if (client.isProcessingRequest()) {
@@ -282,7 +283,7 @@ namespace	webserv
 	{
 		int		errorCode;
 
-		if (!client.hasRequestTerminated()) {
+		if (!client.hasRequestTerminated() && !client.hasResponseReady()) {
 			errorCode = client.parseRequest(_buffer);
 			if (errorCode != 0)
 				return (client.prepareErrorResponse(errorCode));

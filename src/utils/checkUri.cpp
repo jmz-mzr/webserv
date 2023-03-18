@@ -176,7 +176,7 @@ namespace	webserv
 		size_t	i = 1;
 
 		if (!str || *str != '/' || (str[i] && !isUriPChar(str + i)
-					&& delim.find(str[i]) == std::string::npos))
+				&& str[i] != '/' && delim.find(str[i]) == std::string::npos))
 			return (std::string::npos);
 		while (str[i]) {
 			if (str[i] == '/' || str[i] == ':' || str[i] == '@'

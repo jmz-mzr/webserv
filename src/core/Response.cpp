@@ -17,7 +17,7 @@
 #include <ctime>		// gmtime, mktime, strftime, struct tm, time_t
 
 #include <exception>
-#include <ios>			// hex, ios::app/beg/in/out/binary, uppercase
+#include <ios>			// hex, ios::app/beg/binary/in/trunc/out, uppercase
 #include <limits>		// numeric_limits
 #include <map>
 #include <string>
@@ -524,6 +524,7 @@ namespace	webserv
 		errorCode = request.loadInternalRedirect(redirectTo);
 		if (errorCode)
 			return (errorCode);
+		clearResponse(request, _responseCode);
 		prepareResponse(request);
 		return (INTERNAL_REDIRECT);
 	}
@@ -536,7 +537,7 @@ namespace	webserv
 			_logError(request, "", "directory index is forbidden");
 			return (403);
 		}
-		LOG_DEBUG("HTTP autoindex: \"" << _requestedFilename << "\"");
+		LOG_DEBUG("HTTP autoindex: \"" << _requestedFilename.c_str() << "\"");
 		_indexDirectory = opendir(_requestedFilename.c_str());
 		if (!_indexDirectory) {
 			_logError(request, "opendir()", "failed");
@@ -559,9 +560,10 @@ namespace	webserv
 		char			dirChar = _requestedFilename[dirPos + (dirPos == 0)];
 		struct stat		dirInfos;
 
-		dirPos += (dirPos == 0);
+		dirPos += (dirPos == 0 || _requestedFilename[dirPos] != '/');
 		_requestedFilename[dirPos] = '\0';
-		LOG_DEBUG("HTTP index check dir: \"" << _requestedFilename << "\"");
+		LOG_DEBUG("HTTP index check dir: \""
+				<< _requestedFilename.c_str() << "\"");
 		std::memset(&dirInfos, 0, sizeof(dirInfos));
 		if (stat(_requestedFilename.c_str(), &dirInfos) < 0) {
 			if (errno != EACCES && errno != ENOENT) {
@@ -593,7 +595,7 @@ namespace	webserv
 		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0) {
 			LOG_DEBUG("stat() \"" << _requestedFilename << "\" failed ("
-					<< errno << ": " << std::strerror(errno));
+					<< errno << ": " << std::strerror(errno) << ")");
 			if (errno == EACCES) {
 				_logError(request, "", "is forbidden");
 				return (403);
@@ -1463,7 +1465,7 @@ namespace	webserv
 		_tmpCgiBodyFilename = createRandomFilename();
 		LOG_DEBUG("CGI body tmp filename: \"" << _tmpCgiBodyFilename << "\"");
 		_requestedFile.open(_tmpCgiBodyFilename.c_str(), std::ios::in
-				| std::ios::out | std::ios::binary | std::fstream::trunc);
+				| std::ios::out | std::ios::binary | std::ios::trunc);
 		if (_requestedFile.fail()) {
 			_logError(request, "open()", "failed", _tmpCgiBodyFilename.c_str());
 			return (false);
@@ -1613,7 +1615,7 @@ namespace	webserv
 			return (_putPostRequestBody(request, "PUT"));
 		if (request.getRequestMethod() == "POST")
 			return (_putPostRequestBody(request, "POST"));
-		if (*_requestedFilename.rbegin() == '/')
+		if (*request.getUri().rbegin() == '/')
 			return (_loadIndex(request));
 		return (_openRequestedFile(request));
 	}

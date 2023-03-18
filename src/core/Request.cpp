@@ -229,6 +229,9 @@ namespace	webserv
 
 	bool	Request::_loadLocation(const ServerConfig& serverConfig)
 	{
+		// TO DO: If no match (no "/"), use a default location as NGINX (""),
+		// so add it with the same config as the server at the end of parsing
+
 		_location_map::const_iterator		location;
 
 		if (_loadExtensionLocation(serverConfig))
@@ -393,11 +396,11 @@ namespace	webserv
 
 	void	Request::_discardBody()
 	{
+		_isTerminatedRequest = true;
 		if (!isKeepAlive()) {
 			_buffer.clear();
 			return ;
 		}
-		_isTerminatedRequest = true;
 		if (_isChunkedRequest) {
 			_isChunkedRequest = false;
 			return (_discardChunkedBody());
