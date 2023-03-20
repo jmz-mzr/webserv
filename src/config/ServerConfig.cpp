@@ -39,6 +39,7 @@ namespace	webserv
 								configIt->first)));
 			configIt++;
 		}
+		_locations.insert(std::make_pair("", Location(*this, Config(), "")));
 	}
 
 	/**************************************************************************/
