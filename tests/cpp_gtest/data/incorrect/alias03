@@ -1,0 +1,9 @@
+server {
+	location /error/ {
+		alias	webserv;
+		location	*.abc {
+			root		test;
+		}
+		alias	html;
+	}
+}
