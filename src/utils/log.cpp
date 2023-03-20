@@ -115,7 +115,8 @@ namespace Log
 	{
 		std::ostringstream	stream;
 
-		stream << "webserv: [" << _cc[data.level].str << "] "
+		stream << "webserv: ["
+				<< _cc[data.level].str << "] [" << data.timestamp << "] "
 				<< data.file << ":" << data.line << ": " << msg << std::endl;
 		return (stream.str());
 	}
@@ -156,7 +157,8 @@ namespace Log
 		std::ostringstream	stream;
 
 		stream << "webserv: [" << _cc[data.level].color << _cc[data.level].str
-				<< RESET << "] " << BWHT << data.file << ":" << data.line
+				<< RESET << "] [" << data.timestamp << "] "
+				<< BWHT << data.file << ":" << data.line
 				<< RESET << ": " << msg << std::endl;
 		return (stream.str());
 	}

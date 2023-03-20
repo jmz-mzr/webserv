@@ -4,6 +4,7 @@
 # include <sys/stat.h>
 
 # include <algorithm>
+# include <ctime>
 # include <exception>
 # include <fstream>
 # include <iostream>
@@ -64,11 +65,15 @@ namespace Log
 	{
 		ContextInfo(const std::string& f, const unsigned l, const unsigned lv)
 				: file(f), line(l), level(lv)
-		{ }
+		{
+			std::time_t t = std::time(NULL);
+			std::strftime(timestamp, 16, "%H:%M:%S", std::localtime(&t));
+		}
 
-		const std::string	file;
-		const unsigned int	line;
-		const unsigned int	level;
+		char 			timestamp[16];
+		std::string		file;
+		unsigned int	line;
+		unsigned int	level;
 	};
 
 	class Sink {
