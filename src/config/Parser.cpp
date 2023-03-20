@@ -283,7 +283,8 @@ void	Parser::operator()(Lexer::token_queue& tokens)
 				_currConfig->addListenPair(defaultAddr);
 			}
 			_configStack.pop();
-			_currConfig = &_configs.back();
+			if (!_configStack.empty())
+				_currConfig = &_configStack.top().config;
 			tokens.pop_front();
 		} else if (ctrlToken->type == Lexer::Token::kEOF) {
 			tokens.pop_front();
