@@ -30,10 +30,8 @@ namespace	webserv
 		if (_serverNames.empty())
 			_serverNames.insert("");
 		LOG_INFO("New ServerConfig instance");
-		std::cout << src << std::endl;
 		map_it configIt = src.getConfigs().begin();
 		while (configIt != src.getConfigs().end()) {
-			LOG_DEBUG("Location = \"" << configIt->first << "\"");
 			_locations.insert(std::make_pair(configIt->first,
 								Location(*this, configIt->second,
 								configIt->first)));
