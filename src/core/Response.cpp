@@ -608,7 +608,7 @@ namespace	webserv
 			}
 			return (_loadDirIndex(request, index.size()));
 		}
-		return (_loadInternalRedirect(request, (std::string("/") + index)));
+		return (_loadInternalRedirect(request, request.getUri() + index));
 	}
 
 	void	Response::_closeRequestedFile()
@@ -1103,11 +1103,14 @@ namespace	webserv
 	{
 		const Location*		location = request.getLocation();
 		const std::string&	locationName = location->getLocationName();
+		size_t				locationLen = locationName.size();
 		std::string			aliasUri = request.getUri();
 
-		if (location->getAlias().empty())
+		if (location->getAlias().empty() || locationName.empty())
 			return (false);
-		aliasUri.replace(0, locationName.size(), location->getAlias());
+		if (locationName[0] == '*')
+			locationLen += aliasUri.find_last_of(locationName.c_str() + 1) - 1;
+		aliasUri.replace(0, locationLen, location->getAlias());
 		if (aliasUri[0] == '/')
 			_requestedFilename = aliasUri;
 		else {
@@ -1575,9 +1578,6 @@ namespace	webserv
 							_requestedFilename);
 		int				responseCode;
 
-		responseCode = _statCgiScript(request);
-		if (responseCode)
-			return (responseCode);
 		cgi.loadEnv(request, _getContentType(request.getExtension()));
 		if (!cgi.prepareCgiIo(request))
 			return (500);

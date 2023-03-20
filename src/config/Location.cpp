@@ -14,7 +14,7 @@ namespace	webserv
 
 	Location::Location(const Location& src1, const Config& src2,
 						const std::string& path)
-			: _locationName(src1.getLocationName())
+			: _locationName(path)
 			, _maxBodySize(src2.getMaxBodySize()
 							? src2.getMaxBodySize()
 							: src1._maxBodySize)
@@ -39,16 +39,7 @@ namespace	webserv
 						? src1._cgiPass
 						: src2.getCgiPass())
 	{
-		(void)path;
-		LOG_DEBUG("_locationName = " << _locationName
-			<< " (path = " << path << ")\n"
-			<< "loc.name = " << src1.getLocationName() << "\n"
-			<< "loc.root = " << src1._root
-			<< ", conf.root = " << src2.getRoot()
-			<< ", root = " << _root << "\n"
-			<< "loc.alias = " << src1._alias
-			<< ", conf.alias = " << src2.getAlias()
-			<< ", alias = " << _alias << "\n");
+		LOG_DEBUG("New Location instance (\"" << _locationName << "\")");
 	}
 
 	Location::Location(const ServerConfig& src1, const Config& src2,
@@ -80,12 +71,7 @@ namespace	webserv
 						Location(*this, configIt->second, configIt->first)));
 			configIt++;
 		}
-		LOG_DEBUG("_locationName = " << _locationName << "\n"
-			<< "serv.root = " << src1.getRoot()
-			<< ", conf.root = " << src2.getRoot()
-			<< ", root = " << _root << "\n"
-			<< "conf.alias = " << src2.getAlias()
-			<< ", alias = " << _alias << "\n");
+		LOG_DEBUG("New Location instance (\"" << _locationName << "\")");
 	}
 
 	/**************************************************************************/

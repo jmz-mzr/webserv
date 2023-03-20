@@ -7,7 +7,7 @@
 #include <sys/socket.h>		// freeaddrinfo, gai_strerror, getaddrinfo
 #include <sys/stat.h>		// stat, struct stat
 
-#include <cctype>			// isalpha, isdigit, tolower
+#include <cctype>			// isalnum, isalpha, isdigit, tolower
 #include <cerrno>			// errno
 #include <cstdlib>			// strtol, strtoll, strtoul
 #include <cstring>			// memset, strerror, strlen
@@ -570,7 +570,8 @@ void	Parser::_addLocation(Directive& currDirective)
 {
 	Config::LocationType	type;
 
-	if (currDirective.argv[0].find('*') == 0) {
+	if (currDirective.argv[0][0] == '*' && currDirective.argv[0][1] == '.'
+			&& std::isalnum(currDirective.argv[0][2])) {
 		type = Config::kFile;
 	} else
 		type = Config::kPath;

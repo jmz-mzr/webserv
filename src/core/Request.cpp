@@ -3,6 +3,7 @@
 #include <stdint.h>		// int64_t
 #include <unistd.h>		// unlink
 
+#include <cctype>		// isalnum
 #include <cerrno>		// errno
 #include <cstring>		// strerror
 
@@ -186,15 +187,18 @@ namespace	webserv
 	bool	Request::_loadExtensionLocation(const ServerConfig& serverConfig)
 	{
 		_location_map::const_iterator		extLocation;
+		std::string::reverse_iterator		match;
 
 		extLocation = serverConfig.getLocations().lower_bound("*.~");
 		while (extLocation != serverConfig.getLocations().end()
-				&& extLocation->first[0] == '*'
-				&& extLocation->first.size() > 2) {
-			if (std::search(_uri.rbegin(), _uri.rend(),
-						extLocation->first.rbegin(),
-						extLocation->first.rend() - 1,
-						&ft_charcmp_icase) == _uri.rbegin()) {
+				&& extLocation->first[0] == '*' && extLocation->first[1] == '.'
+				&& std::isalnum(extLocation->first[2])) {
+			LOG_DEBUG("extLoc.rbegin() = " << *extLocation->first.rbegin());
+			match = std::search(_uri.rbegin(), _uri.rend(), extLocation->
+					first.rbegin() + (*extLocation->first.rbegin() == '$'),
+					extLocation->first.rend() - 1, &ft_charcmp_icase);
+			if (match != _uri.rend() && (*extLocation->first.rbegin() != '$'
+					|| match == _uri.rbegin())) {
 				_location = &(extLocation->second);
 				LOG_DEBUG("Using location: \"" << extLocation->first << "\"");
 				return (true);
@@ -208,15 +212,17 @@ namespace	webserv
 	bool	Request::_loadExtensionLocation(const Location& location)
 	{
 		_location_map::const_iterator		extLocation;
+		std::string::reverse_iterator		match;
 
 		extLocation = location.getNestedLocations().lower_bound("*.~");
 		while (extLocation != location.getNestedLocations().end()
-				&& extLocation->first[0] == '*'
-				&& extLocation->first.size() > 2) {
-			if (std::search(_uri.rbegin(), _uri.rend(),
-						extLocation->first.rbegin(),
-						extLocation->first.rend() - 1,
-						&ft_charcmp_icase) == _uri.rbegin()) {
+				&& extLocation->first[0] == '*' && extLocation->first[1] == '.'
+				&& std::isalnum(extLocation->first[2])) {
+			match = std::search(_uri.rbegin(), _uri.rend(), extLocation->
+					first.rbegin() + (*extLocation->first.rbegin() == '$'),
+					extLocation->first.rend() - 1, &ft_charcmp_icase);
+			if (match != _uri.rend() && (*extLocation->first.rbegin() != '$'
+					|| match == _uri.rbegin())) {
 				_location = &(extLocation->second);
 				LOG_DEBUG("Using location: \"" << extLocation->first << "\"");
 				return (true);
@@ -229,9 +235,6 @@ namespace	webserv
 
 	bool	Request::_loadLocation(const ServerConfig& serverConfig)
 	{
-		// TO DO: If no match (no "/"), use a default location as NGINX (""),
-		// so add it with the same config as the server at the end of parsing
-
 		_location_map::const_iterator		location;
 
 		if (_loadExtensionLocation(serverConfig))
