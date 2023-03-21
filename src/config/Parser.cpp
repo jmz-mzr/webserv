@@ -560,10 +560,15 @@ void	Parser::_addListen(Directive& currDirective)
 
 void	Parser::_addServerName(Directive& currDirective)
 {
-	if (currDirective.argv[0] == "\"\"")
-		_currConfig->addServerName("");
-	else
-		_currConfig->addServerName(ft_str_tolower(currDirective.argv[0]));
+	std::vector<std::string>::const_iterator it = currDirective.argv.begin();
+
+	while (it != currDirective.argv.end()) {
+		if (*it == "\"\"")
+			_currConfig->addServerName("");
+		else
+			_currConfig->addServerName(ft_str_tolower(*it));
+		it++;
+	}
 }
 
 void	Parser::_addLocation(Directive& currDirective)
