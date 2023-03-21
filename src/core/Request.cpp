@@ -193,7 +193,6 @@ namespace	webserv
 		while (extLocation != serverConfig.getLocations().end()
 				&& extLocation->first[0] == '*' && extLocation->first[1] == '.'
 				&& std::isalnum(extLocation->first[2])) {
-			LOG_DEBUG("extLoc.rbegin() = " << *extLocation->first.rbegin());
 			match = std::search(_uri.rbegin(), _uri.rend(), extLocation->
 					first.rbegin() + (*extLocation->first.rbegin() == '$'),
 					extLocation->first.rend() - 1, &ft_charcmp_icase);
@@ -270,6 +269,7 @@ namespace	webserv
 		while (config != serverConfigs.end()) {
 			name = config->getServerNames().begin();
 			while (name != config->getServerNames().end()) {
+				LOG_DEBUG("_host = " << _host << ", name = " << *name);
 				if (ft_strcmp_icase(_host, *name) == true) {
 					_serverConfig = &(*config);
 					LOG_DEBUG("Using server: \"" << *name << "\" (on \""
