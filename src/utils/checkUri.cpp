@@ -108,6 +108,8 @@ namespace	webserv
 			if (str[i] == '.' && str[i - 1] == '.')
 				return (std::string::npos);
 		}
+		if (i == 1 && str[0] == '.')
+			return (std::string::npos);
 		return (i);
 	}
 

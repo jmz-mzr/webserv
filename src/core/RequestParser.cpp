@@ -66,7 +66,6 @@ namespace webserv
 			_errorCode = 400;
 			return (std::string::npos);
 		}
-		_host.assign(str, i);
 		if (str[i] == ':') {
 			++i;
 			j = checkUriPort(str + i);
@@ -76,6 +75,7 @@ namespace webserv
 				return (std::string::npos);
 			}
 		}
+		_host.assign(str, i + j);
 		return (i + j);
 	}
 
@@ -352,9 +352,9 @@ namespace webserv
 			_errorCode = 400;
 			return (false);
 		}
-		_headers["Host"] = fieldValue;
 		if (_host.empty())
 			_host = fieldValue;
+		_headers["Host"] = _host;
 		return (true);
 	}
 
@@ -489,11 +489,18 @@ namespace webserv
 
 	bool	Request::_checkHost()
 	{
+		size_t	i;
+
 		if (_headers.count("Host") == 0 && _httpVersion == "1.1") {
 			_logError("Client sent HTTP/1.1 request without \"Host\" header");
 			_errorCode = 400;
 			return (false);
 		}
+		i = _host.find(':');
+		if (i == std::string::npos)
+			i = _host.size();
+		i -= (i != 0 && _host[i - 1] == '.');
+		_host.erase(i);
 		return (true);
 	}
 
