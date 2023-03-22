@@ -51,6 +51,7 @@ NO_COLOR	=	\033[m
 # =================================> Strings <================================ #
 
 MKDIR_MSG	=	Creating directory
+CONF_MSG	=	Generating conf
 LN_MSG		=	Creating softlink
 AR_MSG		=	Creating/Updating
 PROCESS_MSG	=	Processing

@@ -6,7 +6,9 @@
 
 NAME		=	webserv
 AUTHOR		=	jmazoyer flohrel mtogbe
+
 BUILD		?=	debug
+PREFIX		?=	/usr/local
 
 ifneq ($(filter-out debug release,$(BUILD)),)
   $(error '$(BUILD)' is incorrect. Build options are 'debug' or 'release')
@@ -26,10 +28,6 @@ DEPDIR		=	$(BUILDIR)/.deps
 TESTDIR		=	tests/cpp_gtest
 WORKDIR		:=	$(realpath .)
 
-ifeq ($(PREFIX),)
-  PREFIX	=	/usr/local
-endif
-
 BINDIR		=	$(PREFIX)/bin
 SYSCONFDIR	=	$(PREFIX)/etc
 CONFDIR		=	$(SYSCONFDIR)/$(NAME)
@@ -41,6 +39,7 @@ LOGDIR		=	$(DATADIR)/log
 INSTALLDIRS	=	$(BINDIR) $(CONFDIR) $(LIBDIR) $(DATADIR) $(LOGDIR) $(WWWDIR)
 
 WEBSERVLNK	=	$(WWWDIR)/$(NAME)
+CONF		=	$(BUILDIR)/default.conf
 
 VPATH		:=	$(addprefix $(SRCDIR)/,$(SUBDIR)) $(SRCDIR)
 
@@ -123,12 +122,14 @@ ifeq (debug,$(BUILD))
 # endif
   CPPFLAGS	+=	-DLOG_FILE=/tmp/webserv.log \
 				-DLOG_LEVEL=Log::Level::kDebug \
-				-DCONF_FILE=$(WORKDIR)/default.conf
+				-DCONF_FILE=$(CONF) \
+				-DWEBSERV_ROOT=$(WORKDIR)/www
 else
   CXXFLAGS	+=	-O3
   CPPFLAGS	+=	-DLOG_FILE=$(LOGDIR)/webserv.log \
 				-DLOG_LEVEL=Log::Level::kError \
-				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf
+				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf \
+				-DWEBSERV_ROOT=$(DATADIR)/www/webserv
 endif
 
 # =================================> Export <================================= #
@@ -166,7 +167,7 @@ ifneq ($(MAKECMDGOALS),clean)
   endif
 endif
 
-$(BIN):			$(OBJ) | $(INSTALLDIRS) $(WEBSERVLNK)
+$(BIN):			$(OBJ)| $(CONF)
 	$(eval RULE = $(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^)
 	@$(call run,$(RULE),$(LINK_MSG),$(B_CYAN))
 	$(eval F=1)
@@ -174,6 +175,10 @@ $(BIN):			$(OBJ) | $(INSTALLDIRS) $(WEBSERVLNK)
 $(INSTALLDIRS):
 	$(eval RULE = mkdir -p $@)
 	@$(call run,$(RULE),$(MKDIR_MSG),$(B_BLUE))
+
+$(CONF):
+	$(eval RULE = cat $(WORKDIR)/template.conf | envsubst > $(CONF))
+	@$(call run,$(RULE),$(CONF_MSG),$(B_BLUE))
 
 $(WEBSERVLNK):
 	$(eval RULE = ln -s $(WORKDIR)/www $(WEBSERVLNK))
@@ -183,16 +188,16 @@ $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ)) | header
 	$(eval RULE = $(AR) rcs $@ $?)
 	@$(call run,$(RULE),$(AR_MSG),$(B_BLUE))
 
-install:		header $(BIN) $(LIB)
+install:		header $(BIN) $(LIB) | $(INSTALLDIRS) $(WEBSERVLNK)
 	$(eval RULE = install -m 755 $(BIN) $(BINDIR)/$(NAME) ;\
-		cp default.conf $(CONFDIR)/)
+		cp $(BUILDIR)/default.conf $(CONFDIR)/)
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
 uninstall:		header
 	$(eval RULE = $(RM) -rf $(BINDIR)/$(NAME) $(WEBSERVLNK) $(CONFDIR))
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
-test:			header $(LIB)
+test:			header $(LIB) | $(CONF)
 	$(eval RULE = $(MAKE) -C $(TESTDIR))
 	@$(call run,$(RULE),$(MAKE_MSG),$(TESTDIR))
 	@chmod +x $(TESTBIN)

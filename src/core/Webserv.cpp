@@ -143,66 +143,6 @@ namespace	webserv
 		std::cerr << "Usage: ./webserv [CONFIG FILE]" << std::endl;
 	}
 
-	struct print_config_tree {
-		print_config_tree() : depth(0) {
-			std::cout
-				<< "========================================" << std::endl
-				<< "          CONFIG TREE           " << std::endl
-				<< "========================================" << std::endl;
-		}
-		void operator()(const Location& location) {
-			for (int i = 0; i < depth; i++)
-				std::cout << "\t";
-			std::cout << "-> \"" << location.getLocationName() << "\"" << std::endl;
-			depth++;
-			webserv::Location::locations_map::const_iterator it = location.getNestedLocations().begin();
-			if (it != location.getNestedLocations().end()) {
-				for (int i = 0; i < depth; i++)
-					std::cout << "\t";
-				std::cout << "-> ";
-				while (it != location.getNestedLocations().end()) {
-					std::cout << " \"" << it->first << "\"";
-					it++;
-				}
-				std::cout << std::endl;
-			}
-			depth--;
-		}
-		void operator()(const ServerConfig& server)
-		{
-			for (int i = 0; i < depth; i++)
-				std::cout << "\t" << "->";
-			for (std::set<std::string, strcmp_icase>::iterator it = server.getServerNames().begin();
-					it != server.getServerNames().end();
-					it++) {
-				std::cout << " \"" << *it << "\"";
-			}
-			std::cout << std::endl;
-			depth++;
-			for (webserv::ServerConfig::location_map::const_iterator it = server.getLocations().begin();
-					it != server.getLocations().end();
-					it++) {
-				this->operator()(it->second);
-			}
-			depth--;
-		}
-		void operator()(const Server& server)
-		{
-			for (int i = 0; i < depth; i++)
-				std::cout << "\t";
-			std::cout << "-> " << server.getSocket() << std::endl;
-			depth++;
-			for (std::vector<ServerConfig>::const_iterator it = server.getConfigs().begin();
-					it != server.getConfigs().end();
-					it++) {
-				this->operator()(*it);
-			}
-			depth--;
-			std::cout << std::endl;
-		}
-		int depth;
-	};
-
 	void	Webserv::init(int argc, char** argv)
 	{
 		std::string		webservRoot(XSTR(WEBSERV_ROOT));
@@ -215,7 +155,7 @@ namespace	webserv
 			ConfigParser config( (argc == 2) ? argv[1] : XSTR(CONF_FILE) );
 			_loadServers(config.parseFile());
 		}
-		std::for_each(_servers.begin(), _servers.end(), print_config_tree());
+		// std::for_each(_servers.begin(), _servers.end(), print_config_tree());
 		if (webservRoot.size() == 0)
 			THROW_FATAL("WEBSERV_ROOT cannot be an empty path");
 		if (webservRoot[0] != '/')
