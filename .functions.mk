@@ -51,7 +51,6 @@ NO_COLOR	=	\033[m
 # =================================> Strings <================================ #
 
 MKDIR_MSG	=	Creating directory
-CONF_MSG	=	Generating conf
 LN_MSG		=	Creating softlink
 AR_MSG		=	Creating/Updating
 PROCESS_MSG	=	Processing
@@ -78,7 +77,7 @@ else
 endif
 
 ifeq ($(detected_OS),Darwin)
-	RUN_CMD = script -q "$(@F).log" $1 > /dev/null; \
+	RUN_CMD = script -q "$(@F).log" $(1) > /dev/null; \
 				RESULT=$$? ; \
 				sed -i "" -e "s/\^D//g" -e $$"s/\x08//g" -e "/^$$/d" "$(@F).log"
 else ifeq ($(detected_OS),Linux)

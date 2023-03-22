@@ -8,7 +8,12 @@ NAME		=	webserv
 AUTHOR		=	jmazoyer flohrel mtogbe
 
 BUILD		?=	debug
-PREFIX		?=	/usr/local
+PREFIX		?=	$(shell [ -d "$HOME/goinfre" ] && [ -w "$HOME/goinfre" ] \
+				&& echo "$HOME/goinfre" || echo "/usr/local")
+
+ifeq ($(PREFIX),)
+  $(error 'Installation directory undefined')
+endif
 
 ifneq ($(filter-out debug release,$(BUILD)),)
   $(error '$(BUILD)' is incorrect. Build options are 'debug' or 'release')
@@ -39,7 +44,6 @@ LOGDIR		=	$(DATADIR)/log
 INSTALLDIRS	=	$(BINDIR) $(CONFDIR) $(LIBDIR) $(DATADIR) $(LOGDIR) $(WWWDIR)
 
 WEBSERVLNK	=	$(WWWDIR)/$(NAME)
-CONF		=	$(BUILDIR)/default.conf
 
 VPATH		:=	$(addprefix $(SRCDIR)/,$(SUBDIR)) $(SRCDIR)
 
@@ -122,7 +126,7 @@ ifeq (debug,$(BUILD))
 # endif
   CPPFLAGS	+=	-DLOG_FILE=/tmp/webserv.log \
 				-DLOG_LEVEL=Log::Level::kDebug \
-				-DCONF_FILE=$(CONF) \
+				-DCONF_FILE=$(WORKDIR)/default.conf \
 				-DWEBSERV_ROOT=$(WORKDIR)/www
 else
   CXXFLAGS	+=	-O3
@@ -167,7 +171,7 @@ ifneq ($(MAKECMDGOALS),clean)
   endif
 endif
 
-$(BIN):			$(OBJ)| $(CONF)
+$(BIN):			$(OBJ)
 	$(eval RULE = $(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^)
 	@$(call run,$(RULE),$(LINK_MSG),$(B_CYAN))
 	$(eval F=1)
@@ -175,10 +179,6 @@ $(BIN):			$(OBJ)| $(CONF)
 $(INSTALLDIRS):
 	$(eval RULE = mkdir -p $@)
 	@$(call run,$(RULE),$(MKDIR_MSG),$(B_BLUE))
-
-$(CONF):
-	$(eval RULE = cat $(WORKDIR)/template.conf | envsubst > $(CONF))
-	@$(call run,$(RULE),$(CONF_MSG),$(B_BLUE))
 
 $(WEBSERVLNK):
 	$(eval RULE = ln -s $(WORKDIR)/www $(WEBSERVLNK))
@@ -190,14 +190,14 @@ $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ)) | header
 
 install:		header $(BIN) $(LIB) | $(INSTALLDIRS) $(WEBSERVLNK)
 	$(eval RULE = install -m 755 $(BIN) $(BINDIR)/$(NAME) ;\
-		cp $(BUILDIR)/default.conf $(CONFDIR)/)
+		cp default.conf $(CONFDIR)/)
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
 uninstall:		header
 	$(eval RULE = $(RM) -rf $(BINDIR)/$(NAME) $(WEBSERVLNK) $(CONFDIR))
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
-test:			header $(LIB) | $(CONF)
+test:			header $(LIB)
 	$(eval RULE = $(MAKE) -C $(TESTDIR))
 	@$(call run,$(RULE),$(MAKE_MSG),$(TESTDIR))
 	@chmod +x $(TESTBIN)
