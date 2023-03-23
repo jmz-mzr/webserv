@@ -1,0 +1,23 @@
+
+{
+	"suiteFixture": {
+		"host": "localhost",
+		"port": 8080,
+		"headers": { "Host": "localhost:8080" },
+		"throwHttpErrors": false
+	},
+	"testCases": [
+		{
+			"name": "bad_path_name01",
+			"method": "GeT",
+			"path" : "/d",
+			"expectedCode": 400
+		},
+		{
+			"name": "Good request",
+			"method": "GET",
+			"path": "/",
+			"expectedCode": 200
+		}
+	]
+}
