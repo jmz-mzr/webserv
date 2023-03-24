@@ -42,13 +42,19 @@ export const TestSuite: ITestSuite = {
 		}
 		const	compareHeaders = (data1:any, data2: any, res1:any, res2: any, output: any) =>
 		{
-			// Compare headers
+			const { diff } = require('deep-object-diff');
+			
 			output += "Headers test : ";
-			const headers1 = JSON.stringify(res1.headers, null, '\n');
-			const headers2 = JSON.stringify(res2.headers, null, '\n');
-			assert.deepEqual(res1.headers, res2.headers, `\x1b[31mFAIL\n\x1b[0mExpected: ${headers2}\nActual: \x1b[31m${headers1}\x1b[0m \n`)
+			const headers1 = JSON.parse(JSON.stringify(res1.headers));
+			const headers2 = JSON.parse(JSON.stringify(res2.headers));
+			const differences = diff(headers2, headers1);
+			
+			if (Object.keys(differences).length === 0) {
+				output += '\x1b[32mSUCCESS\x1b[0m \n';
+			} else {
+				output += `\x1b[31mFAIL\n\x1b[0mExpected: ${JSON.stringify(res2.headers, null, 2)} | Diff: \x1b[31m${JSON.stringify(differences, null, 2)}}\x1b[0m \n`;
+			}
 			//Determine headers to compare
-			output += '\x1b[32mSUCCESS\x1b[0m \n';
 			console.log(output);
 		}
 		const	compareBody = (data1:any, data2: any, res1:any, res2: any, output: any) =>
@@ -58,7 +64,8 @@ export const TestSuite: ITestSuite = {
 			if (data1 === data2) {
 				output += '\x1b[32mSUCCESS\x1b[0m \n';
 			} else {
-					output += `\x1b[31mFAIL\n\x1b[0mExpected: ${data2} \nActual: \x1b[31m${data1}\x1b[0m`;
+				output += `\x1b[31mFAIL\x1b[0m`;
+				//output += `\x1b[31mFAIL\n\x1b[0mExpected: ${data2} \nActual: \x1b[31m${data1}\x1b[0m`;
 			}
 			console.log(output);
 		}
@@ -122,8 +129,6 @@ export const TestSuite: ITestSuite = {
 							});
 							res2.on('end', () => {
 								console.log(`${testCase.name}: \n`);
-								console.log(res2.rawHeaders);
-								console.log(res1.rawHeaders);
 								compareStatusCode(data1, data2, res1, res2, output);
 								compareHeaders(data1, data2, res1, res2, output);
 								compareBody(data1, data2, res1, res2, output);
