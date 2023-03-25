@@ -59,6 +59,7 @@ FLAGS		=	$(CXXFLAGS) $(CPPFLAGS)
 COMPIL_MSG	=	Compiling & assembling
 LINK_MSG	=	Linking
 MAKE_MSG	=	Calling Make in
+CHMOD_MSG	=	Setting permission
 
 # ===============================> Parameters <=============================== #
 

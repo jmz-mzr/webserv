@@ -1,0 +1,4 @@
+http://webserv.42.fr:8080/
+http://webserv.42.fr:8080/cgi-bin/
+http://webserv.test:8081/
+http://webserv.test:8081/directory/

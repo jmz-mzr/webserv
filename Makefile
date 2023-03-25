@@ -8,8 +8,8 @@ NAME		=	webserv
 AUTHOR		=	jmazoyer flohrel mtogbe
 
 BUILD		?=	debug
-PREFIX		?=	$(shell [ -d "$HOME/goinfre" ] && [ -w "$HOME/goinfre" ] \
-				&& echo "$HOME/goinfre" || echo "/usr/local")
+PREFIX		?=	$(shell [ -d "${HOME}/goinfre" ] && [ -w "${HOME}/goinfre" ] \
+				&& echo "${HOME}/goinfre" || echo "/usr/local")
 
 ifeq ($(PREFIX),)
   $(error 'Installation directory undefined')
@@ -183,6 +183,8 @@ $(INSTALLDIRS):
 $(WEBSERVLNK):
 	$(eval RULE = ln -s $(WORKDIR)/www $(WEBSERVLNK))
 	@$(call run,$(RULE),$(LN_MSG),$(B_BLUE))
+	$(eval RULE = chmod +x $(WORKDIR)/www/webserv.42.fr/{index.php,cgi-bin/info.php})
+	@$(call run,$(RULE),$(CHMOD_MSG),$(B_BLUE))
 
 $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ)) | header
 	$(eval RULE = $(AR) rcs $@ $?)

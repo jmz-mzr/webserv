@@ -1,9 +1,8 @@
 #!/usr/bin/env php-cgi
 
 <?php
-  if (!isset($_SESSION)) {
-    session_start();
-  }
+  // ini_set('session.save_path', dirname($_SERVER['DOCUMENT_ROOT']) . '/sessions');
+  if (session_status() !== PHP_SESSION_ACTIVE) session_start();
   if ($_POST) {
     if (isset($_POST['clearbtn'])) {
       session_unset();

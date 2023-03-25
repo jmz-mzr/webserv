@@ -1,18 +1,21 @@
 from .color import *
 from .config import *
 import os
+import sys
 import importlib
 from pathlib import Path
 
 
+'''
+TODO test exec timeout
+'''
+
 def run_test(instance, method):
 	try:
-		result: str = getattr(instance, method)()
-	except:
-		print(
-			"{}Cannot connect to the server on port {}{}".format(C_B_RED, SERVER_PORT, RESET)
-		)
-		exit(1)
+		result = getattr(instance, method)()
+	except Exception as err:
+		print(f"Unexpected {err=}, {type(err)=}")
+		sys.exit(1)
 	char = ""
 	color = C_GREEN
 	if len(result) == 0:
@@ -50,7 +53,7 @@ class TestCase:
 				module_name = file[:-len(".py")]
 				importlib.import_module("modules." + module_name, ".")
 
-	def main(self):
+	def main(self) -> None:
 		for key, data in self.case_registry.items():
 			for test_name in list(data.test_registry):
 				run_test(data.instance, test_name)
