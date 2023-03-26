@@ -15,11 +15,19 @@ def compare_headers(response: HTTPResponse, headers) -> bool :
     return False
 
 def compare_body(response: HTTPResponse, body) -> bool :
-    return False
+    #check if body length match with content-length headers
+    if response.read().__len__ != int(response.getheader("Content-Length"))
+        return False
+    return True
 
 def compare_time(response: HTTPResponse, executionTime) -> bool :
     return False 
 
+def get_headers_by_status_code(code) -> dict :
+    headers = {"405": {"Allow": "GET, POST, DELETE"}
+               } #MUST
+    return headers
+    
 def check_redirection(response: HTTPResponse, s: socket.socket, requestHeaders: dict) -> bool :
     if response.getcode() == 301:
         requestHeaders.Host = response.getheader("Location")
