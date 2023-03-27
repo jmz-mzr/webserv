@@ -290,6 +290,7 @@ namespace	webserv
 		}
 		if (client.hasRequestTerminated() && !client.hasResponseReady())
 			return (client.prepareResponse());
+		LOG_DEBUG("After write");
 		return (true);
 	}
 

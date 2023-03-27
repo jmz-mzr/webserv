@@ -703,6 +703,7 @@ namespace webserv
 			return (_errorCode);
 		if (_bodySize > 0 && !_loadChunk())
 			return (_errorCode);
+		_isTerminatedRequest = true;
 		return (0);
 	}
 

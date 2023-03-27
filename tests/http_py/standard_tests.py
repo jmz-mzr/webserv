@@ -19,7 +19,7 @@ def compare_headers(response: HTTPResponse, headers) -> bool:
 
 def compare_body(response: HTTPResponse) -> bool:
     # check if body length match with content-length headers
-    if response.read().__len__ != int(response.getheader("Content-Length")):
+    if response.read().__len__() != int(response.getheader("Content-Length")):
         return False
     return True
 
