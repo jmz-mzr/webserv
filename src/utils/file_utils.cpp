@@ -14,21 +14,21 @@
 namespace	webserv
 {
 
-    long	getFileSize(const std::string& filename)
-    {
-        struct stat		stat_buf;
-        int 			rc = stat(filename.c_str(), &stat_buf);
+	long	getFileSize(const std::string& filename)
+	{
+		struct stat		stat_buf;
+		int 			rc = stat(filename.c_str(), &stat_buf);
 
-        return ( (rc == 0) ? stat_buf.st_size : -1 );
-    }
+		return ( (rc == 0) ? stat_buf.st_size : -1 );
+	}
 
-    long	fdGetFileSize(int fd)
-    {
-        struct stat		stat_buf;
-        int 			rc = fstat(fd, &stat_buf);
+	long	fdGetFileSize(int fd)
+	{
+		struct stat		stat_buf;
+		int 			rc = fstat(fd, &stat_buf);
 
-        return ( (rc == 0) ? stat_buf.st_size : -1 );
-    }
+		return ( (rc == 0) ? stat_buf.st_size : -1 );
+	}
 
 	std::string	getFileExtension(const std::string& path)
 	{
