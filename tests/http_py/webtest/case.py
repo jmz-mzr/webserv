@@ -1,29 +1,8 @@
-from .color import *
 from .config import *
+from .run import TestRunner
 import os
-import sys
 import importlib
 from pathlib import Path
-
-
-'''
-TODO test exec timeout
-'''
-
-def run_test(instance, method):
-	try:
-		result = getattr(instance, method)()
-	except Exception as err:
-		print(f"Unexpected {err=}, {type(err)=}")
-		sys.exit(1)
-	char = ""
-	color = C_GREEN
-	if len(result) == 0:
-		char = "✅"
-	else:
-		color = C_RED
-		char = "❌"
-	print(r"{}.{:20} {}{} {}{}".format(instance.__name__, method[len("test_"):], color, char, result, RESET))
 
 
 class TestData:
@@ -54,7 +33,9 @@ class TestCase:
 				importlib.import_module("modules." + module_name, ".")
 
 	def main(self) -> None:
-		for key, data in self.case_registry.items():
+		for data in self.case_registry.values():
 			for test_name in list(data.test_registry):
-				run_test(data.instance, test_name)
+				runner = TestRunner(data.instance, test_name)
+				result = runner()
+				result.console_print()
 			print("")

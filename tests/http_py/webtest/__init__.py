@@ -16,7 +16,6 @@ Usage:
         runner.main()
 """
 
-__all__ = ['TestCase', 'send_request']
-
 from .case import TestCase
 from .utils import send_request
+from .config import *
