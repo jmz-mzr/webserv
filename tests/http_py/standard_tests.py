@@ -23,14 +23,10 @@ def compare_body(response: HTTPResponse, body) -> bool :
 def compare_time(response: HTTPResponse, executionTime) -> bool :
     return False 
 
-def get_headers_by_status_code(code) -> dict :
-    headers = {"405": {"Allow": "GET, POST, DELETE"}
-               } #MUST
-    return headers
-    
-def check_redirection(response: HTTPResponse, s: socket.socket, requestHeaders: dict) -> bool :
+def check_redirection(response: HTTPResponse, s: socket.socket, requestHeaders: dict) -> HTTPResponse :
     if response.getcode() == 301:
         requestHeaders.Host = response.getheader("Location")
         s.send(dict_to_request(requestHeaders).encode())
-
-    return False
+        response = HTTPResponse(s)
+        response = check_redirection(response, s, requestHeaders)
+    return response
