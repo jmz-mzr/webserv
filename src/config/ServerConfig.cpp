@@ -18,10 +18,12 @@ namespace	webserv
 	ServerConfig::ServerConfig(const Config& src, const sockaddr_in& listenPair)
 		: _serverNames(src.getServerNames().begin(), src.getServerNames().end())
 		, _errorPages(src.getErrorPages())
-		, _maxBodySize(src.getMaxBodySize() ? src.getMaxBodySize() : (1 << 20))
+		, _maxBodySize(src.getMaxBodySize() >= 0 ? src.getMaxBodySize() : -1)
 		, _returnPair(src.getReturnPair())
 		, _root(src.getRoot().empty() ? "html" : src.getRoot())
 		, _autoIndex(src.isAutoIndex())
+		, _hideLimitRule(src.hideLimitRule())
+		, _hideDirectory(src.hideDirectory())
 		, _index(src.getIndex().empty() ? "index.html" : src.getIndex())
 	{
 		typedef Config::config_map::const_iterator	map_it;

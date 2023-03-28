@@ -28,7 +28,7 @@ namespace webserv
 			_errorCode = 400;
 			return (std::string::npos);
 		}
-		_requestMethod.assign(str, i);
+		_method.assign(str, i);
 		++i;
 		while (str[i] == ' ')
 			++i;
@@ -258,8 +258,8 @@ namespace webserv
 		size_t		i;
 
 		if (line.empty() || line == "\n" || line.size() > REQUEST_LINE_MAX) {
-			if ((line.empty() && _buffer.size() > REQUEST_LINE_MAX)
-					|| line.size() > REQUEST_LINE_MAX) {
+			if ((line.empty() && _buffer.size() - _bufferIndex
+					> REQUEST_LINE_MAX) || line.size() > REQUEST_LINE_MAX) {
 				_logError("Client sent a request line too long");
 				_errorCode = 414;
 			}
@@ -296,7 +296,7 @@ namespace webserv
 		while (*c == ' ' && c != line.end())
 			++c;
 		while (c != line.end()) {
-			if (!*c) {
+			if (!*c || *c == '\r') {
 				_logError("Client sent an invalid header line");
 				_errorCode = 400;
 				return (false);
@@ -429,6 +429,7 @@ namespace webserv
 				|| ft_strcmp_icase(fieldName, "Keep-Alive")
 				|| ft_strcmp_icase(fieldName, "X-Forwarded-For")
 				|| ft_strcmp_icase(fieldName, "X-Real-IP")
+				|| fieldName.find("X-") == 0
 				|| ft_strcmp_icase(fieldName, "Accept")
 				|| ft_strcmp_icase(fieldName, "Accept-Language")
 				|| ft_strcmp_icase(fieldName, "Date")
@@ -466,8 +467,8 @@ namespace webserv
 		std::string		fieldValue;
 
 		if (line.empty() || line.size() > REQUEST_LINE_MAX) {
-			if ((line.empty() && _buffer.size() > REQUEST_LINE_MAX)
-					|| line.size() > REQUEST_LINE_MAX) {
+			if ((line.empty() && _buffer.size() - _bufferIndex
+					> REQUEST_LINE_MAX) || line.size() > REQUEST_LINE_MAX) {
 				_logError("Client sent a header line too long");
 				_errorCode = 431;
 			}
@@ -555,7 +556,7 @@ namespace webserv
 
 	bool	Request::_parseStartAndFieldLines()
 	{
-		if (_requestLine.empty() && !_parseRequestLine(_readLine(true)))
+		if (_requestLine.empty() && !_parseRequestLine(_readLine(false)))
 			return (false);
 		while (!_hasReceivedHeaders && _bufferIndex < _buffer.size()) {
 			if (!_parseHeaderLine(_readLine()))
@@ -614,8 +615,8 @@ namespace webserv
 		size_t	i;
 
 		if (line.empty() || line.size() > REQUEST_LINE_MAX) {
-			if ((line.empty() && _buffer.size() > REQUEST_LINE_MAX)
-					|| line.size() > REQUEST_LINE_MAX) {
+			if ((line.empty() && _buffer.size() - _bufferIndex
+					> REQUEST_LINE_MAX) || line.size() > REQUEST_LINE_MAX) {
 				_logError("Client sent a chunk size line too long");
 				_errorCode = 400;
 			}
@@ -660,11 +661,12 @@ namespace webserv
 		int64_t	inBuffer = (_buffer.size() >= _bufferIndex ?
 							_buffer.size() - _bufferIndex : 0);
 		int64_t	toLoad = (_bodySize > inBuffer ? inBuffer : _bodySize);
-		int		i = 0;
+		size_t	i = 0;
 
 		if (toLoad == _bodySize) {
 			i = _bufferIndex + toLoad;
-			if (i + 2 > inBuffer)
+			if (i >= _buffer.size()
+					|| (_buffer[i] == '\r' && i + 1 == _buffer.size()))
 				return (false);
 			if (_buffer[i] != '\n' && std::string(&_buffer[i], 2) != "\r\n") {
 				_logError("Client sent invalid chunked body");
@@ -678,15 +680,14 @@ namespace webserv
 		_bufferIndex = (i != 0 ? i : _bufferIndex + toLoad);
 		if (_bufferIndex >= _buffer.size())
 			_clearBuffer();
-		_bodySize -= toLoad;
-		if (_bodySize == 0)
+		if ((_bodySize -= toLoad) == 0)
 			_bodySize = -1;
 		return (true);
 	}
 
 	int	Request::_parseChunkedRequest()
 	{
-		if (_requestMethod != "POST" && _requestMethod != "PUT") {
+		if (_method != "POST" && _method != "PUT") {
 			_discardBody();
 			return (0);
 		}
@@ -703,7 +704,8 @@ namespace webserv
 			return (_errorCode);
 		if (_bodySize > 0 && !_loadChunk())
 			return (_errorCode);
-		_isTerminatedRequest = true;
+		if (_bufferIndex < _buffer.size())
+			return (_parseChunkedRequest());
 		return (0);
 	}
 
@@ -711,7 +713,7 @@ namespace webserv
 	{
 		int64_t	toLoad = _bodySize;
 
-		if (_requestMethod != "POST" && _requestMethod != "PUT") {
+		if (_method != "POST" && _method != "PUT") {
 			_discardBody();
 			return (true);
 		}
@@ -735,6 +737,11 @@ namespace webserv
 	int	Request::parseRequest(const char* recvBuffer,
 								const server_configs& serverConfigs)
 	{
+		// TO DO: if client sends more chunks after error, and error not
+		// disconnecting, continue discarding until done (all chunks received)
+		// or until receiving a request line?
+		// Or just make sure to leave time to send first error response???
+
 		if (recvBuffer)
 			_buffer += recvBuffer;
 		if ((!recvBuffer || !recvBuffer[0]) && _buffer.empty())

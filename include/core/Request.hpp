@@ -37,7 +37,7 @@ namespace	webserv
 		const std::string&		getRequestLine() const
 										{ return (_requestLine); }
 		const std::string&		getRequestMethod() const
-										{ return (_requestMethod); }
+										{ return (_method); }
 		const std::string&		getUri() const
 										{ return (_uri); }
 		const std::string&		getQuery() const
@@ -76,7 +76,7 @@ namespace	webserv
 
 		Request&	operator=(const Request& rhs);
 
-		std::string 	_readLine(bool evenWithoutLF = false);
+		std::string 	_readLine(bool allowNonPrintable = true);
 
 		bool		_parseStartAndFieldLines();
 		bool		_parseRequestLine(const std::string& line);
@@ -118,6 +118,7 @@ namespace	webserv
 		bool	_loadLocation(const ServerConfig& serverConfig);
 		bool	_loadExtensionLocation(const ServerConfig& serverConf);
 		bool	_loadExtensionLocation(const Location& location);
+		bool	_ignoreLocation(const Location& location) const;
 		bool	_checkConfig();
 		bool	_checkMaxBodySize();
 		bool	_checkMethod();
@@ -155,7 +156,7 @@ namespace	webserv
 		std::string				_buffer;
 		size_t					_bufferIndex;
 		std::string				_requestLine;
-		std::string				_requestMethod;
+		std::string				_method;
 		std::string				_uri;
 		std::string				_query;
 		std::string				_extension;

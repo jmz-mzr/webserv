@@ -13,9 +13,11 @@ namespace webserv {
 
 Config::Config()
 		: _lType(Config::kNone)
-		, _maxBodySize(0)
+		, _maxBodySize(-1)
 		, _returnPair(-1, "")
 		, _autoIndex(false)
+		, _hideLimitRule(false)
+		, _hideDirectory(false)
 { }
 
 Config::Config(const Config& src)
@@ -25,11 +27,14 @@ Config::Config(const Config& src)
 		, _errorPages(src._errorPages)
 		, _maxBodySize(src._maxBodySize)
 		, _limitExcept(src._limitExcept)
+		, _ignoreExcept(src._ignoreExcept)
 		, _returnPair(src._returnPair)
 		, _root(src._root)
 		, _alias(src._alias)
 		, _index(src._index)
 		, _autoIndex(src._autoIndex)
+		, _hideLimitRule(src._hideLimitRule)
+		, _hideDirectory(src._hideDirectory)
 		, _cgiPass(src._cgiPass)
 		, _configs(src._configs)
 { }
@@ -46,6 +51,9 @@ void	Config::setMaxBodySize(const int64_t size)
 void	Config::addLimitExcept(const std::string& method)
 { _limitExcept.insert(method); }
 
+void	Config::addIgnoreExcept(const std::string& method)
+{ _ignoreExcept.insert(method); }
+
 void	Config::setReturnPair(const return_pair& returnPair)
 { _returnPair = returnPair; }
 
@@ -54,6 +62,12 @@ void	Config::setRoot(const std::string& path)
 
 void	Config::setAlias(const std::string& path)
 { _alias = path; }
+
+void	Config::setHideDirectory(bool b)
+{ _hideDirectory = b; }
+
+void	Config::setHideLimitRule(bool b)
+{ _hideLimitRule = b; }
 
 void	Config::setAutoIndex(bool b)
 { _autoIndex = b; }

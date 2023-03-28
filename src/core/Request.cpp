@@ -3,11 +3,11 @@
 #include <stdint.h>		// int64_t
 #include <unistd.h>		// unlink
 
-#include <cctype>		// isalnum
+#include <cctype>		// isalnum, isprint
 #include <cerrno>		// errno
 #include <cstring>		// strerror
 
-#include <algorithm>	// search
+#include <algorithm>	// all_of, search
 #include <ios>			// ios::out/binary
 #include <sstream>		// ostringstream
 
@@ -108,7 +108,7 @@ namespace	webserv
 
 	void	Request::setRequestMethod(const std::string& method)
 	{
-		_requestMethod = method;
+		_method = method;
 	}
 
 	void	Request::_parseInternalTarget(const std::string& redirectTo)
@@ -163,7 +163,7 @@ namespace	webserv
 	void	Request::_printRequestInfo() const
 	{
 		LOG_INFO("Request Line: " << _requestLine);
-		LOG_INFO("Request Method: " << _requestMethod);
+		LOG_INFO("Request Method: " << _method);
 		LOG_INFO("Request URI: " << _uri);
 		LOG_INFO("Request Query: " << _query);
 		LOG_INFO("Request Extension: " << _extension);
@@ -184,6 +184,15 @@ namespace	webserv
 		LOG_INFO("Request Is Internal Redirect: " << _isInternalRedirect);
 	}
 
+	bool	Request::_ignoreLocation(const Location& location) const
+	{
+		if (location.getIgnoreExcept().empty()
+				|| location.getIgnoreExcept().count(_method) == 1) {
+			return (false);
+		}
+		return (true);
+	}
+
 	bool	Request::_loadExtensionLocation(const ServerConfig& serverConfig)
 	{
 		_location_map::const_iterator		extLocation;
@@ -197,7 +206,8 @@ namespace	webserv
 					first.rbegin() + (*extLocation->first.rbegin() == '$'),
 					extLocation->first.rend() - 1, &ft_charcmp_icase);
 			if (match != _uri.rend() && (*extLocation->first.rbegin() != '$'
-					|| match == _uri.rbegin())) {
+					|| match == _uri.rbegin())
+					&& !_ignoreLocation(extLocation->second)) {
 				_location = &(extLocation->second);
 				LOG_DEBUG("Using location: \"" << extLocation->first << "\"");
 				return (true);
@@ -218,10 +228,11 @@ namespace	webserv
 				&& extLocation->first[0] == '*' && extLocation->first[1] == '.'
 				&& std::isalnum(extLocation->first[2])) {
 			match = std::search(_uri.rbegin(), _uri.rend(), extLocation->
-					first.rbegin() + (*extLocation->first.rbegin() == '$'),
-					extLocation->first.rend() - 1, &ft_charcmp_icase);
+						first.rbegin() + (*extLocation->first.rbegin() == '$'),
+						extLocation->first.rend() - 1, &ft_charcmp_icase);
 			if (match != _uri.rend() && (*extLocation->first.rbegin() != '$'
-					|| match == _uri.rbegin())) {
+					|| match == _uri.rbegin())
+					&& !_ignoreLocation(extLocation->second)) {
 				_location = &(extLocation->second);
 				LOG_DEBUG("Using location: \"" << extLocation->first << "\"");
 				return (true);
@@ -234,26 +245,27 @@ namespace	webserv
 
 	bool	Request::_loadLocation(const ServerConfig& serverConfig)
 	{
-		_location_map::const_iterator		location;
-
 		if (_loadExtensionLocation(serverConfig))
 			return (true);
-		location = serverConfig.getLocations().lower_bound(_uri);
-		while (location != serverConfig.getLocations().end()) {
-			if (location->first == "" || std::search(_uri.begin(), _uri.end(),
-						location->first.begin(), location->first.end(),
-						&ft_charcmp_icase) == _uri.begin()) {
-				_location = &(location->second);
-				if (_loadExtensionLocation(*_location)) {
+		for (_location_map::const_iterator location = serverConfig.
+												getLocations().lower_bound(_uri)
+				; location != serverConfig.getLocations().end()
+				; ++location) {
+			if (location->first == "" || (std::search(_uri.begin(), _uri.end(),
+					location->first.begin(), location->first.end(),
+					&ft_charcmp_icase) == _uri.begin())) {
+				if (_loadExtensionLocation(location->second)) {
 					LOG_DEBUG("Inside location: \"" << location->first << "\"");
-				} else {
+					return (true);
+				} else if (location->first == ""
+						|| !_ignoreLocation(location->second)) {
+					_location = &(location->second);
 					LOG_DEBUG("Using location: \"" << location->first << "\"");
+					return (true);
 				}
-				return (true);
 			}
 			if (location->first[0] != '*')
 				LOG_DEBUG("Test location: \"" << location->first << "\"");
-			++location;
 		}
 		LOG_ERROR("No suitable location found for uri: \"" << _uri << "\"");
 		_errorCode = 500;
@@ -293,7 +305,7 @@ namespace	webserv
 	{
 		LOG_DEBUG("Content-Length: " << _contentLength << ", max: "
 				<< _location->getMaxBodySize());
-		if (_contentLength > 0
+		if (_contentLength > 0 && _location->getMaxBodySize() > 0
 				&& _contentLength > _location->getMaxBodySize()) {
 			_logError("Client intended to send too large body");
 			_errorCode = 413;
@@ -313,17 +325,20 @@ namespace	webserv
 
 	bool	Request::_checkMethod()
 	{
-		if (_requestMethod == "CONNECT" || _requestMethod == "OPTIONS"
-				|| _requestMethod == "TRACE" || _requestMethod == "PATCH")
+		if (_method == "CONNECT" || _method == "OPTIONS"
+				|| _method == "TRACE" || _method == "PATCH")
 			_errorCode = 405;
-		else if (_requestMethod != "GET" && _requestMethod != "HEAD"
-				&& _requestMethod != "POST" && _requestMethod != "PUT"
-				&& _requestMethod != "DELETE")
+		else if (_method != "GET" && _method != "HEAD"
+				&& _method != "POST" && _method != "PUT"
+				&& _method != "DELETE")
 			_errorCode = 501;
 		if (!_location->getLimitExcept().empty()
-				&& !_location->getLimitExcept().count(_requestMethod)) {
+				&& !_location->getLimitExcept().count(_method)) {
 			_logError("Access forbidden by rule");
-			_errorCode = 403;
+			if (_location->hideLimitRule())
+				_errorCode = 405;
+			else
+				_errorCode = 403;
 		}
 		if (_errorCode)
 			return (false);
@@ -387,7 +402,8 @@ namespace	webserv
 				_errorCode = 400;
 				break ;
 			}
-			_bufferIndex += _bodySize;
+			_bufferIndex += _bodySize + 1
+				+ (_buffer[_bufferIndex + _bodySize] == '\r');
 			_bodySize = -1;
 		}
 		if (_errorCode)
@@ -399,7 +415,10 @@ namespace	webserv
 
 	void	Request::_discardBody()
 	{
+		// TO DO: set _isKeepAlive to false only if more is to be received
+
 		_isTerminatedRequest = true;
+		_isKeepAlive = false;
 		if (!isKeepAlive()) {
 			_buffer.clear();
 			return ;
@@ -425,7 +444,7 @@ namespace	webserv
 		_bufferIndex = 0;
 	}
 
-	std::string Request::_readLine(bool evenWithoutLF)
+	std::string Request::_readLine(bool allowNonPrintable)
 	{
 		std::string	line;
 		size_t		i;
@@ -433,7 +452,10 @@ namespace	webserv
 
 		i = _buffer.find_first_of('\n', _bufferIndex);
 		if (i == std::string::npos) {
-			if (!evenWithoutLF)
+//			if (_buffer.empty() || (std::isprint(_buffer[0])
+			if (_buffer.empty() || (_buffer[0] != static_cast<char>(0xFF)
+					&& (allowNonPrintable || std::all_of(_buffer.begin(),
+					_buffer.end(), static_cast<int(*)(int)>(std::isprint)))))
 				return ("");
 			line = _buffer.substr(_bufferIndex);
 			_clearBuffer();
@@ -492,9 +514,15 @@ namespace	webserv
 
 	void	Request::_deleteTmpFile()
 	{
+		struct stat		fileInfos;
+
 		if (_tmpFile.is_open())
 			_closeTmpFile();
-		if (unlink(_tmpFilename.c_str()) < 0) {
+		if (_tmpFilename.empty())
+			return ;
+		if (stat(_tmpFilename.c_str(), &fileInfos) < 0) {
+			LOG_INFO("stat(" << _tmpFilename << "): " << std::strerror(errno));
+		} else if (unlink(_tmpFilename.c_str()) < 0) {
 			_logError((std::string("unlink(") + _tmpFilename
 					   + ") failed: " + std::strerror(errno)).c_str());
 		} else
@@ -504,7 +532,7 @@ namespace	webserv
 	void	Request::_clearStartAndFieldLines()
 	{
 		_requestLine.clear();
-		_requestMethod.clear();
+		_method.clear();
 		_uri.clear();
 		_query.clear();
 		_extension.clear();

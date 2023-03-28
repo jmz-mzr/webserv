@@ -15,12 +15,11 @@ namespace	webserv
 	Location::Location(const Location& src1, const Config& src2,
 						const std::string& path)
 			: _locationName(path)
-			, _maxBodySize(src2.getMaxBodySize()
+			, _maxBodySize(src2.getMaxBodySize() >= 0
 							? src2.getMaxBodySize()
 							: src1._maxBodySize)
-			, _limitExcept(src2.getLimitExcept().empty()
-							? src1._limitExcept
-							: src2.getLimitExcept())
+			, _limitExcept(src2.getLimitExcept())
+			, _ignoreExcept(src2.getIgnoreExcept())
 			, _returnPair((src2.getReturnPair().first == -1)
 						? std::make_pair(src1._returnPair.first,
 										src1._returnPair.second)
@@ -35,6 +34,8 @@ namespace	webserv
 							: src2.getAlias())
 			, _index(src2.getIndex().empty() ? src1._index : src2.getIndex())
 			, _autoIndex(src2.isAutoIndex() || src1._autoIndex)
+			, _hideLimitRule(src2.hideLimitRule() || src1._hideLimitRule)
+			, _hideDirectory(src2.hideDirectory() || src1._hideDirectory)
 			, _cgiPass(src2.getCgiPass().empty()
 						? src1._cgiPass
 						: src2.getCgiPass())
@@ -45,10 +46,11 @@ namespace	webserv
 	Location::Location(const ServerConfig& src1, const Config& src2,
 						const std::string& path)
 			: _locationName(path)
-			, _maxBodySize(src2.getMaxBodySize()
+			, _maxBodySize(src2.getMaxBodySize() >= 0
 							? src2.getMaxBodySize()
 							: src1.getMaxBodySize())
 			, _limitExcept(src2.getLimitExcept())
+			, _ignoreExcept(src2.getIgnoreExcept())
 			, _returnPair((src2.getReturnPair().first == -1)
 						? std::make_pair(src1.getReturnPair().first,
 										src1.getReturnPair().second)
@@ -61,6 +63,8 @@ namespace	webserv
 			, _alias(src2.getAlias())
 			, _index(src2.getIndex().empty() ? src1.getIndex() : src2.getIndex())
 			, _autoIndex(src2.isAutoIndex() || src1.isAutoIndex())
+			, _hideLimitRule(src2.hideLimitRule() || src1.hideLimitRule())
+			, _hideDirectory(src2.hideDirectory() || src1.hideDirectory())
 			, _cgiPass(src2.getCgiPass())
 	{
 		typedef Config::config_map::const_iterator	map_it;

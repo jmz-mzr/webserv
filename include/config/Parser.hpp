@@ -23,15 +23,18 @@ namespace	config {
 	public:
 		typedef Lexer::token_queue::iterator	it_t;
 
-		static const size_t		kDirectiveNb = 13;
+		static const size_t		kDirectiveNb = 16;
 
 		enum Type {
 			kErrorPage,
 			kMaxBodySize,
 			kLimitExcept,
+			kIgnoreExcept,
 			kReturn,
 			kRoot,
 			kAlias,
+			kHideDirectory,
+			kHideLimitRule,
 			kAutoindex,
 			kIndex,
 			kCgiPass,
@@ -115,9 +118,12 @@ namespace	config {
 		void	_addErrorPage(Directive& currDirective);
 		void	_setMaxBodySize(Directive& currDirective);
 		void	_setLimitExcept(Directive& currDirective);
+		void	_setIgnoreExcept(Directive& currDirective);
 		void	_setReturnPair(Directive& currDirective);
 		void	_setRoot(Directive& currDirective);
 		void	_setAlias(Directive& currDirective);
+		void	_setHideDirectory(Directive& currDirective);
+		void	_setHideLimitRule(Directive& currDirective);
 		void	_setAutoIndex(Directive& currDirective);
 		void	_setIndex(Directive& currDirective);
 		void	_setCgiPass(Directive& currDirective);

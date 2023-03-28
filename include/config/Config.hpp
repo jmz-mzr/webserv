@@ -21,6 +21,7 @@ namespace webserv {
 	public:
 		typedef std::pair<int, std::string>					return_pair;
 		typedef std::set<std::string, strcmp_icase>			limit_except_set;
+		typedef std::set<std::string, strcmp_icase>			ignore_except_set;
 		typedef std::map<int, std::string>					error_page_map;
 		typedef std::map<std::string, Config>				config_map;
 		typedef std::set<std::string, strcmp_icase>			hostname_set;
@@ -36,9 +37,12 @@ namespace webserv {
 		void		addErrorPage(const int status, const std::string& uri);
 		void		setMaxBodySize(const int64_t size);
 		void		addLimitExcept(const std::string& method);
+		void		addIgnoreExcept(const std::string& method);
 		void		setReturnPair(const return_pair& returnPair);
 		void		setRoot(const std::string& path);
 		void		setAlias(const std::string& path);
+		void		setHideDirectory(bool b);
+		void		setHideLimitRule(bool b);
 		void		setAutoIndex(bool b);
 		void		setIndex(const std::string& path);
 		void		setCgiPass(const std::string& path);
@@ -46,19 +50,38 @@ namespace webserv {
 		void		addServerName(const std::string& name);
 		Config&		addConfig(const std::string& path, const Config& config);
 
-		const LocationType&		getType() const { return (_lType); }
-		const listen_set&		getListens() const { return (_listens); }
-		const hostname_set&		getServerNames() const { return (_serverNames);}
-		const error_page_map&	getErrorPages() const { return (_errorPages); }
-		const int64_t&			getMaxBodySize() const { return (_maxBodySize);}
-		const limit_except_set&	getLimitExcept() const { return (_limitExcept);}
-		const return_pair&		getReturnPair() const { return (_returnPair); }
-		const std::string&		getRoot() const { return (_root); }
-		const std::string&		getAlias() const { return (_alias); }
-		bool					isAutoIndex() const { return (_autoIndex); }
-		const std::string&		getIndex() const { return (_index); }
-		const std::string&		getCgiPass() const { return (_cgiPass); }
-		const config_map&		getConfigs() const { return (_configs); }
+		const LocationType&			getType() const
+												{ return (_lType); }
+		const listen_set&			getListens() const
+												{ return (_listens); }
+		const hostname_set&			getServerNames() const
+												{ return (_serverNames); }
+		const error_page_map&		getErrorPages() const
+												{ return (_errorPages); }
+		const int64_t&				getMaxBodySize() const
+												{ return (_maxBodySize); }
+		const limit_except_set&		getLimitExcept() const
+												{ return (_limitExcept); }
+		const ignore_except_set&	getIgnoreExcept() const
+												{ return (_ignoreExcept); }
+		const return_pair&			getReturnPair() const
+												{ return (_returnPair); }
+		const std::string&			getRoot() const
+												{ return (_root); }
+		const std::string&			getAlias() const
+												{ return (_alias); }
+		const std::string&			getIndex() const
+												{ return (_index); }
+		bool						isAutoIndex() const
+												{ return (_autoIndex); }
+		bool						hideLimitRule() const
+												{ return (_hideLimitRule); }
+		bool						hideDirectory() const
+												{ return (_hideDirectory); }
+		const std::string&			getCgiPass() const
+												{ return (_cgiPass); }
+		const config_map&			getConfigs() const
+												{ return (_configs); }
 
 		friend std::ostream&	operator<<(std::ostream&, const Config&);
 	private:
@@ -118,7 +141,15 @@ namespace webserv {
 		// 5) If the definition was inherited from the Config, the first
 		// definition line replaces it
 		int64_t						_maxBodySize;
+
+		// 1) Can only be defined once on a level, and if another
+		// definition line appears, it must throw an exception
+		// (like '"limit_except/ignore_except" directive is duplicate
+		// in /usr/local/etc/nginx/nginx.conf:45')
+		// 2) Can only be set in a location context, and nested locations
+		// do not inherit them
 		limit_except_set			_limitExcept;
+		ignore_except_set			_ignoreExcept;
 
 		// 1) Can only be defined once on a level, so the 2nd, 3rd...
 		// definition lines will be ignored, but this doesn't prevent the rest
@@ -177,6 +208,13 @@ namespace webserv {
 		// (like '"autoindex" directive is duplicate in
 		// /usr/local/etc/nginx/nginx.conf:37')
 		bool						_autoIndex;
+
+		// 1) Can only be defined once, and if another
+		// definition line appears, it must throw an exception
+		// (like '"hide_limit_rule/hide_directory" directive is duplicate in
+		// /usr/local/etc/nginx/nginx.conf:37')
+		bool						_hideLimitRule;
+		bool						_hideDirectory;
 
 		// 1) Can only be defined once, and if another definition line
 		// appears, it must throw an exception (like '"cgi_pass" directive

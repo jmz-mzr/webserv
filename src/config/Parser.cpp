@@ -64,10 +64,17 @@ Parser::Parser()
 		},
 		{
 			kLimitExcept,
-			kDirective | kIgnoreDup | kLocCtx,
+			kDirective | kForbiddenDup | kLocCtx,
 			1,
 			"limit_except",
 			&Parser::_setLimitExcept
+		},
+		{
+			kIgnoreExcept,
+			kDirective | kForbiddenDup | kLocCtx,
+			1,
+			"ignore_except",
+			&Parser::_setIgnoreExcept
 		},
 		{
 			kReturn,
@@ -89,6 +96,20 @@ Parser::Parser()
 			1,
 			"alias",
 			&Parser::_setAlias
+		},
+		{
+			kHideDirectory,
+			kDirective | kForbiddenDup | kArgcStrict | kLocCtx | kServCtx,
+			1,
+			"hide_directory",
+			&Parser::_setHideDirectory
+		},
+		{
+			kHideLimitRule,
+			kDirective | kForbiddenDup | kArgcStrict | kLocCtx | kServCtx,
+			1,
+			"hide_limit_rule",
+			&Parser::_setHideLimitRule
 		},
 		{
 			kAutoindex,
@@ -360,6 +381,22 @@ void	Parser::_setLimitExcept(Directive& currDirective)
 	}
 }
 
+void	Parser::_setIgnoreExcept(Directive& currDirective)
+{
+	typedef std::vector<std::string>::const_iterator	argIter_t;
+	typedef std::set<std::string>::const_iterator		methodIter_t;
+
+	for (argIter_t argIt = currDirective.argv.begin();
+			argIt != currDirective.argv.end();
+			argIt++) {
+		methodIter_t it = _methods.find(ft_str_tolower(*argIt));
+		if (it == _methods.end())
+			_errorHandler("Invalid \"ignore_except\" method \""
+								+ *argIt + "\"");
+		_currConfig->addIgnoreExcept(*it);
+	}
+}
+
 void	Parser::_setReturnPair(Directive& currDirective)
 {
 	std::string		arg1(currDirective.argv[0]);
@@ -417,6 +454,28 @@ void	Parser::_setAlias(Directive& currDirective)
 {
 	_duplicateCheck("alias", kRoot, "root");
 	_currConfig->setAlias(currDirective.argv[0]);
+}
+
+void	Parser::_setHideDirectory(Directive& currDirective)
+{
+	if (currDirective.argv[0] == "on")
+		_currConfig->setHideDirectory(true);
+	else if (currDirective.argv[0] == "off")
+		_currConfig->setHideDirectory(false);
+	else
+		_errorHandler("Invalid \"hide_directory\" value \""
+			+ currDirective.argv[0] + "\", it must be \"on\" or \"off\"");
+}
+
+void	Parser::_setHideLimitRule(Directive& currDirective)
+{
+	if (currDirective.argv[0] == "on")
+		_currConfig->setHideLimitRule(true);
+	else if (currDirective.argv[0] == "off")
+		_currConfig->setHideLimitRule(false);
+	else
+		_errorHandler("Invalid \"hide_limit_rule\" value \""
+			+ currDirective.argv[0] + "\", it must be \"on\" or \"off\"");
 }
 
 void	Parser::_setAutoIndex(Directive& currDirective)

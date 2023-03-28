@@ -44,6 +44,10 @@ namespace	webserv
 													{ return (_root); }
 		bool							isAutoIndex() const
 													{ return (_autoIndex); }
+		bool							hideLimitRule() const
+													{ return (_hideLimitRule); }
+		bool							hideDirectory() const
+													{ return (_hideDirectory); }
 		const std::string&				getIndex() const
 													{ return (_index); }
 		const location_map&				getLocations() const
@@ -64,6 +68,8 @@ namespace	webserv
 		return_pair					_returnPair;
 		std::string					_root;
 		bool						_autoIndex;
+		bool						_hideLimitRule;
+		bool						_hideDirectory;
 		std::string					_index;
 		location_map				_locations;
 	};
