@@ -3,7 +3,7 @@ from .run import TestRunner
 import os
 import importlib
 from pathlib import Path
-from threading import Thread
+from threading import Thread, Lock
 
 
 class TestData:
@@ -35,10 +35,11 @@ class TestCase:
 
 	def main(self) -> None:
 		threads = list()
+		lock = Lock()
 		for data in self.case_registry.values():
 			for test_name in list(data.test_registry):
 				runner = TestRunner(data.instance, test_name)
-				t = Thread(target=runner)
+				t = Thread(target=runner, args=[lock])
 				threads.append(t)
 				t.start()
 		for thread in threads:

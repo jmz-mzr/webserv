@@ -17,14 +17,15 @@ class TestResult:
         self.message = ""
         self.test_name = test_name
 
-    def console_print(self):
+    def console_print(self, lock):
         if self.status == RunStatus.SUCCESS:
             char = "✅"
             color = C_GREEN
         else:
             char = "❌"
             color = C_RED
-        print(f"{self.test_name:42} {color}{char} {self.message}{RESET}")
+        with lock:
+            print(f"{self.test_name:42} {color}{char} {self.message}{RESET}")
 
 
 class TestRunner:
@@ -34,7 +35,7 @@ class TestRunner:
         self.function = getattr(instance, method)
         self.result = TestResult(self.instance.__name__ + "." + self.method[len("test_"):])
 
-    def __call__(self):
+    def __call__(self, lock):
         try:
             start = time.time()
             self.result.message = self.function()
@@ -46,5 +47,5 @@ class TestRunner:
             self.result.message = err
             self.result.status = RunStatus.FAIL
         finally:
-            self.result.console_print()
+            self.result.console_print(lock)
             return
