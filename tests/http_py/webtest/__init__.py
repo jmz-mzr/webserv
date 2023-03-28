@@ -18,4 +18,5 @@ Usage:
 
 from .case import TestCase
 from .utils import send_request
+from .utils import print_headers
 from .config import *
