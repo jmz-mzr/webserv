@@ -1,4 +1,4 @@
-#include <cctype>		// isprint, tolower
+#include <cctype>		// isprint, tolower, toupper
 
 #include <algorithm>	// equal, transform
 #include <iostream>		// hex, uppercase
@@ -40,6 +40,20 @@ namespace	webserv
 		std::transform(strToLower.begin(), strToLower.end(),
 				strToLower.begin(), &ft_tolower);
 		return (strToLower);
+	}
+
+	static int	ft_toupper(int c)
+	{
+		return (std::toupper(c));
+	}
+
+	std::string	ft_str_toupper(const std::string& str)
+	{
+		std::string		strToUpper(str);
+
+		std::transform(strToUpper.begin(), strToUpper.end(),
+				strToUpper.begin(), &ft_toupper);
+		return (strToUpper);
 	}
 
 	std::string	strHexDump(const std::string& str)

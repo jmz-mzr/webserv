@@ -14,7 +14,7 @@
 # endif
 
 # ifndef LOGFILE_SIZE_MAX
-#  define LOGFILE_SIZE_MAX	(1 << 10) * 20
+#  define LOGFILE_SIZE_MAX	(1 << 20) * 20
 # endif
 
 # ifndef CONF_FILE
@@ -25,9 +25,9 @@
 #  define WEBSERV_ROOT		/usr/local/var/www/webserv
 # endif
 
-# define RECV_BUFFER_SIZE	8192	// 8KB
+//# define RECV_BUFFER_SIZE	8192	// 8KB
 //# define RECV_BUFFER_SIZE	16384	// 16KB
-//# define RECV_BUFFER_SIZE	32768	// 32KB
+# define RECV_BUFFER_SIZE	32768	// 32KB
 
 # define SEND_BUFFER_SIZE	524288	// 500KB
 //# define SEND_BUFFER_SIZE	1048576	// 1MB

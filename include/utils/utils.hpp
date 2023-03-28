@@ -34,6 +34,7 @@ namespace	webserv
 	bool		ft_strcmp_icase(const std::string& str1,
 								const std::string& str2);
 	std::string	ft_str_tolower(const std::string& str);
+	std::string	ft_str_toupper(const std::string& str);
 
 	std::string	strHexDump(const std::string& str);
 
@@ -47,7 +48,7 @@ namespace	webserv
 	std::string	trim(const std::string& str);
 
 	long		getFileSize(const std::string& filename);
-    long		fdGetFileSize(int fd);
+	long		fdGetFileSize(int fd);
 	std::string	createRandomFilename(const std::string& path = "/tmp/",
 										const std::string& prefix = "");
 	std::string	getFileExtension(const std::string& path);
