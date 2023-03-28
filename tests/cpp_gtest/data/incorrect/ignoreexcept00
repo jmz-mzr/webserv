@@ -1,0 +1,3 @@
+server {
+	ignore_except GET;
+}

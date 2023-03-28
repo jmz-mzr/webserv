@@ -1,0 +1,5 @@
+server {
+	location /error/ {
+		hide_limite_rule	onn;
+	}
+}

@@ -1,0 +1,6 @@
+server {
+	location /error/ {
+		ignore_except GET;
+		ignore_except POST;
+	}
+}

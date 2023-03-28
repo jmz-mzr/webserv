@@ -1,0 +1,6 @@
+server {
+	location /error/ {
+		hide_directory		on;
+		hide_directory		off;
+	}
+}

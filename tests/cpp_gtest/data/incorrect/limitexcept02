@@ -1,5 +1,6 @@
 server {
 	location /error/ {
-		limit_except ;
+		limit_except GET;
+		limit_except POST;
 	}
 }
