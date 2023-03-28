@@ -1,6 +1,6 @@
 MODULE_DIR = "modules"
 
 SERVER_HOST = "localhost"
-SERVER_PORT = 8080
+SERVER_PORT = 8082
 
 URI_MAX_LEN = 16384
