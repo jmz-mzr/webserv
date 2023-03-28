@@ -90,7 +90,6 @@ namespace Log
 				std::cerr << stream.str();
 				throw (webserv::FatalErrorException());
 			}
-			//TODO: write header with timestamp ?
 		}
 	}
 
@@ -114,9 +113,12 @@ namespace Log
 											const std::string& msg) const
 	{
 		std::ostringstream	stream;
+		char 				timestamp[32];
 
+		std::strftime(timestamp, 32, "%d/%m/%Y - %H:%M:%S",
+												std::localtime(&(data.time)));
 		stream << "webserv: ["
-				<< _cc[data.level].str << "] [" << data.timestamp << "] "
+				<< _cc[data.level].str << "] [" << timestamp << "] "
 				<< data.file << ":" << data.line << ": " << msg << std::endl;
 		return (stream.str());
 	}
@@ -155,9 +157,11 @@ namespace Log
 												const std::string& msg) const
 	{
 		std::ostringstream	stream;
+		char 				timestamp[16];
 
+		std::strftime(timestamp, 16, "%H:%M:%S", std::localtime(&(data.time)));
 		stream << "webserv: [" << _cc[data.level].color << _cc[data.level].str
-				<< RESET << "] [" << data.timestamp << "] "
+				<< RESET << "] [" << timestamp << "] "
 				<< BWHT << data.file << ":" << data.line
 				<< RESET << ": " << msg << std::endl;
 		return (stream.str());

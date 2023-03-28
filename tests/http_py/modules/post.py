@@ -1,7 +1,7 @@
 from webtest import *
 from standard_tests import *
 
-class PostMethod(TestCase):
+class Post(TestCase):
     def test_post_directory():
         request = "POST / HTTP/1.1\r\nHost: localhost:8080\r\n\r\n"
         response = send_request(request)

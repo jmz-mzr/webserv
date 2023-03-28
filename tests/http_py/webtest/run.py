@@ -1,5 +1,6 @@
 import sys
 import time
+import logging
 from .color import *
 from enum import Enum
 
@@ -7,7 +8,6 @@ from enum import Enum
 class RunStatus(Enum):
     SUCCESS = 0
     FAIL = 1
-    TIMEOUT = 2
 
 
 class TestResult:
@@ -18,12 +18,13 @@ class TestResult:
         self.test_name = test_name
 
     def console_print(self):
-        color = C_RED
-        char = "❌"
         if self.status == RunStatus.SUCCESS:
             char = "✅"
             color = C_GREEN
-        print(r"{:42} {}{} {}{}".format(self.test_name, color, char, self.message, RESET))
+        else:
+            char = "❌"
+            color = C_RED
+        print(f"{self.test_name:42} {color}{char} {self.message}{RESET}")
 
 
 class TestRunner:
@@ -31,22 +32,19 @@ class TestRunner:
         self.instance = instance
         self.method = method
         self.function = getattr(instance, method)
-        self.result: TestResult = TestResult(self.instance.__name__ + "." + self.method[len("test_"):])
-        pass
+        self.result = TestResult(self.instance.__name__ + "." + self.method[len("test_"):])
 
-    def __call__(self) -> TestResult:
+    def __call__(self):
         try:
             start = time.time()
             self.result.message = self.function()
             end = time.time()
             self.result.exec_time = end - start
-        except TimeoutError:
-            self.result.status = RunStatus.TIMEOUT
-            self.message = "Timeout"
-        except Exception as err:
-            print(f"Unexpected {err=}, {type(err)=}")
-            sys.exit(1)
-        finally:
             if len(self.result.message) != 0:
                 self.result.status = RunStatus.FAIL
-            return self.result
+        except Exception as err:
+            self.result.message = err
+            self.result.status = RunStatus.FAIL
+        finally:
+            self.result.console_print()
+            return

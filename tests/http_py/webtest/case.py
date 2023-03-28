@@ -3,6 +3,7 @@ from .run import TestRunner
 import os
 import importlib
 from pathlib import Path
+from threading import Thread
 
 
 class TestData:
@@ -33,9 +34,12 @@ class TestCase:
 				importlib.import_module("modules." + module_name, ".")
 
 	def main(self) -> None:
+		threads = list()
 		for data in self.case_registry.values():
 			for test_name in list(data.test_registry):
 				runner = TestRunner(data.instance, test_name)
-				result = runner()
-				result.console_print()
-			print("")
+				t = Thread(target=runner)
+				threads.append(t)
+				t.start()
+		for thread in threads:
+			thread.join()

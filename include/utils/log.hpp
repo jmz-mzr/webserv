@@ -64,13 +64,10 @@ namespace Log
 	struct ContextInfo
 	{
 		ContextInfo(const std::string& f, const unsigned l, const unsigned lv)
-				: file(f), line(l), level(lv)
-		{
-			std::time_t t = std::time(NULL);
-			std::strftime(timestamp, 16, "%H:%M:%S", std::localtime(&t));
-		}
+				: time(std::time(NULL)), file(f), line(l), level(lv)
+		{ }
 
-		char 			timestamp[16];
+		time_t			time;
 		std::string		file;
 		unsigned int	line;
 		unsigned int	level;

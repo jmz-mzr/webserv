@@ -1,7 +1,7 @@
 from webtest import *
 
 
-class GetMethod(TestCase):
+class Get(TestCase):
 	@staticmethod
 	def test_valid_path():
 		request = "GET / HTTP/1.1\r\nHost: localhost:8080\r\n\r\n"

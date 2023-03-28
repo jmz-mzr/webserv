@@ -2,7 +2,8 @@ import socket
 from http.client import HTTPResponse
 from webtest import *
 
-class ChunkedMethod(TestCase):
+
+class Chunked(TestCase):
     def test_basic_chunked() -> str:
         # return ""
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
