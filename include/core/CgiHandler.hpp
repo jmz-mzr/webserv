@@ -45,8 +45,12 @@ namespace	webserv
 		void		_loadEnv2(const Request& request);
 		std::string	_convertEnvVarName(const std::string& str) const;
 		void		_loadEnvContainers();
+		bool		_prepareCgiIoFiles(const Request& request);
 		void		_executeCgi(const Request& request, const char* workingDir);
+		void		_handleCgiChildError(bool beforeExecve = true);
 		int			_getChildStatus(const Request& request) const;
+		void		_loadChildErrorLog(const Request& request,
+										int status) const;
 		int			_waitChild(const Request& request, int* status) const;
 		void		_closeCgiFiles();
 
@@ -59,6 +63,7 @@ namespace	webserv
 		int						_inputFd;
 		FILE*					_outputFile;
 		int						_outputFd;
+		FILE*					_errorFile;
 		pid_t					_pid;
 	};
 

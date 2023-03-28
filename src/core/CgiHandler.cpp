@@ -5,11 +5,12 @@
 #include <stdio.h>		// fileno
 #include <stdlib.h>		// exit
 #include <sys/wait.h>	// waitpid
-#include <unistd.h>		// close, chdir, dup2, execve, fork, (u)sleep, STDIN/OUT
+#include <unistd.h>		// close, chdir, dup2, execve, fork, (u)sleep,
+						// STD(IN/OUT/ERR)_FILENO
 
 #include <cerrno>		// errno
 #include <cstring>		// strerror
-#include <cstdio>		// clearerr, fclose
+#include <cstdio>		// clearerr, fclose, fgets, fprintf, rewind
 #include <cctype>		// toupper
 
 #include <list>
@@ -43,6 +44,7 @@ namespace	webserv
 										_inputFd(-1),
 										_outputFile(0),
 										_outputFd(-1),
+										_errorFile(0),
 										_pid(-1)
 	{
 		LOG_INFO("New CgiHandler instance");
@@ -129,14 +131,14 @@ namespace	webserv
 		size_t								dirPos;
 
 		while (it != headers.end()) {
-			if (!ft_strcmp_icase(it->first, "Content-Length")
-					&& !ft_strcmp_icase(it->first, "Content-Type")
-					&& !ft_strcmp_icase(it->first, "Authorization")
-					&& !ft_strcmp_icase(it->first, "Proxy-Authorization")) {
+//			if (!ft_strcmp_icase(it->first, "Content-Length")
+//					&& !ft_strcmp_icase(it->first, "Content-Type")
+//					&& !ft_strcmp_icase(it->first, "Authorization")
+//					&& !ft_strcmp_icase(it->first, "Proxy-Authorization")) {
 				fieldName = "HTTP_";
 				fieldName += _convertEnvVarName(it->first);
 				_envMap[fieldName] = it->second;
-			}
+//			}
 			++it;
 		}
 		dirPos = _requestedFilename.find_last_of('/');
@@ -160,8 +162,8 @@ namespace	webserv
 		if (contentType.empty() && request.getRequestMethod() == "POST")
 			_envMap["CONTENT_TYPE"] = computedContentType;
 		_envMap["GATEWAY_INTERFACE"] = "CGI/1.1";
-		_envMap["PATH_INFO"] = _requestedFilename;
-		_envMap["PATH_TRANSLATED"] = _requestedFilename;
+		_envMap["PATH_INFO"] = request.getUri();
+		_envMap["PATH_TRANSLATED"] = request.getUri();
 		_envMap["QUERY_STRING"] = request.getQuery();
 		_envMap["REDIRECT_STATUS"] = "200";
 		_envMap["REMOTE_ADDR"] = request.getClientSocket().getIpAddr();
@@ -195,6 +197,36 @@ namespace	webserv
 				_outputFile = 0;
 			}
 		}
+		if (_errorFile) {
+			if (std::fclose(_errorFile) != 0) {
+				LOG_ERROR("Bad fclose() on temporary cgiErrorFile");
+				std::clearerr(_errorFile);
+			} else
+				_errorFile = 0;
+		}
+	}
+
+	bool	CgiHandler::_prepareCgiIoFiles(const Request& request)
+	{
+		_outputFile = std::tmpfile();
+		if (!_outputFile) {
+			_logError(request, "tmpfile()", "failed", "(cgiOutputFile)");
+			return (false);
+		}
+		_outputFd = fileno(_outputFile);
+		if (_outputFd < 0) {
+			_logError(request, "Error with", "while preparing cgi", "fileno()");
+			_closeCgiFiles();
+			return (false);
+		}
+		_errorFile = std::tmpfile();
+		if (!_errorFile) {
+			_logError(request, "tmpfile()", "failed", "(cgiErrorFile)");
+			_closeCgiFiles();
+			return (false);
+		}
+		LOG_DEBUG("CGI tmp output file opened (fd=" << _outputFd << ")");
+		return (true);
 	}
 
 	bool	CgiHandler::prepareCgiIo(const Request& request)
@@ -209,43 +241,42 @@ namespace	webserv
 			}
 			LOG_DEBUG("CGI input file opened: " << request.getTmpFilename());
 		}
-		_outputFile = std::tmpfile();
-		if (!_outputFile) {
-			_logError(request, "tmpfile()", "failed", "(cgiOutputFile)");
+		if (!_prepareCgiIoFiles(request))
 			return (false);
-		}
-		_outputFd = fileno(_outputFile);
-		if (_outputFd < 0) {
-			_logError(request, "Error with", "while preparing cgi", "fileno()");
-			_closeCgiFiles();
-			return (false);
-		}
-		LOG_DEBUG("CGI tmp output file opened (fd=" << _outputFd << ")");
 		return (true);
+	}
+
+	void	CgiHandler::_handleCgiChildError(bool beforeExecve)
+	{
+		std::fprintf(_errorFile, "(%d: %s)", errno, std::strerror(errno));
+		if (beforeExecve) {
+			close(_inputFd);
+			close(_outputFd);
+		}
 	}
 
 	void	CgiHandler::_executeCgi(const Request& request,
 									const char* workingDir)
 	{
+		// TO DO: Check for fd leaks when success AND error
+
 		if (request.getRequestMethod() == "POST") {
 			if (dup2(_inputFd, STDIN_FILENO) < 0) {
-				close(_inputFd);
-				close(_outputFd);
+				_handleCgiChildError();
 				exit(DUP2_ERROR);
 			}
 		}
 		if (dup2(_outputFd, STDOUT_FILENO) < 0) {
-			close(_inputFd);
-			close(_outputFd);
+			_handleCgiChildError();
 			exit(DUP2_ERROR);
 		}
 		if (chdir(workingDir) < 0) {
-			close(_inputFd);
-			close(_outputFd);
+			_handleCgiChildError();
 			exit(CHDIR_ERROR);
 		}
 		close(_outputFd);
 		execve(_argv[0], _argv, _envp.data());
+		_handleCgiChildError(false);
 		exit(EXECVE_ERROR);
 	}
 
@@ -276,6 +307,26 @@ namespace	webserv
 		return (0);
 	}
 
+	void	CgiHandler::_loadChildErrorLog(const Request& request,
+											int status) const
+	{
+		char	errorStr[256];
+
+		std::rewind(_errorFile);
+		std::fgets(errorStr, 256, _errorFile);
+		if (WEXITSTATUS(status) == DUP2_ERROR)
+			_logError(request, "Error in dup2() before CGI launch",
+					"", errorStr);
+		else if (WEXITSTATUS(status) == CHDIR_ERROR)
+			_logError(request, "Error in chdir() before CGI launch",
+					"", errorStr);
+		else if (WEXITSTATUS(status) == EXECVE_ERROR)
+			_logError(request, "Error in execve() before CGI launch",
+					"", errorStr);
+		else
+			_logError(request, "The CGI process failed while serving", "");
+	}
+
 	int	CgiHandler::_getChildStatus(const Request& request) const
 	{
 		int		status;
@@ -289,14 +340,7 @@ namespace	webserv
 		}
 		LOG_DEBUG("CGI exited with code: " << WEXITSTATUS(status));
 		if (WEXITSTATUS(status) != 0) {
-			if (WEXITSTATUS(status) == DUP2_ERROR)
-				_logError(request, "Error in", "before CGI launch", "dup2()");
-			else if (WEXITSTATUS(status) == CHDIR_ERROR)
-				_logError(request, "Error in", "before CGI launch", "chdir()");
-			else if (WEXITSTATUS(status) == EXECVE_ERROR)
-				_logError(request, "Error in", "before CGI launch", "execve()");
-			else
-				_logError(request, "The CGI process failed while serving", "");
+			_loadChildErrorLog(request, status);
 			if (WEXITSTATUS(status) == DUP2_ERROR || WEXITSTATUS(status)
 					== CHDIR_ERROR || WEXITSTATUS(status) == EXECVE_ERROR)
 				return (500);
@@ -311,6 +355,7 @@ namespace	webserv
 		std::string	filePath(_requestedFilename);
 		char*		workingDir = dirname(const_cast<char*>(filePath.c_str()));
 
+		LOG_DEBUG("workingDir = " << workingDir)
 		_pid = fork();
 		if (_pid < 0) {
 			_logError(request, "Error with", "while loading the CGI", "fork()");

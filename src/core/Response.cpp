@@ -93,6 +93,8 @@ namespace	webserv
 			delete[] _fileBuffer;
 		if (_indexDirectory != 0)
 			_closeIndexDirectory();
+		if (!_tmpCgiBodyFilename.empty())
+			unlink(_tmpCgiBodyFilename.c_str());
 	}
 
 	/**************************************************************************/
@@ -161,7 +163,6 @@ namespace	webserv
 		limit_set::const_iterator	it = allowedMethods.begin();
 		std::ostringstream			allowStr;
 
-		allowStr << std::uppercase;
 		if (!allowedMethods.empty()) {
 			while (it != allowedMethods.end()) {
 				allowStr << *it;
@@ -170,10 +171,10 @@ namespace	webserv
 			}
 		} else
 			allowStr << "GET, HEAD, POST, PUT, DELETE";
-		return (allowStr.str());
+		return (ft_str_toupper(allowStr.str()));
 	}
 
-	void	Response::_loadHeaders(const Request& request)
+	void	Response::_loadHeaders(const Request& request, bool logHeaders)
 	{
 		const char*			connection = _isKeepAlive ? "keep-alive" : "close";
 		std::ostringstream	headers;
@@ -198,7 +199,8 @@ namespace	webserv
 			headers << "ETag: " << _getETag() << CRLF;
 		headers << CRLF;
 		_responseBuffer = headers.str();
-		LOG_DEBUG("HTTP Headers:\n" << _responseBuffer);
+		if (logHeaders)
+			LOG_DEBUG("HTTP Headers:\n" << _responseBuffer);
 	}
 
 	void	Response::_logError(const Request& request,
@@ -535,6 +537,8 @@ namespace	webserv
 				&& request.getRequestMethod() != "HEAD")
 				|| !request.getLocation()->isAutoIndex()) {
 			_logError(request, "", "directory index is forbidden");
+			if (request.getLocation()->hideDirectory())
+				return (404);
 			return (403);
 		}
 		LOG_DEBUG("HTTP autoindex: \"" << _requestedFilename.c_str() << "\"");
@@ -1048,7 +1052,11 @@ namespace	webserv
 	int	Response::_handleRequestAlreadyExistingFile(const Request& request,
 												const struct stat* fileInfos)
 	{
-		if (request.getRequestMethod() == "PUT")
+		// TO DO: Handle special 42 tester case with a config option?
+		// Or create a filename manually when POSTing to directory?
+
+		if (request.getRequestMethod() == "PUT"
+				|| request.getRequestMethod() == "POST") // 42 tester only!!
 			return (_moveRequestTmpFile(request, fileInfos, true));
 		if (fileInfos->st_size == 0) {
 			_loadRelativeLocationPrefix(request);
@@ -1101,6 +1109,9 @@ namespace	webserv
 
 	bool	Response::_loadFileWithAlias(Request& request)
 	{
+		// TO DO: For alias in *.xxx, compute on parent location name, and if
+		// none (""), consider it as "/"
+
 		const Location*		location = request.getLocation();
 		const std::string&	locationName = location->getLocationName();
 		size_t				locationLen = locationName.size();
@@ -1538,7 +1549,7 @@ namespace	webserv
 			_responseCode = cgi.responseCode;
 		if (_contentType.empty())
 			_contentType = _getContentType("");
-		_loadHeaders(request);
+		_loadHeaders(request, false);
 		if (!cgi.headers.empty()) {
 			if (_responseBuffer.size() > 4 && (_responseBuffer.c_str()
 					+ (_responseBuffer.size() - 4) == std::string(CRLF CRLF)))
@@ -1766,12 +1777,30 @@ namespace	webserv
 		_isResponseReady = true;
 	}
 
-	void	Response::clearResponse(const Request& request,
-									int responseCodeToKeep)
+	void	Response::_deleteTmpCgiBodyFile(const Request& request)
+	{
+		struct stat		fileInfos;
+
+		if (_tmpCgiBodyFilename.empty())
+			return ;
+		if (stat(_tmpCgiBodyFilename.c_str(), &fileInfos) < 0) {
+			LOG_INFO("stat(" << _tmpCgiBodyFilename << "): "
+					<< std::strerror(errno));
+		} else if (unlink(_tmpCgiBodyFilename.c_str()) < 0) {
+			_logError(request, "unlink()", "failed",
+					_tmpCgiBodyFilename.c_str());
+		} else
+			_tmpCgiBodyFilename.clear();
+	}
+
+	void	Response::_clearBuffersAndFiles(const Request& request)
 	{
 		_responseBuffer.clear();
 		_requestedFilename = XSTR(WEBSERV_ROOT);
-		_tmpCgiBodyFilename.clear();
+		if (!_tmpCgiBodyFilename.empty()) {
+			_deleteTmpCgiBodyFile(request);
+			_tmpCgiBodyFilename.clear();
+		}
 //		if (_requestedFileFd >= 0)
 		if (_requestedFile.is_open())
 			_closeRequestedFile();
@@ -1781,6 +1810,12 @@ namespace	webserv
 		}
 		_fileBufferSize = 0;
 		_bufferPos = 0;
+	}
+
+	void	Response::clearResponse(const Request& request,
+									int responseCodeToKeep)
+	{
+		_clearBuffersAndFiles(request);
 		if (_indexDirectory != 0)
 			_closeIndexDirectory();
 		_dirEntrySet.clear();

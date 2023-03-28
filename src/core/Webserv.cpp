@@ -18,7 +18,6 @@
 #include "config/ConfigParser.hpp"
 #include "config/ServerConfig.hpp"
 #include "core/Response.hpp"
-#include "utils/global_defs.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/log.hpp"
 #include "utils/utils.hpp"
@@ -217,18 +216,21 @@ namespace	webserv
 		return (_pollFds.end());
 	}
 
-	void	Webserv::_showOtherRevents(pollFd_iter pollFd,
+	bool	Webserv::_showOtherRevents(pollFd_iter pollFd,
 										const std::string& object) const
 	{
 		if ((object == SERVER
 					&& (pollFd->revents & ~POLLIN) != 0)
 				|| (object == CLIENT
-					&& ((pollFd->revents & ~(POLLIN | POLLOUT)) != 0)))
+					&& ((pollFd->revents & ~(POLLIN | POLLOUT)) != 0))) {
 			LOG_DEBUG(object << " (fd=" << pollFd->fd << ") "
 					<< "received other poll flags:"
 					<< " POLLERR=" << ((pollFd->revents & POLLERR) != 0)
 					<< " POLLHUP=" << ((pollFd->revents & POLLHUP) != 0)
 					<< " POLLNVAL=" << ((pollFd->revents & POLLNVAL) != 0));
+			return (true);
+		}
+		return (false);
 	}
 
 	void	Webserv::_acceptConnections()
@@ -272,7 +274,8 @@ namespace	webserv
 			_buffer[received] = '\0';
 			client.updateTimeout();
 			LOG_INFO("Received a client request (fd=" << clientFd << ")");
-			LOG_DEBUG("Request: " << _buffer);
+			LOG_DEBUG("Request: " << strHexDump(_buffer)
+					<< " (" << received << " bytes)");
 		} else if (received == -1)
 			LOG_ERROR("Could not receive the client request "
 					<< " (fd=" << clientFd << "): " << std::strerror(errno));
@@ -290,7 +293,6 @@ namespace	webserv
 		}
 		if (client.hasRequestTerminated() && !client.hasResponseReady())
 			return (client.prepareResponse());
-		LOG_DEBUG("After write");
 		return (true);
 	}
 
@@ -300,8 +302,8 @@ namespace	webserv
 
 		if (response.getResponseCode() == 408)
 			return (false);
-		if (client.hasResponseReady() && (pollFd->revents & POLLOUT) != 0) {
-			if (!client.sendResponse(_ioFlags))
+		if (client.hasResponseReady() && (pollFd->revents & ~POLLIN) != 0) {
+			if (!client.sendResponse(_ioFlags) || _showOtherRevents(pollFd))
 				return (false);
 			if (response.isPartialResponse() || client.hasResponseReady())
 				return (true);
@@ -313,6 +315,8 @@ namespace	webserv
 		}
 		else if (client.hasResponseReady() && !(pollFd->events & POLLOUT))
 			pollFd->events |= POLLOUT;
+		if (_showOtherRevents(pollFd))
+			return (false);
 		return (true);
 	}
 
@@ -346,7 +350,7 @@ namespace	webserv
 	{
 		while (!Webserv::receivedSigInt) {
 			if (poll(_pollFds.data(),
-						static_cast<uint32_t>(_pollFds.size()), 500) == -1) {
+						static_cast<uint32_t>(_pollFds.size()), 10) == -1) {
 				LOG_WARN("poll() error: " << strerror(errno));
 				continue ;
 			}

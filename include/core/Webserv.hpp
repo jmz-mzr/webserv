@@ -18,6 +18,7 @@
 # include "core/Server.hpp"
 # include "core/Client.hpp"
 # include "utils/print_config_tree.hpp"
+# include "utils/global_defs.hpp"
 
 namespace	webserv
 {
@@ -50,8 +51,8 @@ namespace	webserv
 		void		_acceptConnections();
 		pollFd_iter	_findPollFd(const int fdToFind, const size_t hint,
 											const std::string& object);
-		void		_showOtherRevents(pollFd_iter pollFd,
-										const std::string& object) const;
+		bool		_showOtherRevents(pollFd_iter pollFd,
+									const std::string& object = CLIENT) const;
 		void		_addClient(const int serverFd, const Server& server);
 		client_iter	_removeClient(client_iter client, pollFd_iter pollFd);
 		void		_handleClients();
