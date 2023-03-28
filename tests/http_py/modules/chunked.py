@@ -4,6 +4,7 @@ from webtest import *
 
 
 class Chunked(TestCase):
+    @staticmethod
     def test_basic_chunked() -> str:
         # return ""
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -20,13 +21,14 @@ class Chunked(TestCase):
         http_response = HTTPResponse(client)
         http_response.begin()
         if http_response.status != 201 and http_response.status != 303:
-            return "Bad status code: {}, expected: {}".format(
+            return "Status code: {}, expected: {}".format(
                 str(http_response.status), "201"
             )
         body = http_response.read().decode("UTF-8")
         # print(body)
         return ""
-    
+
+    @staticmethod
     def test_chunked_w_trailer() -> str:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((SERVER_HOST, SERVER_PORT))
@@ -42,7 +44,7 @@ class Chunked(TestCase):
         http_response.begin()
         # print_headers(http_response)
         if http_response.status != 201 and http_response.status != 303:
-            return "Bad status code: {}, expected: {}".format(
+            return "Status code: {}, expected: {}".format(
                 str(http_response.status), "201"
             )
         if http_response.headers.get("Content-Type") is None:
@@ -52,8 +54,9 @@ class Chunked(TestCase):
             return "Missing content in request"
         # print(body)
         return ""
-    
-    def test_chunked_multiplezeros() -> str:
+
+    @staticmethod
+    def test_chunked_multiple_zeros() -> str:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((SERVER_HOST, SERVER_PORT))
         request_header = "POST /post/print.cgi HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n\r\n"
@@ -67,13 +70,14 @@ class Chunked(TestCase):
         http_response = HTTPResponse(client)
         http_response.begin()
         if http_response.status != 201 and http_response.status != 303:
-            return "Bad status code: {}, expected: {}".format(
+            return "Status code: {}, expected: {}".format(
                 str(http_response.status), "201"
             )
         # print(body)
         return ""
-    
-    def test_ChunkExtensionNoValue() -> str:
+
+    @staticmethod
+    def test_chunk_extensio_no_value() -> str:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((SERVER_HOST, SERVER_PORT))
         request_header = "POST /post/print.cgi HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n\r\n"
@@ -85,12 +89,13 @@ class Chunked(TestCase):
         http_response = HTTPResponse(client)
         http_response.begin()
         if http_response.status != 201 and http_response.status != 303:
-            return "Bad status code: {}, expected: {}".format(
+            return "Status code: {}, expected: {}".format(
                 str(http_response.status), "201"
             )
         # print(body)
         return ""
-    
+
+    @staticmethod
     def test_ChunkExtensionUnquotedValue() -> str:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((SERVER_HOST, SERVER_PORT))
@@ -105,13 +110,14 @@ class Chunked(TestCase):
         http_response = HTTPResponse(client)
         http_response.begin()
         if http_response.status != 201 and http_response.status != 303:
-            return "Bad status code: {}, expected: {}".format(
+            return "Status code: {}, expected: {}".format(
                 str(http_response.status), "201"
             )
         # print(body)
         return ""
-    
-    def test_MultipleChunkExtensions() -> str:
+
+    @staticmethod
+    def test_multiple_chunk_extensions() -> str:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((SERVER_HOST, SERVER_PORT))
         request_header = "POST /post/print.cgi HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n\r\n"
@@ -123,13 +129,14 @@ class Chunked(TestCase):
         http_response = HTTPResponse(client)
         http_response.begin()
         if http_response.status != 201 and http_response.status != 303:
-            return "Bad status code: {}, expected: {}".format(
+            return "Status code: {}, expected: {}".format(
                 str(http_response.status), "201"
             )
         # print(body)
         return ""
-    
-    def test_DecodeEmptyBodyInPieces() -> str:
+
+    @staticmethod
+    def test_decode_empty_body_in_pieces() -> str:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((SERVER_HOST, SERVER_PORT))
         request_header = "POST /post/print.cgi HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n\r\n"
@@ -149,13 +156,14 @@ class Chunked(TestCase):
         http_response = HTTPResponse(client)
         http_response.begin()
         if http_response.status != 201 and http_response.status != 303:
-            return "Bad status code: {}, expected: {}".format(
+            return "Status code: {}, expected: {}".format(
                 str(http_response.status), "201"
             )
         # print(body)
         return ""
-    
-    def test_DecodeThreeChunksOnePiece() -> str:
+
+    @staticmethod
+    def test__decode_three_chunks_one_piece() -> str:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((SERVER_HOST, SERVER_PORT))
         request_header = "POST /post/print.cgi HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n\r\n"
@@ -167,7 +175,7 @@ class Chunked(TestCase):
         http_response = HTTPResponse(client)
         http_response.begin()
         if http_response.status != 201 and http_response.status != 303:
-            return "Bad status code: {}, expected: {}".format(
+            return "Status code: {}, expected: {}".format(
                 str(http_response.status), "201"
             )
         body = http_response.read().decode("UTF-8")
@@ -175,20 +183,20 @@ class Chunked(TestCase):
             return "Missing content 'Hello, World!!!It's me' "
         return ""
 
+    @staticmethod
+    def test_decode_bad_trailer() -> str:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((SERVER_HOST, SERVER_PORT))
+        request_header = "POST /post/print.cgi HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n\r\n"
+        client.send(request_header.encode())
+        request_header = "0\r\nX-Foo Bar\r\n\r\n"
+        client.send(request_header.encode())
 
-def test_DecodeBadTrailer() -> str:
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((SERVER_HOST, SERVER_PORT))
-    request_header = "POST /post/print.cgi HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n\r\n"
-    client.send(request_header.encode())
-    request_header = "0\r\nX-Foo Bar\r\n\r\n"
-    client.send(request_header.encode())
-
-    # read and parse http response
-    http_response = HTTPResponse(client)
-    http_response.begin()
-    if http_response.status != 400:
-        return "Bad status code: {}, expected: {}".format(
-            str(http_response.status), "400"
-        )
-    return ""
+        # read and parse http response
+        http_response = HTTPResponse(client)
+        http_response.begin()
+        if http_response.status != 400:
+            return "Status code: {}, expected: {}".format(
+                str(http_response.status), "400"
+            )
+        return ""
