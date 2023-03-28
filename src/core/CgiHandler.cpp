@@ -311,9 +311,12 @@ namespace	webserv
 											int status) const
 	{
 		char	errorStr[256];
+		char*	resultPtr;
 
 		std::rewind(_errorFile);
-		std::fgets(errorStr, 256, _errorFile);
+		resultPtr = std::fgets(errorStr, 256, _errorFile);
+		if (!resultPtr)
+			errorStr[0] = '\0';
 		if (WEXITSTATUS(status) == DUP2_ERROR)
 			_logError(request, "Error in dup2() before CGI launch",
 					"", errorStr);

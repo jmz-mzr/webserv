@@ -27,6 +27,8 @@ namespace	webserv
 
 	void	ft_sleep(double seconds);
 
+	bool		isnotprint(int ch);
+
 	bool		ft_charcmp_icase(const unsigned char c1,
 									const unsigned char c2);
 	bool		ft_charcmp_icase2(const unsigned char c1,

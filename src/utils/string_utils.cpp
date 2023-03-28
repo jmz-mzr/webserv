@@ -9,6 +9,11 @@
 namespace	webserv
 {
 
+	bool	isnotprint(int ch)
+	{
+		return (std::isprint(ch) != 0);
+	}
+
 	bool	ft_charcmp_icase(const unsigned char c1, const unsigned char c2)
 	{
 		return (std::tolower(c1) == std::tolower(c2));

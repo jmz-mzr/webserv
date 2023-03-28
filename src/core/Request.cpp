@@ -3,11 +3,11 @@
 #include <stdint.h>		// int64_t
 #include <unistd.h>		// unlink
 
-#include <cctype>		// isalnum, isprint
+#include <cctype>		// isalnum
 #include <cerrno>		// errno
 #include <cstring>		// strerror
 
-#include <algorithm>	// all_of, search
+#include <algorithm>	// find_if, search
 #include <ios>			// ios::out/binary
 #include <sstream>		// ostringstream
 
@@ -452,10 +452,9 @@ namespace	webserv
 
 		i = _buffer.find_first_of('\n', _bufferIndex);
 		if (i == std::string::npos) {
-//			if (_buffer.empty() || (std::isprint(_buffer[0])
 			if (_buffer.empty() || (_buffer[0] != static_cast<char>(0xFF)
-					&& (allowNonPrintable || std::all_of(_buffer.begin(),
-					_buffer.end(), static_cast<int(*)(int)>(std::isprint)))))
+					&& (allowNonPrintable || std::find_if(_buffer.begin(),
+					_buffer.end(), &isnotprint) == _buffer.end())))
 				return ("");
 			line = _buffer.substr(_bufferIndex);
 			_clearBuffer();
