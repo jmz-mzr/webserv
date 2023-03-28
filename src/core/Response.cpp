@@ -1011,7 +1011,7 @@ namespace	webserv
 
 		if (responseCode)
 			return (responseCode);
-		if (std::rename(request.getTmpFilename().c_str(),
+		if (moveFile(request.getTmpFilename().c_str(),
 					_requestedFilename.c_str()) < 0) {
 			_logError(request, "rename()", "failed");
 			return (500);

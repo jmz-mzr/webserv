@@ -54,6 +54,7 @@ namespace	webserv
 	std::string	createRandomFilename(const std::string& path = "/tmp/",
 										const std::string& prefix = "");
 	std::string	getFileExtension(const std::string& path);
+	int			moveFile(const char* from, const char* to);
 
 	bool	isUriPChar(const char* c);
 	bool	isUriUnreserved(const char c);

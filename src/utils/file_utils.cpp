@@ -3,10 +3,14 @@
 
 #include <cctype>		// isprint
 #include <cerrno>		// errno
+#include <cstdio>
 #include <cstdlib>		// abs, srand, rand
 #include <cstring>		// memset
 #include <ctime>		// time
 
+#include <fstream>
+#include <ios>
+#include <iostream>
 #include <string>
 
 #include "utils/utils.hpp"
@@ -116,6 +120,17 @@ namespace	webserv
 			tmpFilename += alphaNum[std::rand() % len];
 		tmpFilename += to_string(std::abs(suffix++));
 		return (_assertUniqueness(path, prefix, tmpFilename));
+	}
+
+	int moveFile(const char* from, const char* to)
+	{
+		std::ifstream in(from, std::ios::in | std::ios::binary);
+		std::ofstream out(to, std::ios::out | std::ios::binary);
+
+		if (in.fail() || out.fail())
+			return (-1);
+		out << in.rdbuf();
+		return (std::remove(from));
 	}
 
 }	// namespace webserv
