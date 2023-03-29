@@ -2,7 +2,7 @@
 #include <fcntl.h>		// open
 #include <stddef.h>		// size_t
 #include <stdint.h>		// int64_t
-#include <stdio.h>		// rename, rewind, FILE
+#include <stdio.h>		// rewind, FILE
 #include <sys/socket.h>	// send
 #include <sys/stat.h>	// lstat, stat, struct stat, S_ISDIR, S_ISREG
 #include <sys/types.h>	// closedir, opendir, ssize_t, ssize_t
@@ -12,9 +12,9 @@
 #include <cctype>		// isalnum, isdigit, isprint
 #include <cerrno>		// errno
 #include <cstdio>		// feof, ferror, fgetc, fgets, fread, ungetc
-#include <cstdlib>		// atoi, strtoll
+#include <cstdlib>		// abs, atoi, strtoll
 #include <cstring>		// memset, strerror
-#include <ctime>		// gmtime, mktime, strftime, struct tm, time_t
+#include <ctime>		// gmtime, mktime, strftime, struct tm, time, time_t
 
 #include <exception>
 #include <ios>			// hex, ios::app/beg/binary/in/trunc/out, uppercase
@@ -1001,19 +1001,110 @@ namespace	webserv
 		_location += _escapeUri(request.getUri());
 	}
 
+	std::string	Response::_createPostFilename(const Request& request,
+												bool addSlash) const
+	{
+		char			buffer[32];
+		time_t			rawTime = std::time(0);
+		struct tm*		gmtTime = std::gmtime(&rawTime);
+		std::string		filename = (addSlash ? "/" : "");
+		static int		suffix = 0;
+		struct stat		fileInfos;
+
+		std::strftime(buffer, 32, "%y-%m-%d_%H:%M:%S_", gmtTime);
+		filename += std::string("POST_") + buffer + to_string(std::abs(suffix));
+		while (suffix != 100) {
+			std::memset(&fileInfos, 0, sizeof(fileInfos));
+			if (stat(std::string(std::string(_requestedFilename)
+						+ filename).c_str(), &fileInfos) < 0)
+				break ;
+			filename.erase(filename.find_last_of('_') + 1);
+			filename += to_string(std::abs(++suffix));
+		}
+		if (suffix == 100) {
+			_logError(request, "Cannot create a unique filename for",
+					"to a directory", "POST");
+			filename = "";
+		}
+		suffix = 0;
+		return (filename);
+	}
+
+	int	Response::_createPostFile(Request& request)
+	{
+		std::string	filename = _createPostFilename(request,
+											*request.getUri().rbegin() == '/');
+
+		if (filename.empty())
+			return (500);
+		if (request.loadInternalRedirect(request.getUri() + filename, false))
+			return (500);
+		if (*_requestedFilename.rbegin() != '/' && filename[0] != '/')
+			_requestedFilename += '/';
+		_requestedFilename += filename;
+		LOG_DEBUG("HTTP POST filename: \"" << _requestedFilename << "\"");
+		if (moveFile(request.getTmpFilename().c_str(),
+					_requestedFilename.c_str()) < 0) {
+			_logError(request, "moveFile()", "failed");
+			return (500);
+		}
+		_responseCode = 201;
+		_setPutPostHeaders(request);
+		return (0);
+	}
+
+	int	Response::_postRequestBody(Request& request)
+	{
+		// TO DO: Before loading the request body, check in request after having
+		// received the headers if the POST request will be processed ?
+		// (i.e. there is no return directive, there is a CGI, or after the
+		// root/alias translation, there is a filename that is not a directory,
+		// and that doesn't already exist)
+		// If so, just run this function with a dryRun parameter ?
+		// (The goal would be to avoid loading a large file, if it will be lost
+		// because of an error right afterwards)
+
+		struct stat		fileInfos;
+		std::string		savedFilename = _requestedFilename;
+
+		if (*request.getUri().rbegin() == '/'
+				&& _loadIndex(request) == INTERNAL_REDIRECT)
+			return (INTERNAL_REDIRECT);
+		_requestedFilename = savedFilename;
+		if (request.getTmpFilename().empty()) {
+			_logError(request, "POST body must be in a file", "", "");
+			return (500);
+		} else if (*_requestedFilename.rbegin() == '/')
+			return (_createPostFile(request));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
+		if (stat(_requestedFilename.c_str(), &fileInfos) < 0) {
+			LOG_DEBUG("HTTP POST filename: \"" << _requestedFilename << "\"");
+			return (_moveRequestTmpFile(request, 0));
+		}
+		if (S_ISDIR(fileInfos.st_mode))
+			return (_createPostFile(request));
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
+		if (stat(request.getTmpFilename().c_str(), &fileInfos) < 0) {
+			_logError(request, "stat()", "failed");
+			return (500);
+		}
+		return (_handleAlreadyExistingFile(request, &fileInfos));
+	}
+
 	int	Response::_moveRequestTmpFile(const Request& request,
 										const struct stat* fileInfos,
 										bool fileExists)
 	{
 		// TO DO: Add an option to create the full path if it doesn't exist ?
 
-		int		responseCode = _checkConditionalHeaders(request, fileInfos);
+		int		responseCode = (fileInfos ?
+							_checkConditionalHeaders(request, fileInfos) : 0);
 
 		if (responseCode)
 			return (responseCode);
 		if (moveFile(request.getTmpFilename().c_str(),
-					_requestedFilename.c_str()) < 0) {
-			_logError(request, "rename()", "failed");
+					_requestedFilename.c_str()) != 0) {
+			_logError(request, "moveFile()", "failed");
 			return (500);
 		}
 		if (!fileExists) {
@@ -1049,16 +1140,18 @@ namespace	webserv
 		return (0);
 	}
 */
-	int	Response::_handleRequestAlreadyExistingFile(const Request& request,
+	int	Response::_handleAlreadyExistingFile(const Request& request,
 												const struct stat* fileInfos)
 	{
-		// TO DO: Handle special 42 tester case with a config option?
-		// Or create a filename manually when POSTing to directory?
+		struct stat		existingFileInfos;
 
-		if (request.getRequestMethod() == "PUT"
-				|| request.getRequestMethod() == "POST") // 42 tester only!!
+		if (request.getRequestMethod() == "PUT")
 			return (_moveRequestTmpFile(request, fileInfos, true));
-		if (fileInfos->st_size == 0) {
+		if (stat(_requestedFilename.c_str(), &existingFileInfos) < 0) {
+			_logError(request, "stat()", "failed");
+			return (500);
+		}
+		if (existingFileInfos.st_size == 0 && fileInfos->st_size == 0) {
 			_loadRelativeLocationPrefix(request);
 			_location += _escapeUri(request.getUri());
 			return (303);
@@ -1068,8 +1161,7 @@ namespace	webserv
 		return (409);
 	}
 
-	int	Response::_putPostRequestBody(const Request& request,
-										const char* method)
+	int	Response::_putRequestBody(const Request& request)
 	{
 		// TO DO: Before loading the request body, check in request after having
 		// received the headers if the POST request will be processed ?
@@ -1083,17 +1175,16 @@ namespace	webserv
 		struct stat		fileInfos;
 
 		if (*_requestedFilename.rbegin() == '/') {
-			_logError(request, "Cannot PUT/POST to a directory:", "");
+			_logError(request, "Cannot PUT to a directory:", "");
 			return (409);
 		} else if (request.getTmpFilename().empty()) {
-			_logError(request, "PUT/POST body must be in a file", "", "");
+			_logError(request, "PUT body must be in a file", "", "");
 			return (500);
 		}
-		LOG_DEBUG("HTTP " << method << " filename: \""
-				<< _requestedFilename << "\"");
+		LOG_DEBUG("HTTP PUT filename: \"" << _requestedFilename << "\"");
 		std::memset(&fileInfos, 0, sizeof(fileInfos));
 		if (stat(_requestedFilename.c_str(), &fileInfos) < 0)
-			return (_moveRequestTmpFile(request, &fileInfos));
+			return (_moveRequestTmpFile(request, 0));
 		if (S_ISDIR(fileInfos.st_mode)) {
 			errno = EISDIR;
 			_logError(request, "The file", "could not be created");
@@ -1104,7 +1195,7 @@ namespace	webserv
 			_logError(request, "stat()", "failed");
 			return (500);
 		}
-		return (_handleRequestAlreadyExistingFile(request, &fileInfos));
+		return (_handleAlreadyExistingFile(request, &fileInfos));
 	}
 
 	bool	Response::_loadFileWithAlias(Request& request)
@@ -1623,9 +1714,9 @@ namespace	webserv
 		if (request.getRequestMethod() == "DELETE")
 			return (_removeRequestedFile(request));
 		if (request.getRequestMethod() == "PUT")
-			return (_putPostRequestBody(request, "PUT"));
+			return (_putRequestBody(request));
 		if (request.getRequestMethod() == "POST")
-			return (_putPostRequestBody(request, "POST"));
+			return (_postRequestBody(request));
 		if (*request.getUri().rbegin() == '/')
 			return (_loadIndex(request));
 		return (_openRequestedFile(request));

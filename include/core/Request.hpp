@@ -65,7 +65,8 @@ namespace	webserv
 								const server_configs& serverConfigs);
 
 		void	setRequestMethod(const std::string& method);
-		int		loadInternalRedirect(const std::string& redirectTo);
+		int		loadInternalRedirect(const std::string& redirectTo,
+										bool reloadLocation = true);
 
 		void	clearRequest();
 	private:

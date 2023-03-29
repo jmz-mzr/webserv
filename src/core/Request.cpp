@@ -123,7 +123,8 @@ namespace	webserv
 		_extension = getFileExtension(_uri);
 	}
 
-	int	Request::loadInternalRedirect(const std::string& redirectTo)
+	int	Request::loadInternalRedirect(const std::string& redirectTo,
+										bool reloadLocation)
 	{
 		// NOTE: During internal redirections, NGINX does not check the URI
 		// validity (!!!) and allows it to go up like "/../../../[file]"
@@ -135,7 +136,7 @@ namespace	webserv
 		}
 		_parseInternalTarget(redirectTo);
 		LOG_DEBUG("Internal redirect: \"" << _uri << "?" << _query << "\"");
-		if (!_loadLocation(*_serverConfig))
+		if (reloadLocation && !_loadLocation(*_serverConfig))
 			return (500);
 		if (!_checkConfig())
 			return (_errorCode);
@@ -327,7 +328,7 @@ namespace	webserv
 	{
 		if (_method == "CONNECT" || _method == "OPTIONS"
 				|| _method == "TRACE" || _method == "PATCH")
-			_errorCode = 405;
+			_errorCode = 501;
 		else if (_method != "GET" && _method != "HEAD"
 				&& _method != "POST" && _method != "PUT"
 				&& _method != "DELETE")

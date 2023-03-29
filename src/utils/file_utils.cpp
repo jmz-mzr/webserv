@@ -3,7 +3,7 @@
 
 #include <cctype>		// isprint
 #include <cerrno>		// errno
-#include <cstdio>
+#include <cstdio>		// remove, rename
 #include <cstdlib>		// abs, srand, rand
 #include <cstring>		// memset
 #include <ctime>		// time
@@ -14,6 +14,7 @@
 #include <string>
 
 #include "utils/utils.hpp"
+#include "utils/log.hpp"
 
 namespace	webserv
 {
@@ -122,15 +123,43 @@ namespace	webserv
 		return (_assertUniqueness(path, prefix, tmpFilename));
 	}
 
+	void	closeFile(std::fstream& file, const char* name)
+	{
+		file.clear();
+		file.close();
+		if (file.fail()) {
+			LOG_ERROR("Bad close() on \"" << name << "\"");
+			file.clear();
+		}
+	}
+
 	int moveFile(const char* from, const char* to)
 	{
-		std::ifstream in(from, std::ios::in | std::ios::binary);
-		std::ofstream out(to, std::ios::out | std::ios::binary);
+		std::fstream	in(from, std::ios::in | std::ios::binary);
+		std::fstream	out(to, std::ios::out | std::ios::binary);
+		long			fileSize = getFileSize(from);
+		static int		fail = 0;
+		bool			error = false;
 
 		if (in.fail() || out.fail())
 			return (-1);
-		out << in.rdbuf();
-		return (std::remove(from));
+		while (fileSize && ++fail < 100) {
+			out << in.rdbuf();
+			if (!out.fail() || out.bad())
+				break ;
+			out.clear();
+		}
+		if (fail == 100 || out.bad())
+			error = true;
+		fail = 0;
+		closeFile(in, from);
+		closeFile(out, to);
+		if (error) {
+			LOG_ERROR("Cannot copy \"" << from << "\" to \"" << to << "\"");
+			LOG_DEBUG("Trying to rename it");
+			std::remove(to);
+		}
+		return (error ? std::rename(from, to) : std::remove(from));
 	}
 
 }	// namespace webserv

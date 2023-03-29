@@ -55,6 +55,7 @@ namespace	webserv
 										const std::string& prefix = "");
 	std::string	getFileExtension(const std::string& path);
 	int			moveFile(const char* from, const char* to);
+	void		closeFile(std::fstream& file, const char* name);
 
 	bool	isUriPChar(const char* c);
 	bool	isUriUnreserved(const char c);
