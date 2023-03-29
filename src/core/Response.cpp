@@ -1200,9 +1200,6 @@ namespace	webserv
 
 	bool	Response::_loadFileWithAlias(Request& request)
 	{
-		// TO DO: For alias in *.xxx, compute on parent location name, and if
-		// none (""), consider it as "/"
-
 		const Location*		location = request.getLocation();
 		const std::string&	locationName = location->getLocationName();
 		size_t				locationLen = locationName.size();
@@ -1210,8 +1207,13 @@ namespace	webserv
 
 		if (location->getAlias().empty() || locationName.empty())
 			return (false);
-		if (locationName[0] == '*')
-			locationLen += aliasUri.find_last_of(locationName.c_str() + 1) - 1;
+		if (locationName[0] == '*') {
+			locationLen -= 1;
+			if (locationName[locationLen] == '$')
+				--locationLen;
+			locationLen = aliasUri.find_last_of(ft_str_tolower(locationName.
+					c_str() + 1).c_str(), std::string::npos, locationLen) + 1;
+		}
 		aliasUri.replace(0, locationLen, location->getAlias());
 		if (aliasUri[0] == '/')
 			_requestedFilename = aliasUri;
