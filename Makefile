@@ -8,8 +8,7 @@ NAME		=	webserv
 AUTHOR		=	jmazoyer flohrel mtogbe
 
 BUILD		?=	debug
-PREFIX		?=	$(shell [ -d "${HOME}/goinfre" ] && [ -w "${HOME}/goinfre" ] \
-				&& echo "${HOME}/goinfre" || echo "/usr/local")
+PREFIX		?=
 
 ifeq ($(PREFIX),)
   $(error 'Installation directory undefined')
@@ -31,14 +30,14 @@ INCLDIR		=	include
 BUILDIR		=	build/$(BUILD)
 DEPDIR		=	$(BUILDIR)/.deps
 TESTDIR		=	tests/cpp_gtest
-WORKDIR		:=	$(realpath .)
+WORKDIR		?=	$(realpath .)
 
 BINDIR		=	$(PREFIX)/bin
 SYSCONFDIR	=	$(PREFIX)/etc
 CONFDIR		=	$(SYSCONFDIR)/$(NAME)
 LIBDIR		=	$(PREFIX)/lib
 DATADIR		=	$(PREFIX)/var
-WWWDIR		=	$(DATADIR)/www
+WWWDIR		?=	$(DATADIR)/www
 LOGDIR		=	$(DATADIR)/log
 
 INSTALLDIRS	=	$(BINDIR) $(CONFDIR) $(LIBDIR) $(DATADIR) $(LOGDIR) $(WWWDIR)
@@ -183,8 +182,6 @@ $(INSTALLDIRS):
 $(WEBSERVLNK):
 	$(eval RULE = ln -s $(WORKDIR)/www $(WEBSERVLNK))
 	@$(call run,$(RULE),$(LN_MSG),$(B_BLUE))
-	$(eval RULE = chmod +x $(WORKDIR)/www/webserv.42.fr/{index.php,cgi-bin/info.php})
-	@$(call run,$(RULE),$(CHMOD_MSG),$(B_BLUE))
 
 $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ)) | header
 	$(eval RULE = $(AR) rcs $@ $?)

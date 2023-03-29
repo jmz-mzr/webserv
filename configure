@@ -1,6 +1,14 @@
-#!/bin/bash
+case $SHELL in
+*/bash)
+	export SELF_PATH="${BASH_SOURCE[0]}"
+	;;
+*)
+	export SELF_PATH="$0"
+esac
 
-WORKDIR=${0%/*}
+WORKDIR="$(dirname "$(realpath -- "$SELF_PATH")")"
+unset SELF_PATH
+
 WWWDIR=$WORKDIR/www
 CONF_FILE="$WORKDIR/default.conf"
 PLATFORM=$(uname -s)
@@ -14,8 +22,10 @@ fi
 chmod +x $WWWDIR/webserv.42.fr/{index.php,cgi-bin/info.php}
 chmod -R +x $WWWDIR/webserv{.42,}.test/cgi-bin/
 
-# if [ -d "$HOME/goinfre" -a -w "$HOME/goinfre" ]; then
-# 	export PREFIX="$HOME/goinfre"
-# else
-# 	export PREFIX="/usr/local"
-# fi
+if [ -d "$HOME/goinfre" -a -w "$HOME/goinfre" ]; then
+	export PREFIX="$HOME/goinfre"
+else
+	export PREFIX="/usr/local"
+fi
+
+export PATH="$PREFIX/bin:$PATH"
