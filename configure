@@ -6,21 +6,25 @@ case $SHELL in
 	export SELF_PATH="$0"
 esac
 
-WORKDIR="$(dirname "$(realpath -- "$SELF_PATH")")"
+ft_realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+
+WORKDIR="$(dirname "$(ft_realpath "$SELF_PATH")")"
 unset SELF_PATH
 
 WWWDIR=$WORKDIR/www
 CONF_FILE="$WORKDIR/default.conf"
 PLATFORM=$(uname -s)
 
-if [[ "$PLATFORM" -eq "Linux" ]]; then
+if [[ "$PLATFORM" = "Linux" ]]; then
 	sed -i 's/macos/ubuntu/g' "$CONF_FILE"
-elif [[ "$PLATFORM" -eq "Darwin" ]]; then
+elif [[ "$PLATFORM" = "Darwin" ]]; then
 	sed -i "" -e 's/ubuntu/macos/g' "$CONF_FILE"
 fi
 
 chmod +x $WWWDIR/webserv.42.fr/{index.php,cgi-bin/info.php}
-chmod -R +x $WWWDIR/webserv{.42,}.test/cgi-bin/
+chmod -R +x $WWWDIR/webserv.42.test/cgi-bin/
 
 if [ -d "$HOME/goinfre" -a -w "$HOME/goinfre" ]; then
 	export PREFIX="$HOME/goinfre"
@@ -28,4 +32,6 @@ else
 	export PREFIX="/usr/local"
 fi
 
-export PATH="$PREFIX/bin:$PATH"
+if [[ -z "$(echo "$PATH" | grep "$PREFIX/bin")" ]]; then
+	export PATH="$PREFIX/bin:$PATH"
+fi
