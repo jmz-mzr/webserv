@@ -4,6 +4,18 @@ INSTALLDIR="$HOME/.local"
 
 #==================================================================
 
+if [ "$1" = "-u" -o "$1" = "--uninstall" ]; then
+	echo "Uninstalling \"webserv\""
+	export PATH="$(echo "$PATH" | sed -e "s|${INSTALLDIR//|/\\|}/bin:||g")"
+	echo -n "Deleting \"$INSTALLDIR\"? "
+	read -r CONFIRM
+	if [[ "${CONFIRM:0:1}" =~ ^[Yy]$ ]]; then
+		rm -fr "$INSTALLDIR"
+		echo "\"$INSTALLDIR\" has been removed"
+	fi
+	return
+fi
+
 ft_realpath() {
 	[[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
 }
@@ -34,17 +46,20 @@ else
 	chmod -R +x $WWWDIR/webserv.42.test/cgi-bin/
 
 	if [ ! -d "$INSTALLDIR" ]; then
-		echo "$INSTALLDIR does not exist."
+		echo "Creating \"$INSTALLDIR\" to install \"webserv\""
+		mkdir -p "$INSTALLDIR"
+	fi
+	if [ ! -d "$INSTALLDIR" ]; then
+		echo "\"$INSTALLDIR\" cannot be created, set another installation path"
 	elif [ ! -w "$INSTALLDIR" ]; then
-		echo "You do not have write permission on $INSTALLDIR."
+		echo "You do not have write permission on \"$INSTALLDIR\""
 	else
 		export PREFIX=$INSTALLDIR
-
 		if [[ -z "$(echo "$PATH" | grep "$PREFIX/bin")" ]]; then
 			export PATH="$PREFIX/bin:$PATH"
 		fi
+		echo "\"webserv\"'s installation directory is \"$INSTALLDIR\""
 	fi
-
 fi
 
 unset SELF_PATH
