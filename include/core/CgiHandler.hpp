@@ -43,9 +43,11 @@ namespace	webserv
 						const char* errorType, const char* filename = 0) const;
 
 		void		_loadEnv2(const Request& request);
+		void		_loadEnv3(const Request& request);
 		std::string	_convertEnvVarName(const std::string& str) const;
 		void		_loadEnvContainers();
 		bool		_prepareCgiIoFiles(const Request& request);
+		std::string	_loadWorkingDir() const;
 		void		_executeCgi(const Request& request, const char* workingDir);
 		void		_handleCgiChildError(bool beforeExecve = true);
 		int			_getChildStatus(const Request& request) const;

@@ -19,6 +19,8 @@
 #include <sstream>
 
 #include "core/CgiHandler.hpp"
+#include "webserv_config.hpp"
+#include "utils/global_defs.hpp"
 #include "utils/log.hpp"
 #include "utils/utils.hpp"
 
@@ -123,28 +125,51 @@ namespace	webserv
 		return (name);
 	}
 
-	void	CgiHandler::_loadEnv2(const Request& request)
+	void	CgiHandler::_loadEnv3(const Request& request)
 	{
 		Request::header_map					headers = request.getHeaders();
 		Request::header_map::const_iterator	it = headers.begin();
 		std::string							fieldName;
-		size_t								dirPos;
 
 		while (it != headers.end()) {
-//			if (!ft_strcmp_icase(it->first, "Content-Length")
-//					&& !ft_strcmp_icase(it->first, "Content-Type")
-//					&& !ft_strcmp_icase(it->first, "Authorization")
-//					&& !ft_strcmp_icase(it->first, "Proxy-Authorization")) {
+			if (!ft_strcmp_icase(it->first, "Content-Length")
+					&& !ft_strcmp_icase(it->first, "Content-Type")
+					&& !ft_strcmp_icase(it->first, "Authorization")
+					&& !ft_strcmp_icase(it->first, "Proxy-Authorization")) {
 				fieldName = "HTTP_";
 				fieldName += _convertEnvVarName(it->first);
 				_envMap[fieldName] = it->second;
-//			}
+			}
 			++it;
 		}
-		dirPos = _requestedFilename.find_last_of('/');
-		dirPos += (dirPos == 0);
-		_envMap["DOCUMENT_ROOT"] = _requestedFilename.substr(0, dirPos);
 		return (_loadEnvContainers());
+	}
+
+	void	CgiHandler::_loadEnv2(const Request& request)
+	{
+		size_t					i = request.getUri().find_first_of('.');
+
+		while (i != std::string::npos
+				&& std::isalnum(request.getUri().c_str()[i + 1]))
+			++i;
+		i += (i != std::string::npos);
+		_envMap["SCRIPT_NAME"] = request.getUri().substr(0, i);
+		_envMap["SCRIPT_FILENAME"] = _cgiPass;
+		_envMap["DOCUMENT_ROOT"] = std::string(XSTR(WEBSERV_ROOT)) + "/";
+		if (request.getLocation()->getAlias().c_str()[0] == '/'
+				|| (request.getLocation()->getAlias().empty()
+					&& request.getLocation()->getRoot().c_str()[0] == '/'))
+			_envMap["DOCUMENT_ROOT"] = "";
+		if (!request.getLocation()->getAlias().empty())
+			_envMap["DOCUMENT_ROOT"] += request.getLocation()->getAlias();
+		else
+			_envMap["DOCUMENT_ROOT"] += request.getLocation()->getRoot();
+		_envMap["PHP_SELF"] = request.getUri();
+		_envMap["REQUEST_URI"] = request.getUri();
+		if (!request.getQuery().empty())
+			_envMap["REQUEST_URI"] += std::string("?") + request.getQuery();
+		_envMap["QUERY_STRING"] = request.getQuery();
+		return (_loadEnv3(request));
 	}
 
 	void	CgiHandler::loadEnv(const Request& request,
@@ -163,14 +188,10 @@ namespace	webserv
 			_envMap["CONTENT_TYPE"] = computedContentType;
 		_envMap["GATEWAY_INTERFACE"] = "CGI/1.1";
 		_envMap["PATH_INFO"] = request.getUri();
-		_envMap["PATH_TRANSLATED"] = request.getUri();
-		_envMap["QUERY_STRING"] = request.getQuery();
+		_envMap["PATH_TRANSLATED"] = _requestedFilename;
 		_envMap["REDIRECT_STATUS"] = "200";
 		_envMap["REMOTE_ADDR"] = request.getClientSocket().getIpAddr();
 		_envMap["REQUEST_METHOD"] = request.getRequestMethod();
-		_envMap["REQUEST_URI"] = request.getUri();
-		_envMap["SCRIPT_NAME"] = _cgiPass;
-		_envMap["SCRIPT_FILENAME"] = _cgiPass;
 		_envMap["SERVER_ADDR"] = ft_inet_ntoa(request.
 				getServerConfig()->getListenPair().sin_addr);
 		_envMap["SERVER_NAME"] = request.getServerName();
@@ -253,6 +274,20 @@ namespace	webserv
 			close(_inputFd);
 			close(_outputFd);
 		}
+	}
+
+	std::string	CgiHandler::_loadWorkingDir() const
+	{
+		struct stat		fileInfos;
+		std::string		filePath(_requestedFilename);
+
+		std::memset(&fileInfos, 0, sizeof(fileInfos));
+		if (stat(filePath.c_str(), &fileInfos) < 0
+				|| !S_ISDIR(fileInfos.st_mode))
+			return (dirname(const_cast<char*>(filePath.c_str())));
+		if (*filePath.rbegin() != '/')
+			filePath += "/.";
+		return (dirname(const_cast<char*>(filePath.c_str())));
 	}
 
 	void	CgiHandler::_executeCgi(const Request& request,
@@ -355,17 +390,15 @@ namespace	webserv
 	int	CgiHandler::launchCgiProcess(const Request& request)
 	{
 		int			errorCode;
-		std::string	filePath(_requestedFilename);
-		char*		workingDir = dirname(const_cast<char*>(filePath.c_str()));
+		std::string	workingDir = _loadWorkingDir();
 
-		LOG_DEBUG("workingDir = " << workingDir)
 		_pid = fork();
 		if (_pid < 0) {
 			_logError(request, "Error with", "while loading the CGI", "fork()");
 			_closeCgiFiles();
 			return (500);
 		} else if (_pid == 0)
-			_executeCgi(request, workingDir);
+			_executeCgi(request, workingDir.c_str());
 		LOG_DEBUG("CGI launch (pid=" << _pid << ")");
 		_env.clear();
 		_envp.clear();
