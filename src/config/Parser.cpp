@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "config/Parser.hpp"
+#include "webserv_config.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/global_defs.hpp"
 #include "utils/log.hpp"

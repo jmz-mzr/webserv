@@ -1,5 +1,6 @@
 #include "config/ConfigParser.hpp"
 #include "core/Webserv.hpp"
+#include "webserv_config.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/global_defs.hpp"
 
