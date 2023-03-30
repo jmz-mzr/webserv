@@ -282,7 +282,6 @@ namespace	webserv
 		while (config != serverConfigs.end()) {
 			name = config->getServerNames().begin();
 			while (name != config->getServerNames().end()) {
-				LOG_DEBUG("_host = " << _host << ", name = " << *name);
 				if (ft_strcmp_icase(_host, *name) == true) {
 					_serverConfig = &(*config);
 					LOG_DEBUG("Using server: \"" << *name << "\" (on \""
