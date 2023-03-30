@@ -8,17 +8,16 @@ NAME		=	webserv
 AUTHOR		=	jmazoyer flohrel mtogbe
 
 BUILD		?=	debug
-PREFIX		?=
-
-ifeq ($(PREFIX),)
-  $(error 'Installation directory undefined')
-endif
+PREFIX		?=	# defined by configure file
 
 ifneq ($(filter-out debug release,$(BUILD)),)
   $(error '$(BUILD)' is incorrect. Build options are 'debug' or 'release')
 endif
 
-ifneq ($(filter install, $(strip $(MAKECMDGOALS))),)
+ifneq ($(filter install uninstall, $(strip $(MAKECMDGOALS))),)
+  ifeq ($(PREFIX),)
+    $(error 'Installation directory undefined')
+  endif
   override BUILD = release
 endif
 
@@ -148,7 +147,6 @@ export WORKDIR
 export LIB
 
 
-
 ################################################################################
 #                                    RULES                                     #
 ################################################################################
@@ -204,7 +202,7 @@ test:			header $(LIB)
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
 clean:			header
-	$(eval RULE = $(RM) -rf build *.log)
+	$(eval RULE = $(RM) -rf build *.log www/webwerv.42.test/upload/* www/webserv.test/chunked)
 	@$(call run,$(RULE),clean)
 
 fclean:			clean

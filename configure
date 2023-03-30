@@ -1,3 +1,13 @@
+#============================================ Intallation directory
+
+INSTALLDIR="$HOME/.local"
+
+#==================================================================
+
+ft_realpath() {
+	[[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+
 case $SHELL in
 */bash)
 	export SELF_PATH="${BASH_SOURCE[0]}"
@@ -6,32 +16,35 @@ case $SHELL in
 	export SELF_PATH="$0"
 esac
 
-ft_realpath() {
-    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
-}
-
-WORKDIR="$(dirname "$(ft_realpath "$SELF_PATH")")"
-unset SELF_PATH
-
-WWWDIR=$WORKDIR/www
-CONF_FILE="$WORKDIR/default.conf"
-PLATFORM=$(uname -s)
-
-if [[ "$PLATFORM" = "Linux" ]]; then
-	sed -i 's/macos/ubuntu/g' "$CONF_FILE"
-elif [[ "$PLATFORM" = "Darwin" ]]; then
-	sed -i "" -e 's/ubuntu/macos/g' "$CONF_FILE"
-fi
-
-chmod +x $WWWDIR/webserv.42.fr/{index.php,cgi-bin/info.php}
-chmod -R +x $WWWDIR/webserv.42.test/cgi-bin/
-
-if [ -d "$HOME/goinfre" -a -w "$HOME/goinfre" ]; then
-	export PREFIX="$HOME/goinfre"
+if [ -z "$INSTALLDIR" ]; then
+	echo "Installation directory undefined, please open $SELF_PATH"
 else
-	export PREFIX="/usr/local"
+	WORKDIR="$(dirname "$(ft_realpath "$SELF_PATH")")"
+	WWWDIR=$WORKDIR/www
+	CONF_FILE="$WORKDIR/default.conf"
+	PLATFORM=$(uname -s)
+
+	if [[ "$PLATFORM" = "Linux" ]]; then
+		sed -i 's/macos/ubuntu/g' "$CONF_FILE"
+	elif [[ "$PLATFORM" = "Darwin" ]]; then
+		sed -i "" -e 's/ubuntu/macos/g' "$CONF_FILE"
+	fi
+
+	chmod +x $WWWDIR/webserv.42.fr/{index.php,cgi-bin/info.php}
+	chmod -R +x $WWWDIR/webserv.42.test/cgi-bin/
+
+	if [ ! -d "$INSTALLDIR" ]; then
+		echo "$INSTALLDIR does not exist."
+	elif [ ! -w "$INSTALLDIR" ]; then
+		echo "You do not have write permission on $INSTALLDIR."
+	else
+		export PREFIX=$INSTALLDIR
+
+		if [[ -z "$(echo "$PATH" | grep "$PREFIX/bin")" ]]; then
+			export PATH="$PREFIX/bin:$PATH"
+		fi
+	fi
+
 fi
 
-if [[ -z "$(echo "$PATH" | grep "$PREFIX/bin")" ]]; then
-	export PATH="$PREFIX/bin:$PATH"
-fi
+unset SELF_PATH
