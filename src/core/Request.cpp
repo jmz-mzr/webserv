@@ -365,71 +365,84 @@ namespace	webserv
 		return (true);
 	}
 
-	void	Request::_discardChunkedTrailer()
+	bool	Request::_discardChunkedTrailer()
 	{
-		int			savedErrorCode = _errorCode;
 		std::string	line;
 
 		while (1) {
 			line = _readLine();
 			if (_parseChunkTrailer(line))
-				return ;
+				return (true);
 			if (line.empty() || _errorCode != 0) {
 				if (line.empty())
 					_clearBuffer();
 				else
 					_buffer.clear();
-				_errorCode = savedErrorCode;
-				return ;
+				return (false);
 			}
 		}
+	}
+
+	bool	Request::_discardChunk()
+	{
+		if (!_parseChunkSize(_readLine()))
+			return (false);
+		if (_bodySize == 0)
+			return (_discardChunkedTrailer());
+		if (static_cast<size_t>(_bodySize) >= _buffer.size() - _bufferIndex
+				|| (_buffer[_bufferIndex + _bodySize] != '\r'
+					&& _buffer[_bufferIndex + _bodySize] != '\n')
+				|| (*(_buffer.c_str() + _bufferIndex + _bodySize) == '\r'
+					&& _buffer[_bufferIndex + _bodySize + 1] != '\n')) {
+			return (false);
+		}
+		_bufferIndex += _bodySize + 1
+			+ (_buffer[_bufferIndex + _bodySize] == '\r');
+		_bodySize = -1;
+		return (true);
 	}
 
 	void	Request::_discardChunkedBody()
 	{
 		int		savedErrorCode = _errorCode;
+		bool	error = false;
 
 		LOG_DEBUG("HTTP discard chunked body");
 		while (1) {
-			if (!_parseChunkSize(_readLine()))
+			if (!_discardChunk() || !_isChunkedRequest)
 				break ;
-			if (_bodySize == 0)
-				return (_discardChunkedTrailer());
-			if (static_cast<size_t>(_bodySize) >= _buffer.size() - _bufferIndex
-					|| (_buffer[_bufferIndex + _bodySize] != '\r'
-						&& _buffer[_bufferIndex + _bodySize] != '\n')
-					|| (*(_buffer.c_str() + _bufferIndex + _bodySize) == '\r'
-						&& _buffer[_bufferIndex + _bodySize + 1] != '\n')) {
-				_errorCode = 400;
-				break ;
-			}
-			_bufferIndex += _bodySize + 1
-				+ (_buffer[_bufferIndex + _bodySize] == '\r');
-			_bodySize = -1;
 		}
 		if (_errorCode)
-			_buffer.clear();
-		else
+			error = true;
+		else if (_isChunkedRequest) {
+			LOG_DEBUG("Body not in buffer, disconnecting the client");
+			error = true;
+		} else
 			_clearBuffer();
+		if (error) {
+			_isChunkedRequest = false;
+			_isKeepAlive = false;
+			_buffer.clear();
+		}
 		_errorCode = savedErrorCode;
 	}
 
 	void	Request::_discardBody()
 	{
-		// TO DO: set _isKeepAlive to false only if more is to be received
-
 		_isTerminatedRequest = true;
-		_isKeepAlive = false;
 		if (!isKeepAlive()) {
 			_buffer.clear();
 			return ;
 		}
-		if (_isChunkedRequest) {
-			_isChunkedRequest = false;
+		if (_isChunkedRequest)
 			return (_discardChunkedBody());
-		}
 		LOG_DEBUG("HTTP discard body");
 		if (_bodySize > 0) {
+			if (static_cast<size_t>(_bodySize)
+					> _buffer.size() - _bufferIndex) {
+				LOG_DEBUG("Body not in buffer, disconnecting the client");
+				_isKeepAlive = false;
+			}
 			if (_bufferIndex < _buffer.size())
 				_bufferIndex += _bodySize;
 			_clearBuffer();

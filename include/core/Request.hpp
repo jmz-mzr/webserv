@@ -127,7 +127,8 @@ namespace	webserv
 
 		void	_discardBody();
 		void	_discardChunkedBody();
-		void	_discardChunkedTrailer();
+		bool	_discardChunk();
+		bool	_discardChunkedTrailer();
 
 		bool	_createBodyTmpFile();
 		bool	_writeBodyTmpFile(int64_t n);
