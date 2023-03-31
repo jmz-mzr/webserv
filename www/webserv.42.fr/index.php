@@ -3,7 +3,8 @@
 <?php
   // ini_set('session.save_path', dirname($_SERVER['DOCUMENT_ROOT']) . '/sessions');
   if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-  if ($_POST) {
+  if (!isset($_SESSION['username'])) $_SESSION['username'] = "GUEST";
+  if (!empty($_POST)) {
     if (isset($_POST['clearbtn'])) {
       session_unset();
       session_destroy();
@@ -188,12 +189,7 @@ table-layout:fixed;
 <div class="w3-content w3-container w3-padding-64" id="about">
   <h3 class="w3-center w3-text-teal">
     <?php
-      echo "WELCOME DEAR ";
-      if (isset($_SESSION['username'])) {
-        echo htmlspecialchars($_SESSION['username']);
-      } else {
-        echo "GUEST";
-      }
+      echo "WELCOME DEAR " . htmlspecialchars($_SESSION['username']);
     ?>
   </h3>
   <p class="w3-center"><em>Do you love surfing?</em></p>

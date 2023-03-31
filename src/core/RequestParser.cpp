@@ -421,6 +421,7 @@ namespace webserv
 	{
 		if (ft_strcmp_icase(fieldName, "User-Agent")
 				|| ft_strcmp_icase(fieldName, "Referer")
+				|| ft_strcmp_icase(fieldName, "Content-Type")
 				|| ft_strcmp_icase(fieldName, "Range")
 				|| ft_strcmp_icase(fieldName, "TE")
 				|| ft_strcmp_icase(fieldName, "Upgrade")
