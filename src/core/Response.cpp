@@ -24,8 +24,8 @@
 #include <sstream>
 #include <utility>		// make_pair
 
-#include "webserv_config.hpp"
 #include "core/Response.hpp"
+#include "webserv_config.hpp"
 #include "utils/global_defs.hpp"
 #include "utils/log.hpp"
 #include "utils/utils.hpp"
@@ -174,7 +174,7 @@ namespace	webserv
 		return (ft_str_toupper(allowStr.str()));
 	}
 
-	void	Response::_loadHeaders(const Request& request, bool logHeaders)
+	void	Response::_loadHeaders(const Request& request)
 	{
 		const char*			connection = _isKeepAlive ? "keep-alive" : "close";
 		std::ostringstream	headers;
@@ -199,8 +199,7 @@ namespace	webserv
 			headers << "ETag: " << _getETag() << CRLF;
 		headers << CRLF;
 		_responseBuffer = headers.str();
-		if (logHeaders)
-			LOG_DEBUG("HTTP Headers:\n" << _responseBuffer);
+		LOG_DEBUG("HTTP Headers:\n" << _responseBuffer);
 	}
 
 	void	Response::_logError(const Request& request,
@@ -405,7 +404,7 @@ namespace	webserv
 	{
 		std::ostringstream	chunkSize;
 
-		chunkSize << _responseBuffer.size();
+		chunkSize << std::hex << _responseBuffer.size() << CRLF;
 		_responseBuffer.insert(0, chunkSize.str());
 		if (isLastChunk)
 			_responseBuffer += CRLF "0" CRLF CRLF;
@@ -1642,7 +1641,7 @@ namespace	webserv
 			_responseCode = cgi.responseCode;
 		if (_contentType.empty())
 			_contentType = _getContentType("");
-		_loadHeaders(request, false);
+		_loadHeaders(request);
 		if (!cgi.headers.empty()) {
 			if (_responseBuffer.size() > 4 && (_responseBuffer.c_str()
 					+ (_responseBuffer.size() - 4) == std::string(CRLF CRLF)))
@@ -1775,7 +1774,8 @@ namespace	webserv
 		if (responseCode != 0)
 			return (prepareErrorResponse(request, responseCode));
 		_isKeepAlive = isKeepAlive(request);
-		_loadHeaders(request);
+		if (_responseBuffer.empty())
+			_loadHeaders(request);
 		if (!_handleBodyDrop(request) && (request.getRequestMethod() == "PUT"
 					|| request.getRequestMethod() == "POST"))
 			_responseBuffer += _getPutPostResponseBody(request);

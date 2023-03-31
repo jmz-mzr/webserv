@@ -18,6 +18,7 @@
 #include "config/ConfigParser.hpp"
 #include "config/ServerConfig.hpp"
 #include "core/Response.hpp"
+#include "utils/global_defs.hpp"
 #include "utils/exceptions.hpp"
 #include "utils/log.hpp"
 #include "utils/utils.hpp"

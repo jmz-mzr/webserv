@@ -155,7 +155,7 @@ namespace	webserv
 				<< ":" << ntohs(_serverConfig->getListenPair().sin_port)
 				<< " (\"" << getServerName() << "\")";
 		}
-		msg << ", request: \"" << _requestLine
+		msg << ", request: \"" << strHexDump(_requestLine)
 			<< "\", host: \"" << _host << "\""
 			<< ", body size: " << _contentLength;
 		LOG_ERROR(msg.str().c_str());
@@ -282,7 +282,6 @@ namespace	webserv
 		while (config != serverConfigs.end()) {
 			name = config->getServerNames().begin();
 			while (name != config->getServerNames().end()) {
-				LOG_DEBUG("_host = " << _host << ", name = " << *name);
 				if (ft_strcmp_icase(_host, *name) == true) {
 					_serverConfig = &(*config);
 					LOG_DEBUG("Using server: \"" << *name << "\" (on \""
@@ -460,15 +459,17 @@ namespace	webserv
 
 	std::string Request::_readLine(bool allowNonPrintable)
 	{
-		std::string	line;
-		size_t		i;
-		bool		hasCR = false;
+		size_t					i;
+		std::string::iterator	found;
+		std::string				line;
+		bool					hasCR = false;
 
 		i = _buffer.find_first_of('\n', _bufferIndex);
 		if (i == std::string::npos) {
 			if (_buffer.empty() || (_buffer[0] != static_cast<char>(0xFF)
-					&& (allowNonPrintable || std::find_if(_buffer.begin(),
-					_buffer.end(), &isnotprint) == _buffer.end())))
+					&& (allowNonPrintable || (found = std::find_if(_buffer.
+					begin(), _buffer.end(), &isnotprint)) == _buffer.end()
+					|| (*found == '\r' && found + 1 == _buffer.end()))))
 				return ("");
 			line = _buffer.substr(_bufferIndex);
 			_clearBuffer();

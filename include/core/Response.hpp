@@ -159,8 +159,7 @@ namespace	webserv
 		void	_loadCgiHeaders(const Request& request, CgiHandler& cgi);
 
 		bool			_handleBodyDrop(const Request& request);
-		void			_loadHeaders(const Request& request,
-										bool logHeaders = true);
+		void			_loadHeaders(const Request& request);
 		std::string		_getAllowedMethods(const Request& request) const;
 		std::string		_getETag(const struct stat* fileInfos = 0) const;
 
