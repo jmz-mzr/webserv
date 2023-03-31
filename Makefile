@@ -202,7 +202,7 @@ test:			header $(LIB)
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
 clean:			header
-	$(eval RULE = $(RM) -rf build *.log www/webwerv.42.test/upload/* www/webserv.test/chunked)
+	$(eval RULE = $(RM) -rf -i build *.log www/webserv.42.test/upload/* www/webserv.test/chunked)
 	@$(call run,$(RULE),clean)
 
 fclean:			clean
