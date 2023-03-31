@@ -118,8 +118,6 @@ namespace	webserv
 		_uri = redirectTo.substr(0, query);
 		if (query != std::string::npos)
 			_query = redirectTo.substr(query + 1);
-		else
-			_query.clear();
 		_extension = getFileExtension(_uri);
 	}
 
