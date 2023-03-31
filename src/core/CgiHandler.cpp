@@ -3,7 +3,7 @@
 #include <signal.h>		// kill
 #include <stddef.h>		// size_t
 #include <stdio.h>		// fileno
-#include <stdlib.h>		// exit
+#include <stdlib.h>		// exit, getenv
 #include <sys/wait.h>	// waitpid
 #include <unistd.h>		// close, chdir, dup2, execve, fork, (u)sleep,
 						// STD(IN/OUT/ERR)_FILENO
@@ -99,7 +99,11 @@ namespace	webserv
 		std::string											envVar;
 		std::list<std::string>::const_iterator				envIt;
 
-		_envp.reserve(_envMap.size());
+		_envp.reserve(_envMap.size() + 2);
+		envVar = std::string("PATH=") + getenv("PATH");
+		LOG_DEBUG("CGI variable: " << envVar);
+		envIt = _env.insert(_env.end(), envVar);
+		_envp.push_back(const_cast<char*>(envIt->c_str()));
 		var = _envMap.begin();
 		while (var != _envMap.end()) {
 			envVar = var->first + "=" + var->second;
