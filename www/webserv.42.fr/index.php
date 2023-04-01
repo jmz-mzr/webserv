@@ -17,7 +17,7 @@
       unset($_POST);
     }
     // POST/Redirect/GET to avoid form resubmission
-    header("Location: {$_SERVER['REQUEST_URI']}", true, 303);
+    header("Location: http://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}#welcome", true, 303);
     exit();
   }
 
@@ -85,7 +85,7 @@ body, html {
 .w3-hover-opacity {cursor: pointer;}
 
 /* Turn off parallax scrolling for tablets and phones */
-@media only screen and (max-width: 1500px) {
+@media only screen and (max-width: 1400px) {
   .bgimg-1, .bgimg-2, .bgimg-3 {
     background-attachment: scroll;
     min-height: 400px;
@@ -155,7 +155,7 @@ table-layout:fixed;
       <i class="fa fa-bars"></i>
     </a>
     <a href="#home" class="w3-bar-item w3-button"><i class="fa fa-home"></i> HOME</a>
-    <a href="#about" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-user"></i> WELCOME</a>
+    <a href="#welcome" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-user"></i> WELCOME</a>
     <a href="#portfolio" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-th"></i> SCRIPTS</a>
     <a href="#contact" class="w3-bar-item w3-button w3-hide-small"><i class="fa fa-envelope"></i> CONTACT</a>
     <form method="post" target="_self">
@@ -167,7 +167,7 @@ table-layout:fixed;
 
   <!-- Navbar on small screens -->
   <div id="navDemo" class="w3-bar-block w3-white w3-hide w3-hide-large w3-hide-medium">
-    <a href="#about" class="w3-bar-item w3-button" onclick="toggleFunction()">WELCOME</a>
+    <a href="#welcome" class="w3-bar-item w3-button" onclick="toggleFunction()">WELCOME</a>
     <a href="#portfolio" class="w3-bar-item w3-button" onclick="toggleFunction()">SCRIPTS</a>
     <a href="#contact" class="w3-bar-item w3-button" onclick="toggleFunction()">CONTACT</a>
     <form method="post" target="_self">
@@ -185,11 +185,11 @@ table-layout:fixed;
   </div>
 </div>
 
-<!-- Container (About Section) -->
-<div class="w3-content w3-container w3-padding-64" id="about">
+<!-- Container (Welcome Section) -->
+<div class="w3-content w3-container w3-padding-64" id="welcome">
   <h3 class="w3-center w3-text-teal">
     <?php
-      echo "WELCOME DEAR " . htmlspecialchars($_SESSION['username']);
+      echo "WELCOME DEAR " . htmlspecialchars(strtoupper($_SESSION['username']));
     ?>
   </h3>
   <p class="w3-center"><em>Do you love surfing?</em></p>
@@ -198,7 +198,7 @@ table-layout:fixed;
       <img src="https://lepetitjournal.com/sites/default/files/2020-02/Kelly%20Slater.jpg" class="w3-round w3-image w3-opacity w3-hover-opacity-off" alt="Photo of Me" width="500" height="333">
     </div>
     <div class="w3-center w3-padding-large">
-      <p>Well, since you're here we guess that you do young guest!<br><br>But you feel ignored and misunderstood as you're not the one pictured here?<br>Tell us then who you are right away!</p>
+	  <p>Well, since you're here we guess that you do young <?php echo htmlspecialchars($_SESSION['username']); ?>!<br><br>But you feel ignored and misunderstood as you're not the one pictured here?<br>Tell us then who you are right away!</p>
        <form method="post" target="_self">
        <!-- <form action="https://nohello.net/en/" target="_blank"> -->
         <div class="w3-cell-row" style="margin:8 -16px 8px -16px">
@@ -392,7 +392,7 @@ table-layout:fixed;
             <input class="w3-input w3-border" type="text" placeholder="Subject" required name="subject">
           </div>
           <div class="w3-half">
-            <select class="w3-select w3-border" name="to" required>
+            <select class="w3-select w3-border" style="padding:11.5px" name="to" required>
               <option value="" disabled selected>Choose your recipient</option>
               <option value="jmazoyer@student.42.fr">jmazoyer@student.42.fr</option>
               <option value="flohrel@student.42.fr">flohrel@student.42.fr</option>
