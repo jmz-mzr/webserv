@@ -485,7 +485,9 @@ namespace webserv
 			return (false);
 		if (!_recordHeader(fieldName, fieldValue))
 			return (false);
-		LOG_DEBUG("HTTP header: \"" << fieldName << ": " << fieldValue << "\"");
+		if (!fieldName.empty())
+			LOG_DEBUG("HTTP header: \"" << fieldName
+					<< ": " << fieldValue << "\"");
 		return (true);
 	}
 
@@ -654,7 +656,7 @@ namespace webserv
 			}
 			++i;
 		}
-		return (false);
+		return (true);
 	}
 
 	bool	Request::_loadChunk()

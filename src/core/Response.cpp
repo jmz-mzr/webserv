@@ -13,7 +13,7 @@
 #include <cerrno>		// errno
 #include <cstdio>		// feof, ferror, fgetc, fgets, fread, ungetc
 #include <cstdlib>		// abs, atoi, strtoll
-#include <cstring>		// memset, strerror
+#include <cstring>		// memset, strerror, strlen
 #include <ctime>		// gmtime, mktime, strftime, struct tm, time, time_t
 
 #include <exception>
@@ -279,7 +279,7 @@ namespace	webserv
 			_requestedFilename += '/';
 			_requestedFilename += dirEntry->d_name;
 			errorCode = _loadDirEntry(request, dirEntry->d_name);
-			_requestedFilename[pathLen] = '\0';
+			_requestedFilename.erase(pathLen);
 			if (errorCode != 0)
 				return (errorCode);
 		}
@@ -540,7 +540,8 @@ namespace	webserv
 				return (404);
 			return (403);
 		}
-		LOG_DEBUG("HTTP autoindex: \"" << _requestedFilename.c_str() << "\"");
+		_requestedFilename.erase(std::strlen(_requestedFilename.c_str()));
+		LOG_DEBUG("HTTP autoindex: \"" << _requestedFilename << "\"");
 		_indexDirectory = opendir(_requestedFilename.c_str());
 		if (!_indexDirectory) {
 			_logError(request, "opendir()", "failed");
