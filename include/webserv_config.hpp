@@ -25,6 +25,10 @@
 #  define WEBSERV_ROOT		/usr/local/var/www/webserv
 # endif
 
+# ifndef CGI_SESSION
+#  define CGI_SESSION		/tmp
+# endif
+
 //# define RECV_BUFFER_SIZE	8192	// 8KB
 //# define RECV_BUFFER_SIZE	16384	// 16KB
 # define RECV_BUFFER_SIZE	32768	// 32KB

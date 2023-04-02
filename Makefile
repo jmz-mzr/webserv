@@ -37,6 +37,7 @@ CONFDIR		=	$(SYSCONFDIR)/$(NAME)
 LIBDIR		=	$(PREFIX)/lib
 DATADIR		=	$(PREFIX)/var
 WWWDIR		?=	$(DATADIR)/www
+SESSIONDIR	=	$(WWWDIR)/sessions
 LOGDIR		=	$(DATADIR)/log
 
 INSTALLDIRS	=	$(BINDIR) $(CONFDIR) $(LIBDIR) $(DATADIR) $(LOGDIR) $(WWWDIR)
@@ -125,13 +126,15 @@ ifeq (debug,$(BUILD))
   CPPFLAGS	+=	-DLOG_FILE=/tmp/webserv.log \
 				-DLOG_LEVEL=Log::Level::kDebug \
 				-DCONF_FILE=$(WORKDIR)/default.conf \
-				-DWEBSERV_ROOT=$(WORKDIR)/www
+				-DWEBSERV_ROOT=$(WORKDIR)/www \
+				-DCGI_SESSION=$(WORKDIR)/www/sessions
 else
   CXXFLAGS	+=	-O3
   CPPFLAGS	+=	-DLOG_FILE=$(LOGDIR)/webserv.log \
 				-DLOG_LEVEL=Log::Level::kError \
 				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf \
-				-DWEBSERV_ROOT=$(DATADIR)/www/webserv
+				-DWEBSERV_ROOT=$(WEBSERVLNK) \
+				-DCGI_SESSION=$(WEBSERVLNK)/sessions
 endif
 
 # =================================> Export <================================= #

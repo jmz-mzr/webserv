@@ -99,8 +99,12 @@ namespace	webserv
 		std::string											envVar;
 		std::list<std::string>::const_iterator				envIt;
 
-		_envp.reserve(_envMap.size() + 2);
+		_envp.reserve(_envMap.size() + 3);
 		envVar = std::string("PATH=") + getenv("PATH");
+		LOG_DEBUG("CGI variable: " << envVar);
+		envIt = _env.insert(_env.end(), envVar);
+		_envp.push_back(const_cast<char*>(envIt->c_str()));
+		envVar = std::string("CGI_SESSION=") + XSTR(CGI_SESSION);
 		LOG_DEBUG("CGI variable: " << envVar);
 		envIt = _env.insert(_env.end(), envVar);
 		_envp.push_back(const_cast<char*>(envIt->c_str()));

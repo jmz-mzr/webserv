@@ -118,4 +118,4 @@ Dockerfile
 docker-compose.yml
 locust/
 .idea/
-sessions/*
+**/sessions/*
