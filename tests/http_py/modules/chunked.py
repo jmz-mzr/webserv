@@ -3,54 +3,32 @@ from http.client import HTTPResponse
 from webtest import *
 
 
+#TODO: add some data check after response has been received
 class Chunked(TestCase):
     @staticmethod
     def test_basic() -> str:
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect((SERVER_HOST, SERVER_PORT))
-        request_header = b"POST /chunked HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n\r\n"
-        client.send(request_header)
-        request_header = b"5\r\nhello\r\n"
-        client.send(request_header)
-        request_header = b"0\r\n\r\n"
-        client.send(request_header)
-
-        # read and parse http response
-        http_response = HTTPResponse(client)
-        http_response.begin()
-        if http_response.status != 201 and http_response.status != 303:
-            return "Status code: {}, expected: {}".format(
-                str(http_response.status), "201"
-            )
-        body = http_response.read().decode("UTF-8")
+        request = [
+            "POST /post/basic HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n\r\n",
+            "5\r\nhello\r\n",
+            "0\r\n\r\n"
+        ]
+        response = send_request(*request)
+        if response.status != 201:
+            return f"Status code: {response.status}, expected: 201"
         return ""
 
-    # @staticmethod
-    # def test_chunked_w_trailer() -> str:
-    #     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #     client.connect((SERVER_HOST, SERVER_PORT))
-    #     request_header = "POST /post/print.cgi HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n\r\n"
-    #     client.send(request_header.encode())
-    #     request_header = "5\r\ntest\n\r\n"
-    #     client.send(request_header.encode())
-    #     request_header = "0\r\naccept-language: fr\r\ntest-header: blabla\r\n\r\n"
-    #     client.send(request_header.encode())
-    #
-    #     # read and parse http response
-    #     http_response = HTTPResponse(client)
-    #     http_response.begin()
-    #     # print_headers(http_response)
-    #     if http_response.status != 201 and http_response.status != 303:
-    #         return "Status code: {}, expected: {}".format(
-    #             str(http_response.status), "201"
-    #         )
-    #     if http_response.headers.get("Content-Type") is None:
-    #         return "No content type header"
-    #     body = http_response.read().decode("UTF-8")
-    #     if body.find("test") == -1:
-    #         return "Missing content in request"
-    #     # print(body)
-    #     return ""
+    @staticmethod
+    def test_trailer_fields() -> str:
+        request = [
+            "POST /post/trailer HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n",
+            "5\r\ntest\n\r\n",
+            "0\r\naccept-language: fr\r\ntest-header: blabla\r\n\r\n"
+        ]
+        response = send_request(*request)
+        if response.status != 201:
+            return f"Status code: {response.status}, expected: 201"
+        return ""
+
     #
     # @staticmethod
     # def test_chunked_multiple_zeros() -> str:

@@ -1,7 +1,7 @@
 #!/usr/bin/env php-cgi
 
 <?php
-  // ini_set('session.save_path', dirname($_SERVER['DOCUMENT_ROOT']) . '/sessions');
+  ini_set('session.save_path', dirname($_SERVER['DOCUMENT_ROOT']) . '/sessions');
   if (session_status() !== PHP_SESSION_ACTIVE) session_start();
   if (!isset($_SESSION['username'])) $_SESSION['username'] = "GUEST";
   if (!empty($_POST)) {
@@ -10,7 +10,7 @@
       session_destroy();
       session_write_close();
       setcookie(session_name(), '', 0, null, null, false, true);
-      session_regenerate_id(true);
+      // session_regenerate_id(true);
     }
     elseif (isset($_POST['updatebtn'])) {
       $_SESSION['username'] = $_POST['username'];

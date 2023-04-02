@@ -203,7 +203,7 @@ test:			header $(LIB)
 
 clean:			header
 	$(eval RULE = $(RM) -rf build *.log www/webserv.test/chunked ;\
-		find "www/webserv.42.test/upload/." -name "[[:alpha:]]*" -delete)
+		find www/webserv{.42,}.test/upload/. -name "[[:alpha:]]*" -delete)
 	@$(call run,$(RULE),clean)
 
 fclean:			clean

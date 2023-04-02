@@ -2,15 +2,13 @@ import socket
 from http.client import HTTPResponse
 from .config import (SERVER_HOST, SERVER_PORT)
 
-def send_request(string: str, chunked = False) -> HTTPResponse:
+def send_request(*args) -> HTTPResponse:
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.settimeout(5.0)
 	s.connect((SERVER_HOST, SERVER_PORT))
-	s.send(string.encode())
-	if (chunked == False):
-		response = HTTPResponse(s)
-	else:
-		return  HTTPResponse(status=404)
+	for string in args:
+		s.send(string.encode('utf-8'))
+	response = HTTPResponse(s)
 	response.begin()
 	return response
 

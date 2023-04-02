@@ -44,6 +44,7 @@ else
 
 	chmod +x $WWWDIR/webserv.42.fr/{index.php,cgi-bin/info.php}
 	chmod -R +x $WWWDIR/webserv.42.test/cgi-bin/
+	chmod 1777 $WWWDIR/sessions
 
 	if [ ! -d "$INSTALLDIR" ]; then
 		echo "Creating \"$INSTALLDIR\" to install \"webserv\""
