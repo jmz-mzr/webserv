@@ -46,6 +46,7 @@ namespace	webserv
 		void		_loadEnv3(const Request& request);
 		std::string	_convertEnvVarName(const std::string& str) const;
 		void		_loadEnvContainers();
+		void		_loadCustomEnvVars();
 		bool		_prepareCgiIoFiles(const Request& request);
 		std::string	_loadWorkingDir() const;
 		void		_executeCgi(const Request& request, const char* workingDir);

@@ -93,13 +93,11 @@ namespace	webserv
 		LOG_ERROR("Logging error: " << e.what());
 	}
 
-	void	CgiHandler::_loadEnvContainers()
+	void	CgiHandler::_loadCustomEnvVars()
 	{
-		std::map<std::string, std::string>::const_iterator	var;
-		std::string											envVar;
-		std::list<std::string>::const_iterator				envIt;
+		std::string									envVar;
+		std::list<std::string>::const_iterator		envIt;
 
-		_envp.reserve(_envMap.size() + 3);
 		envVar = std::string("PATH=") + getenv("PATH");
 		LOG_DEBUG("CGI variable: " << envVar);
 		envIt = _env.insert(_env.end(), envVar);
@@ -108,6 +106,20 @@ namespace	webserv
 		LOG_DEBUG("CGI variable: " << envVar);
 		envIt = _env.insert(_env.end(), envVar);
 		_envp.push_back(const_cast<char*>(envIt->c_str()));
+		envVar = std::string("LIB_PERL_CGI=") + XSTR(LIB_PERL_CGI);
+		LOG_DEBUG("CGI variable: " << envVar);
+		envIt = _env.insert(_env.end(), envVar);
+		_envp.push_back(const_cast<char*>(envIt->c_str()));
+	}
+
+	void	CgiHandler::_loadEnvContainers()
+	{
+		std::map<std::string, std::string>::const_iterator	var;
+		std::string											envVar;
+		std::list<std::string>::const_iterator				envIt;
+
+		_envp.reserve(_envMap.size() + 4);
+		_loadCustomEnvVars();
 		var = _envMap.begin();
 		while (var != _envMap.end()) {
 			envVar = var->first + "=" + var->second;

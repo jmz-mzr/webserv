@@ -29,6 +29,10 @@
 #  define CGI_SESSION		/tmp
 # endif
 
+# ifndef LIB_PERL_CGI
+#  define LIB_PERL_CGI		/usr/local/lib/perl5
+# endif
+
 //# define RECV_BUFFER_SIZE	8192	// 8KB
 //# define RECV_BUFFER_SIZE	16384	// 16KB
 # define RECV_BUFFER_SIZE	32768	// 32KB

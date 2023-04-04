@@ -42,7 +42,7 @@ else
 		sed -i "" -e 's/ubuntu/macos/g' "$CONF_FILE"
 	fi
 
-	chmod +x $WWWDIR/webserv.42.fr/{index.php,cgi-bin/info.php}
+	chmod +x $WWWDIR/webserv.42.fr/{index.php,index.pl,cgi-bin/info.php}
 	chmod -R +x $WWWDIR/webserv.42.test/cgi-bin/
 	chmod 1777 $WWWDIR/sessions
 

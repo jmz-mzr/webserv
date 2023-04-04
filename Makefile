@@ -26,6 +26,8 @@ endif
 SRCDIR		=	src
 SUBDIR		=	config core utils
 INCLDIR		=	include
+LIBPERLDIR	=	include/lib
+LIBPERLCGI	=	perl_cgi
 BUILDIR		=	build/$(BUILD)
 DEPDIR		=	$(BUILDIR)/.deps
 TESTDIR		=	tests/cpp_gtest
@@ -127,14 +129,16 @@ ifeq (debug,$(BUILD))
 				-DLOG_LEVEL=Log::Level::kDebug \
 				-DCONF_FILE=$(WORKDIR)/default.conf \
 				-DWEBSERV_ROOT=$(WORKDIR)/www \
-				-DCGI_SESSION=$(WORKDIR)/www/sessions
+				-DCGI_SESSION=$(WORKDIR)/www/sessions \
+				-DLIB_PERL_CGI=$(WORKDIR)/$(LIBPERLDIR)/$(LIBPERLCGI)
 else
   CXXFLAGS	+=	-O3
   CPPFLAGS	+=	-DLOG_FILE=$(LOGDIR)/webserv.log \
 				-DLOG_LEVEL=Log::Level::kError \
 				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf \
 				-DWEBSERV_ROOT=$(WEBSERVLNK) \
-				-DCGI_SESSION=$(WEBSERVLNK)/sessions
+				-DCGI_SESSION=$(WEBSERVLNK)/sessions \
+				-DLIB_PERL_CGI=$(LIBDIR)/$(LIBPERLCGI)
 endif
 
 # =================================> Export <================================= #
@@ -190,7 +194,8 @@ $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ)) | header
 
 install:		header $(BIN) $(LIB) | $(INSTALLDIRS) $(WEBSERVLNK)
 	$(eval RULE = install -m 755 $(BIN) $(BINDIR)/$(NAME) ;\
-		cp default.conf $(CONFDIR)/)
+		cp default.conf $(CONFDIR)/ ;\
+		cp -R $(LIBPERLDIR)/$(LIBPERLCGI) $(LIBDIR))
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
 uninstall:		header

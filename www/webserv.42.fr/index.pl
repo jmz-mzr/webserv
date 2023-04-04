@@ -1,7 +1,8 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
+use lib qq($ENV{'LIB_PERL_CGI'});
 use CGI;
 use CGI::Session;
 use CGI::Cookie;
