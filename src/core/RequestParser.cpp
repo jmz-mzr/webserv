@@ -742,11 +742,6 @@ namespace webserv
 	int	Request::parseRequest(const std::string& recvBuffer,
 								const server_configs& serverConfigs)
 	{
-		// TO DO: if client sends more chunks after error, and error not
-		// disconnecting, continue discarding until done (all chunks received)
-		// or until receiving a request line?
-		// Or just make sure to leave time to send first error response???
-
 		if (!recvBuffer.empty())
 			_buffer += recvBuffer;
 		else if (_buffer.empty())

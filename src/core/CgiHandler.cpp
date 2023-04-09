@@ -195,9 +195,6 @@ namespace	webserv
 	void	CgiHandler::loadEnv(const Request& request,
 								const std::string& computedContentType)
 	{
-		//TO DO: Add "remote_ident/user" for sessions?
-		//		 And HTTP_COOKIE?
-
 		const std::string&	contentType = request.getContentType();
 		const std::string&	contentLength = (request.getContentLength() >= 0 ?
 									to_string(request.getContentLength()) : "");

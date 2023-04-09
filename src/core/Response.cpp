@@ -513,9 +513,6 @@ namespace	webserv
 	int	Response::_loadInternalRedirect(Request& request,
 										const std::string& redirectTo)
 	{
-		// TO DO: 1) Return error only after 10 identical redirect (like NGINX)?
-		// 2) Do we need to first clear the response (if return/error_page)?
-
 		int		errorCode;
 
 		if (request.isInternalRedirect() && redirectTo == request.getUri()) {
@@ -810,8 +807,6 @@ namespace	webserv
 
 	int	Response::_openRequestedFile(const Request& request)
 	{
-		// TO DO: Make sure the requested file search is case-insensitive
-
 		struct stat		fileInfos;
 
 		if (!_openAndStatFile(request, &fileInfos)) {
@@ -1055,15 +1050,6 @@ namespace	webserv
 
 	int	Response::_postRequestBody(Request& request)
 	{
-		// TO DO: Before loading the request body, check in request after having
-		// received the headers if the POST request will be processed ?
-		// (i.e. there is no return directive, there is a CGI, or after the
-		// root/alias translation, there is a filename that is not a directory,
-		// and that doesn't already exist)
-		// If so, just run this function with a dryRun parameter ?
-		// (The goal would be to avoid loading a large file, if it will be lost
-		// because of an error right afterwards)
-
 		struct stat		fileInfos;
 		std::string		savedFilename = _requestedFilename;
 
@@ -1095,8 +1081,6 @@ namespace	webserv
 										const struct stat* fileInfos,
 										bool fileExists)
 	{
-		// TO DO: Add an option to create the full path if it doesn't exist ?
-
 		int		responseCode = (fileInfos ?
 							_checkConditionalHeaders(request, fileInfos) : 0);
 
@@ -1163,15 +1147,6 @@ namespace	webserv
 
 	int	Response::_putRequestBody(const Request& request)
 	{
-		// TO DO: Before loading the request body, check in request after having
-		// received the headers if the POST request will be processed ?
-		// (i.e. there is no return directive, there is a CGI, or after the
-		// root/alias translation, there is a filename that is not a directory,
-		// and that doesn't already exist)
-		// If so, just run this function with a dryRun parameter ?
-		// (The goal would be to avoid loading a large file, if it will be lost
-		// because of an error right afterwards)
-
 		struct stat		fileInfos;
 
 		if (*_requestedFilename.rbegin() == '/') {

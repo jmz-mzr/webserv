@@ -252,11 +252,6 @@ namespace	webserv
 
 	ssize_t	Webserv::_receiveClientRequest(Client& client, pollFd_iter pollFd)
 	{
-		// TO DO: How to keep the client able to interact with the server
-		// 		  while the server sends a large file to the client?
-		// 		  The user agent (browser) handles it itself? Or should we
-		// 		  send it through a new socket connected to the client?
-
 		int			clientFd = client.getSocket().getFd();
 		ssize_t		received;
 

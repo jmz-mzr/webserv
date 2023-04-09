@@ -345,13 +345,13 @@ namespace	webserv
 
 	bool	Request::_checkConfig()
 	{
-		// TO DO: In case of PUT/POST, before loading the request body,
+		// NOTE: In case of PUT/POST, before loading the request body,
 		// check if the POST request will be processed, to avoid a potential
 		// blocking and consuming of time and resources while loading a large
-		// file that would be dropped because of an error right afterwards ?
+		// file that would be dropped because of an error right afterwards?
 		// (i.e. more than the return directive, check if there is a CGI,
 		// or after the root/alias translation, there is a filename that is not
-		// a directory, and for POST, that doesn't already exist)
+		// a directory, and for POST, that doesn't already exist?)
 
 		if (!_checkMaxBodySize())
 			return (false);

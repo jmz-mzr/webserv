@@ -280,7 +280,6 @@ void	Parser::_parseDirective(it_t nameToken, it_t ctrlToken)
 		if (currDirective.syntax.rules & Parser::kForbiddenDup)
 			_parseDup(currDirective);
 		_parseArgc(currDirective);
-		// TODO: MUST be checked first or could check empty stack !
 		if ((currDirective.syntax.rules & ~Parser::kIgnoreDup)
 			|| !(_configStack.top().isDefined[currDirective.syntax.type])) {
 			errno = 0;
