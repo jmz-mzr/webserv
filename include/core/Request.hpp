@@ -61,7 +61,7 @@ namespace	webserv
 		bool	isTerminatedRequest() const { return (_isTerminatedRequest); }
 		bool	isInternalRedirect() const { return (_isInternalRedirect); }
 
-		int		parseRequest(const char* buffer, 
+		int		parseRequest(const std::string& recvBuffer,
 								const server_configs& serverConfigs);
 
 		void	setRequestMethod(const std::string& method);
@@ -147,7 +147,7 @@ namespace	webserv
 		void	_printRequestInfo() const;
 		void	_logError(const char* errorAt) const;
 
-		void	_clearBuffer();
+		void	_clearBuffer(bool clearLastEmptyLines = false);
 		void	_clearStartAndFieldLines();
 		void	_closeTmpFile();
 		void	_deleteTmpFile();

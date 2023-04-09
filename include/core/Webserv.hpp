@@ -64,6 +64,7 @@ namespace	webserv
 		void		_parseConfig(std::string configFilePath);
 
 		char						_buffer[RECV_BUFFER_SIZE];
+		std::string					_recvBuffer;
 		std::vector<Server>			_servers;
 		std::list<Client>			_clients;
 		std::vector<struct pollfd>	_pollFds;

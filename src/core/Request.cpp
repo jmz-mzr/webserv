@@ -446,12 +446,28 @@ namespace	webserv
 		}
 	}
 
-	void	Request::_clearBuffer()
+	void	Request::_clearBuffer(bool clearLastEmptyLines)
 	{
-		if (_bufferIndex >= _buffer.size())
+		const char*		buffer = _buffer.c_str();
+
+		if (_bufferIndex >= _buffer.size()) {
 			_buffer.clear();
-		else
-			_buffer.erase(0, _bufferIndex);
+			_bufferIndex = 0;
+			return ;
+		}
+		if (clearLastEmptyLines) {
+			while (_bufferIndex < _buffer.size()) {
+				if (buffer[_bufferIndex] == '\n')
+					++_bufferIndex;
+				else if (buffer[_bufferIndex] == '\r'
+						&& _bufferIndex + 1 < _buffer.size()
+						&& buffer[_bufferIndex + 1] == '\n')
+					_bufferIndex += 2;
+				else
+					break ;
+			}
+		}
+		_buffer.erase(0, _bufferIndex);
 		_bufferIndex = 0;
 	}
 
@@ -567,7 +583,7 @@ namespace	webserv
 			_buffer.clear();
 			_bufferIndex = 0;
 		} else
-			_clearBuffer();
+			_clearBuffer(true);
 		_clearStartAndFieldLines();
 		_errorCode = 0;
 		if (_tmpFile.is_open())

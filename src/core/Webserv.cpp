@@ -260,7 +260,7 @@ namespace	webserv
 		int			clientFd = client.getSocket().getFd();
 		ssize_t		received;
 
-		_buffer[0] = '\0';
+		_recvBuffer.clear();
 		if (client.hasTimedOut())
 			return (-1);
 		if (client.isProcessingRequest()) {
@@ -272,10 +272,10 @@ namespace	webserv
 			return (0);
 		received = recv(clientFd, _buffer, RECV_BUFFER_SIZE - 1, _ioFlags);
 		if (received > 0) {
-			_buffer[received] = '\0';
+			_recvBuffer = std::string(_buffer, received);
 			client.updateTimeout();
 			LOG_INFO("Received a client request (fd=" << clientFd << ")");
-			LOG_DEBUG("Request: " << strHexDump(_buffer)
+			LOG_DEBUG("Request: " << strHexDump(_recvBuffer)
 					<< " (" << received << " bytes)");
 		} else if (received == -1)
 			LOG_ERROR("Could not receive the client request "
@@ -288,7 +288,7 @@ namespace	webserv
 		int		errorCode;
 
 		if (!client.hasRequestTerminated() && !client.hasResponseReady()) {
-			errorCode = client.parseRequest(_buffer);
+			errorCode = client.parseRequest(_recvBuffer);
 			if (errorCode != 0)
 				return (client.prepareErrorResponse(errorCode));
 		}

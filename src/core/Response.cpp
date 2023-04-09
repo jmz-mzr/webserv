@@ -1455,7 +1455,7 @@ namespace	webserv
 		} else if (ft_strcmp_icase(fieldName, "Content-Length")) {
 			if (!_parseCgiContentLength(request, fieldValue))
 				return (false);
-		} else {
+		} else if (!ft_strcmp_icase(fieldName, "Date")) {
 			cgi.headers += buffer;
 			if (cgi.headers[cgi.headers.size() - 2] != '\r')
 				cgi.headers.insert(cgi.headers.end() - 1, '\r');
@@ -1734,7 +1734,7 @@ namespace	webserv
 			responseBody << "<html>" CRLF
 				"<head><title>Your file has been saved!</title></head>" CRLF
 				"<body>" CRLF
-				"<center><h1>Click <A href=\""
+				"<center><h1>Your file has been saved! Click <A href=\""
 				<< _escapeUriComponent(request.getUri())
 				<< "\">here</A> to view it.</h1></center>" CRLF
 				"<hr><center>webserv</center>" CRLF

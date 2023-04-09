@@ -64,7 +64,7 @@ namespace	webserv
 					<< ", request: \"" << _request.getRequestLine() << "\"");
 	}
 
-	int	Client::parseRequest(const char* recvBuffer)
+	int	Client::parseRequest(const std::string& recvBuffer)
 	{
 		int		errorCode;
 

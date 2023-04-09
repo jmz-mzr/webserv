@@ -26,7 +26,7 @@ namespace	webserv
 
 		const AcceptSocket&		getSocket() const { return (_socket); }
 
-		int		parseRequest(const char* recvBuffer);
+		int		parseRequest(const std::string& recvBuffer);
 
 		const Request&		getRequest() const { return (_request); }
 		const Response&		getResponse() const { return (_response); }
