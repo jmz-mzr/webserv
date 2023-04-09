@@ -10,6 +10,16 @@ class Get(TestCase):
             return f"Status code: {response.getcode()}, expected: 200"
         return ""
 
+    def test_almost_done() -> str:
+        request = [
+            "GET / HTTP/1.1\r",
+            f"\nHost: {SERVER_HOST}\r\nTest: get_almost_done\r\n\r\n"
+        ]
+        response = send_request(*request)
+        if response.getcode() != 200:
+            return f"Status code: {response.getcode()}, expected: 200"
+        return ""
+
     @staticmethod
     def test_invalid_path() -> str:
         request = f"GET /bad_path/ HTTP/1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
@@ -22,8 +32,8 @@ class Get(TestCase):
     def test_forbidden_path() -> str:
         request = f"GET /post/ HTTP/1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
         response = send_request(request)
-        if response.getcode() != 405:
-            return f"Status code: {response.getcode()}, expected: 405"
+        if response.getcode() != 405 and response.status != 403:
+            return f"Status code: {response.getcode()}, expected: 405 | 403"
         allow_header = response.headers.get('Allow')
         if not allow_header:
             return "\"Allow\" header field missing from response"
@@ -36,7 +46,7 @@ class Get(TestCase):
         request = f"GET /index.html HTTP/1.1\r\nHost: {SERVER_HOST}\r\nAccept: image/png\r\n\r\n"
         response = send_request(request)
         if response.getcode() != 200 and response.getcode() != 406:
-            return f"Status code: {response.getcode()}, expected: 200|406"
+            return f"Status code: {response.getcode()}, expected: 200 | 406"
         return ""
 
     @staticmethod

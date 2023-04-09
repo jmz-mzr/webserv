@@ -120,3 +120,17 @@ class Chunked(TestCase):
         if response.status != 400:
             return f"Status code: {response.status}, expected: 400"
         return ""
+
+    @staticmethod
+    def test_almost_done() -> str:
+        request = [
+            "POST /post/ HTTP/1.1\r\nHost: localhost\r\nTransfer-encoding: chunked\r\n",
+            "Test: chunk_almost_done\r\n\r\n",
+            "1\r\n-\r\n0\r\n\r",
+            "\n"
+        ]
+        send_request(*request)
+        response = send_request(*request)
+        if response.status != 201 and response.status != 303:
+            return f"Status code: {response.status}, expected: 201 | 303"
+        return ""
