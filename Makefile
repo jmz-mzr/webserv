@@ -195,7 +195,7 @@ $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ)) | header
 install:		header $(BIN) $(LIB) | $(INSTALLDIRS) $(WEBSERVLNK)
 	$(eval RULE = install -m 755 $(BIN) $(BINDIR)/$(NAME) ;\
 		cp default.conf $(CONFDIR)/ ;\
-		cp -R $(LIBPERLDIR)/$(LIBPERLCGI) $(LIBDIR))
+		cp -Rf $(LIBPERLDIR)/$(LIBPERLCGI) $(LIBDIR))
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
 uninstall:		header
