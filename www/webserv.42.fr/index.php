@@ -320,7 +320,7 @@ echo "\n";
 if (count($files) > 0) {
 	echo "          <option value=\"\" disabled selected>Choose a file</option>\n";
 	foreach ($files as $file)
-		echo '          <option value="' . urlencode($file) . '">' . $file . "</option>\n";
+		echo '          <option value="' . rawurlencode($file) . '">' . $file . "</option>\n";
 } else
 	echo "          <option value=\"\" disabled selected>No files available for download on the server</option>\n";
 echo "        </select>\n";
