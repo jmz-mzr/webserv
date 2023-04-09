@@ -38,14 +38,16 @@ namespace webserv
 	size_t	Request::_parseOriginUri(const char* str)
 	{
 		size_t	i = checkUriPathAbs(str, "? ");
+		size_t	j;
 
 		if (i != std::string::npos && str[i])
 			_uri.assign(str, i);
 		if (i != std::string::npos && str[i] == '?') {
-			str += i;
-			i = checkUriQuery(++str, " ");
-			if (i != std::string::npos)
-				_query.assign(str, i);
+			++i;
+			j = checkUriQuery(str + i, " ");
+			if (j != std::string::npos)
+				_query.assign(str + i, j);
+			i = (j == std::string::npos ? std::string::npos : i + j);
 		}
 		if (i == std::string::npos || str[i] != ' ') {
 			_logError("Client sent invalid URI in request line");
@@ -656,7 +658,7 @@ namespace webserv
 			}
 			++i;
 		}
-		return (true);
+		return (i != 0 ? true : false);
 	}
 
 	bool	Request::_loadChunk()
@@ -737,7 +739,7 @@ namespace webserv
 		return (true);
 	}
 
-	int	Request::parseRequest(const char* recvBuffer,
+	int	Request::parseRequest(const std::string& recvBuffer,
 								const server_configs& serverConfigs)
 	{
 		// TO DO: if client sends more chunks after error, and error not
@@ -745,9 +747,9 @@ namespace webserv
 		// or until receiving a request line?
 		// Or just make sure to leave time to send first error response???
 
-		if (recvBuffer)
+		if (!recvBuffer.empty())
 			_buffer += recvBuffer;
-		if ((!recvBuffer || !recvBuffer[0]) && _buffer.empty())
+		else if (_buffer.empty())
 			return (0);
 		if (!_hasReceivedHeaders && !_parseStartAndFieldLines())
 			return (_errorCode);

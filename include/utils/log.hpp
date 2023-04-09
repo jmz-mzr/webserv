@@ -15,17 +15,19 @@
 # include "webserv_config.hpp"
 
 # define LOG(level, msg)	{												\
-	try {																	\
-		std::ostringstream	stream;											\
-		std::string			str;											\
-		stream << msg;														\
-		str = stream.str();													\
-		if (str.size() && *(str.rbegin()) == '\n')							\
-			str.erase(str.end() - 1);										\
-		Log::ContextInfo data(__FILE__, __LINE__, level);					\
-		Log::Core::get().filter(data, str);									\
-	} catch (const std::exception& exception) {								\
-		std::cerr << "Logging error: " << exception.what() << std::endl;	\
+	if (level <= Log::Core::get().getThreshold()) {							\
+		try {																\
+			std::ostringstream	_logStream;									\
+			std::string			_logString;									\
+			_logStream << msg;												\
+			_logString = _logStream.str();									\
+			if (_logString.size() && *(_logString.rbegin()) == '\n')		\
+				_logString.erase(_logString.end() - 1);						\
+			Log::ContextInfo data(__FILE__, __LINE__, level);				\
+			Log::Core::get().filter(data, _logString);						\
+		} catch (const std::exception& exception) {							\
+			std::cerr << "Logging error: " << exception.what() << std::endl;\
+		}																	\
 	}																		\
 }
 
@@ -129,7 +131,8 @@ namespace Log
 			static Core	instance;
 			return (instance);
 		}
-		void	filter(const ContextInfo& data, const std::string& msg);
+		void		filter(const ContextInfo& data, const std::string& msg);
+		Level::l	getThreshold() const { return (_threshold); }
 
 	private:
 		Core();
