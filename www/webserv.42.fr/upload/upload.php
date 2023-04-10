@@ -27,7 +27,7 @@ if (preg_match($regex, $content_type) == 1) {
 		exit();
 	}
 	$upload_dir = $_SERVER['DOCUMENT_ROOT'];
-	$filename = $_FILES['file']['name'];
+	$filename = addslashes($_FILES['file']['name']);
 	if (file_exists($upload_dir . $filename)) {
 		http_response_code(409);
 		html_body("Error: the file \"$filename\" already exists");
