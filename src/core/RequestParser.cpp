@@ -342,20 +342,48 @@ namespace webserv
 		return (_loadHeaderValue(line, c, fieldValue));
 	}
 
+	size_t	Request::_validateHostHeader(const std::string& fieldValue) const
+	{
+		const char*	str = fieldValue.c_str();
+		size_t		i = 0;
+		size_t		hostLen = std::string::npos;
+
+		while (str[i]) {
+			if (str[i] == '/' || str[i] <= ' ' || str[i] > '~'
+					|| (i > 0 && str[i] == '.' && str[i - 1] == '.'))
+				return (std::string::npos);
+			if (str[i] == ':' && hostLen == std::string::npos)
+				hostLen = i;
+			if (str[i] == ']' && str[0] == '[' && hostLen == std::string::npos)
+				hostLen = i + 1;
+			++i;
+		}
+		if (hostLen == std::string::npos)
+			hostLen = i;
+		if (hostLen > 0 && str[hostLen - 1] == '.')
+			--hostLen;
+		if (i == 0 || hostLen == 0)
+			return (std::string::npos);
+		return (hostLen);
+	}
+
 	bool	Request::_recordHostHeader(const std::string& fieldValue)
 	{
+		size_t	hostLen;
+
 		if (_headers.count("Host")) {
 			_logError("Client sent duplicate host header");
 			_errorCode = 400;
 			return (false);
 		}
-		if (checkUriHost(fieldValue.c_str()) == std::string::npos) {
+		hostLen = _validateHostHeader(fieldValue);
+		if (hostLen == std::string::npos) {
 			_logError("Client sent invalid host header");
 			_errorCode = 400;
 			return (false);
 		}
 		if (_host.empty())
-			_host = fieldValue;
+			_host = std::string(fieldValue, 0, hostLen);
 		_headers["Host"] = _host;
 		return (true);
 	}

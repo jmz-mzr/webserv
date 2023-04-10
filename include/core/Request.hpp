@@ -104,6 +104,7 @@ namespace	webserv
 		bool	_recordHeader(const std::string& fieldName,
 								const std::string& fieldValue);
 		bool	_recordHostHeader(const std::string& fieldValue);
+		size_t	_validateHostHeader(const std::string& fieldValue) const;
 		bool	_recordConnectionHeader(const std::string& fieldValue);
 		bool	_recordAcceptLanguageHeader(const std::string& fieldValue);
 		bool	_recordGenericHeader(const std::string& fieldName,

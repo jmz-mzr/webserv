@@ -54,8 +54,6 @@ namespace	webserv
 													{ return (_locations); }
 
 		bool	eraseName(const std::string& name);
-		void	addName(const std::string& name);
-
 	private:
 		ServerConfig();
 
