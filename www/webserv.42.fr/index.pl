@@ -23,15 +23,13 @@ if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 		$session->flush();
 		$cookie = CGI::Cookie->new(-name => 'CGISESSID',
 			-value => $session->id(), -expires => '-1d');
-		print "Location: "
-				. "http://$ENV{'HTTP_HOST'}$ENV{'REQUEST_URI'}#welcome\n\n";
 	}
 	elsif (defined $cgi->param('updatebtn')) {
 		my $name = $cgi->param('username');
 		$session->param('username', $name);
-		print "Location: "
-				. "http://$ENV{'HTTP_HOST'}$ENV{'REQUEST_URI'}#welcome\n\n";
 	}
+	print "Location: http://$ENV{'HTTP_HOST'}:$ENV{'LISTEN_PORT'}"
+			. "$ENV{'REQUEST_URI'}#welcome\n\n";
 	exit();
 }
 

@@ -16,7 +16,7 @@ if (!empty($_POST)) {
 		unset($_POST);
 	}
 	// POST->GET redirect to avoid form resubmission
-	$url = "http://{$_SERVER['HTTP_HOST']}"
+	$url = "http://{$_SERVER['HTTP_HOST']}:{$_SERVER['LISTEN_PORT']}"
 				. "{$_SERVER['REQUEST_URI']}#welcome";
 	header("Location: {$url}", true, 303);
 	echo "Submission success! GET redirection to "

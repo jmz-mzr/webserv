@@ -213,6 +213,8 @@ namespace	webserv
 				getServerConfig()->getListenPair().sin_addr);
 		_envMap["SERVER_NAME"] = request.getServerName();
 		_envMap["SERVER_PORT"] = to_string(request.getClientSocket().getPort());
+		_envMap["LISTEN_PORT"] = to_string(ntohs(request.getServerConfig()
+												->getListenPair().sin_port));
 		_envMap["SERVER_PROTOCOL"] = "HTTP/1.1";
 		_envMap["SERVER_SOFTWARE"] = "webserv";
 		return (_loadEnv2(request));
