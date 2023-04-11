@@ -32,7 +32,7 @@ class Config(TestCase):
         response = send_request(request)
         if response.getcode() != 404:
             return f"Status code: {response.getcode()}, expected: 404"
-        body = response.read();
+        body = response.read()
         if body != b'index\n':
             return f"Body: {body}, expected: b'index\\n'"
         return ""
@@ -43,7 +43,7 @@ class Config(TestCase):
         response = send_request(request)
         if response.getcode() != 404:
             return f"Status code: {response.getcode()}, expected: 404"
-        body = response.read();
+        body = response.read()
         if body == b'index\n':
             return f"Body: {body}, expected not to find: b'index\\n'"
         return ""
@@ -54,7 +54,7 @@ class Config(TestCase):
         response = send_request(request)
         if response.getcode() != 404:
             return f"Status code: {response.getcode()}, expected: 404"
-        body = response.read();
+        body = response.read()
         if body != b'index\n':
             return f"Body: {body}, expected: b'index\\n'"
         return ""
@@ -95,4 +95,25 @@ class Config(TestCase):
         response = send_request(*request)
         if response.getcode() != 413:
             return f"Status code: {response.getcode()}, expected: 413"
+        return ""
+
+    @staticmethod
+    def test_return_redirect() -> str:
+        request = f"GET /redir/ HTTP/1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 302:
+            return f"Status code: {response.getcode()}, expected: 302"
+        if not response.getheader('Location'):
+            return f"Location header missing"
+        else:
+            url = response.getheader('Location')
+            if url != "http://localhost:8082/":
+                return f'Location header value: {url}, expected: "http://localhost:8082/"'
+        request = f"GET {url} HTTP/1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 200:
+            return f"Status code: {response.getcode()}, expected: 200"
+        body = response.read()
+        if body != b'index\n':
+            return f"Body: {body}, expected: b'index\\n'"
         return ""
