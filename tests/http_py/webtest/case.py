@@ -5,6 +5,7 @@ import importlib
 from pathlib import Path
 from threading import Thread, Lock
 
+import unittest
 
 class TestData:
 	def __init__(self, instance, test_registry):

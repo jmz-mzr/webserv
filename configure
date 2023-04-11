@@ -31,8 +31,8 @@ esac
 if [ -z "$INSTALLDIR" ]; then
 	echo "Installation directory undefined, please open $SELF_PATH"
 else
-	WORKDIR="$(dirname "$(ft_realpath "$SELF_PATH")")"
-	WWWDIR=$WORKDIR/www
+	export WORKDIR="$(dirname "$(ft_realpath "$SELF_PATH")")"
+	export WWWDIR=$WORKDIR/www
 	CONF_FILE="$WORKDIR/default.conf"
 	PLATFORM=$(uname -s)
 

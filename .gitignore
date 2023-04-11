@@ -119,3 +119,4 @@ docker-compose.yml
 locust/
 .idea/
 **/sessions/*
+upload/
