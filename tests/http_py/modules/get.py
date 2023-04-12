@@ -10,6 +10,7 @@ class Get(TestCase):
             return f"Status code: {response.getcode()}, expected: 200"
         return ""
 
+    @staticmethod
     def test_almost_done() -> str:
         request = [
             "GET / HTTP/1.1\r",

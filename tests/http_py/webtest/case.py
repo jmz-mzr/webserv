@@ -4,8 +4,7 @@ import os
 import importlib
 from pathlib import Path
 from threading import Thread, Lock
-
-import unittest
+import logging
 
 class TestData:
 	def __init__(self, instance, test_registry):
@@ -22,6 +21,8 @@ class TestCase:
 		"""
 		super().__init_subclass__()
 		tests = dict()
+		if cls.__name__ in cls.case_registry.keys():
+			raise Exception(f'"{cls.__name__}" test case already exists')
 		for attribute in dir(cls):
 			if callable(getattr(cls, attribute)) and attribute.startswith('test') is True:
 				tests[attribute] = getattr(cls, attribute)

@@ -20,3 +20,13 @@ class Delete(TestCase):
 		if response.getcode() != 200 and response.getcode() != 202 and response.getcode() != 204:
 			return f"Status code: {response.getcode()}, expected: 200 | 202 | 204"
 		return ""
+
+	@staticmethod
+	def test_invalid_resource() -> str:
+		request = [
+			"DELETE /delete/nothing HTTP/1.1\r\nHost: localhost\r\n\r\n"
+		]
+		response = send_request(*request)
+		if response.getcode() != 404:
+			return f"Status code: {response.getcode()}, expected: 404"
+		return ""
