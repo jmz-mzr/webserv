@@ -72,11 +72,11 @@ namespace webserv {
 												{ return (_alias); }
 		const std::string&			getIndex() const
 												{ return (_index); }
-		bool						isAutoIndex() const
+		int							isAutoIndex() const
 												{ return (_autoIndex); }
-		bool						hideLimitRule() const
+		int							hideLimitRule() const
 												{ return (_hideLimitRule); }
-		bool						hideDirectory() const
+		int							hideDirectory() const
 												{ return (_hideDirectory); }
 		const std::string&			getCgiPass() const
 												{ return (_cgiPass); }
@@ -85,6 +85,8 @@ namespace webserv {
 
 		friend std::ostream&	operator<<(std::ostream&, const Config&);
 	private:
+		Config&		operator=(const Config& rhs);
+
 		LocationType				_lType;
 		listen_set					_listens;
 		hostname_set				_serverNames;
@@ -95,59 +97,12 @@ namespace webserv {
 		return_pair					_returnPair;
 		std::string					_root;
 		std::string					_alias;
-
-		// 1) For the sake of simplicity, accept only one default file
-		// to answer if the request is a directory (unlike NGINX's index)
-		// 2) Like NGINX's, it always has a default _index: "index.html",
-		// already set when creating a Location class
-		// 3) Can be defined multiple times, and for the sake of simplicity,
-		// if another definition line appears, it replaces the previous one
 		std::string					_index;
-
-		// 1) Can only be defined once, and if another
-		// definition line appears, it must throw an exception
-		// (like '"autoindex" directive is duplicate in
-		// /usr/local/etc/nginx/nginx.conf:37')
-		bool						_autoIndex;
-
-		// 1) Can only be defined once, and if another
-		// definition line appears, it must throw an exception
-		// (like '"hide_limit_rule/hide_directory" directive is duplicate in
-		// /usr/local/etc/nginx/nginx.conf:37')
-		bool						_hideLimitRule;
-		bool						_hideDirectory;
-
-		// 1) Can only be defined once, and if another definition line
-		// appears, it must throw an exception (like '"cgi_pass" directive
-		// is duplicate in /usr/local/etc/nginx/nginx.conf:109')
-		// 2) It must be either a valid IP address, or a valid hostname (no special
-		// characters, and can be translated, case-insensitively to an IP address
-		// with the hosts file), and a port, otherwise it throw an exception (like
-		// 'no port in upstream "localhost" in /usr/local/etc/nginx/nginx.conf:114',
-		// 'invalid host in upstream "http:/localhost:80" in /.../nginx.conf:133',
-		// 'invalid port in upstream "loCalhOst:80000" in /usr/.../nginx.conf:133',
-		// 'host not found in upstream "127.0.0.1000" in /usr/.../nginx.conf:133',
-		// 'host not found in upstream "localhosttt" in /usr/.../nginx.conf:133')
+		int							_autoIndex;
+		int							_hideLimitRule;
+		int							_hideDirectory;
 		std::string					_cgiPass;
-
-		// TO DO: 1) The locations are case-insensitive, so they must
-		// be recorded in lowercase with str_tolower
-		// 2) A given location can only appear once in a server
-		// otherwise it must throw an exception (like 'duplicate
-		// location "/abc" in /usr/local/etc/nginx/nginx.conf:91')
-		// 3) The location cannot be empty, otherwise it must
-		// throw an exception (like 'invalid number of arguments in
-		// "location" directive in /usr/local/etc/nginx/nginx.conf:95')
-		// 4) It has at least an empty default location, with parameters
-		// inherited from the ServerConfig
-		// 5) Extension locations must follow the form "\*\.(alnum|$|.|_|-)+"
-		// (star, dot, and then any NON-EMPTY (total size > 2) combination of
-		// alphanum/dollar/dot/underscore/dash)
-		// 6) For the sake of simplicity, only allow nested locations if they
-		// are extension locations in normal locations
 		config_map					_configs;
-
-		Config&						operator=(const Config& rhs);
 	};
 
 }	// namespace webserv

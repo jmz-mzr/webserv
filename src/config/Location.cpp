@@ -33,9 +33,15 @@ namespace	webserv
 							? src1._alias
 							: src2.getAlias())
 			, _index(src2.getIndex().empty() ? src1._index : src2.getIndex())
-			, _autoIndex(src2.isAutoIndex() || src1._autoIndex)
-			, _hideLimitRule(src2.hideLimitRule() || src1._hideLimitRule)
-			, _hideDirectory(src2.hideDirectory() || src1._hideDirectory)
+			, _autoIndex(src2.isAutoIndex() >= 0
+							? src2.isAutoIndex()
+							: src1.isAutoIndex())
+			, _hideLimitRule(src2.hideLimitRule() >= 0
+							? src2.hideLimitRule()
+							: src1.hideLimitRule())
+			, _hideDirectory(src2.hideDirectory() >= 0
+							? src2.hideDirectory()
+							: src1.hideDirectory())
 			, _cgiPass(src2.getCgiPass().empty()
 						? src1._cgiPass
 						: src2.getCgiPass())
@@ -62,9 +68,15 @@ namespace	webserv
 			, _root(src2.getRoot().empty() ? src1.getRoot() : src2.getRoot())
 			, _alias(src2.getAlias())
 			, _index(src2.getIndex().empty() ? src1.getIndex() : src2.getIndex())
-			, _autoIndex(src2.isAutoIndex() || src1.isAutoIndex())
-			, _hideLimitRule(src2.hideLimitRule() || src1.hideLimitRule())
-			, _hideDirectory(src2.hideDirectory() || src1.hideDirectory())
+			, _autoIndex(src2.isAutoIndex() >= 0
+							? src2.isAutoIndex()
+							: src1.isAutoIndex())
+			, _hideLimitRule(src2.hideLimitRule() >= 0
+							? src2.hideLimitRule()
+							: src1.hideLimitRule())
+			, _hideDirectory(src2.hideDirectory() >= 0
+							? src2.hideDirectory()
+							: src1.hideDirectory())
 			, _cgiPass(src2.getCgiPass())
 	{
 		typedef Config::config_map::const_iterator	map_it;

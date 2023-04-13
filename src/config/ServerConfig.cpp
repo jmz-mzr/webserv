@@ -21,9 +21,9 @@ namespace	webserv
 		, _maxBodySize(src.getMaxBodySize() >= 0 ? src.getMaxBodySize() : -1)
 		, _returnPair(src.getReturnPair())
 		, _root(src.getRoot().empty() ? "html" : src.getRoot())
-		, _autoIndex(src.isAutoIndex())
-		, _hideLimitRule(src.hideLimitRule())
-		, _hideDirectory(src.hideDirectory())
+		, _autoIndex(src.isAutoIndex() > 0 ? true : false)
+		, _hideLimitRule(src.hideLimitRule() > 0 ? true : false)
+		, _hideDirectory(src.hideDirectory() > 0 ? true : false)
 		, _index(src.getIndex().empty() ? "index.html" : src.getIndex())
 	{
 		typedef Config::config_map::const_iterator	map_it;

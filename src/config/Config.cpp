@@ -15,9 +15,9 @@ Config::Config()
 		: _lType(Config::kNone)
 		, _maxBodySize(-1)
 		, _returnPair(-1, "")
-		, _autoIndex(false)
-		, _hideLimitRule(false)
-		, _hideDirectory(false)
+		, _autoIndex(-1)
+		, _hideLimitRule(-1)
+		, _hideDirectory(-1)
 { }
 
 Config::Config(const Config& src)
