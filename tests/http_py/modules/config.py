@@ -216,3 +216,41 @@ class Config(TestCase):
         if body != b'/index/':
             return f"Body: {body}, expected: b'/index/'"
         return ""
+
+    @staticmethod
+    def test_root_at_root() -> str:
+        request = f"GET /index.html HTTP/1.1\r\nHost: test\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 404:
+            return f"Status code: {response.getcode()}, expected: 404"
+        return ""
+
+    @staticmethod
+    def test_alias_at_root() -> str:
+        request = f"GET /index.html.abc HTTP/1.1\r\nHost: test\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 404:
+            return f"Status code: {response.getcode()}, expected: 404"
+        return ""
+
+    @staticmethod
+    def test_valid_root() -> str:
+        request = f"GET /webserv.test/index.html HTTP/1.1\r\nHost: test\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 200:
+            return f"Status code: {response.getcode()}, expected: 200"
+        body = response.read()
+        if body != b'index\n':
+            return f"Body: {body}, expected: b'index\\n'"
+        return ""
+
+    @staticmethod
+    def test_valid_alias() -> str:
+        request = f"GET /webserv.test/index.php HTTP/1.1\r\nHost: test\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 301:
+            return f"Status code: {response.getcode()}, expected: 301"
+        if response.getheader('Location') != "http://test:8082/webserv.test/index.php/":
+            return (f"Location: {response.getheader('Location')}"
+                + ", expected: \"http://test:8082/webserv.test/index.php/\"")
+        return ""

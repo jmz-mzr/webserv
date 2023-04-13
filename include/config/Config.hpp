@@ -93,25 +93,7 @@ namespace webserv {
 		limit_except_set			_limitExcept;
 		ignore_except_set			_ignoreExcept;
 		return_pair					_returnPair;
-
-		// 1) Can only be defined once, and if another definition line
-		// appears, it must throw an exception (like '"root" directive is
-		// duplicate in /usr/local/etc/nginx/nginx.conf:117')
-		// 2) If it was not defined it must not stay empty, and like NGINX
-		// it must be set to the default _root: "html"
-		// 3) Cannot be defined if "alias" was already specified in a location,
-		// otherwise it must throw an exception (like '"root" directive is
-		// duplicate, "alias" directive was specified earlier in
-		// /usr/local/etc/nginx/nginx.conf:68)
 		std::string					_root;
-
-		// 1) Can only be defined once, and if another definition line
-		// appears, it must throw an exception (like '"alias" directive is
-		// duplicate in /usr/local/etc/nginx/nginx.conf:68')
-		// 2) Cannot be defined if "root" was already specified in a location,
-		// otherwise it must throw an exception (like '"alias" directive is
-		// duplicate, "root" directive was specified earlier in
-		// /usr/local/etc/nginx/nginx.conf:68)
 		std::string					_alias;
 
 		// 1) For the sake of simplicity, accept only one default file
