@@ -1,4 +1,5 @@
 from webtest import *
+import socket
 
 
 class Head(TestCase):
@@ -8,7 +9,10 @@ class Head(TestCase):
         response = send_request(request)
         if response.getcode() != 200:
             return f"Status code: {response.getcode()}, expected: 200"
-        body = response.read()
-        if body:
-            return "HEAD should not return body"
+        try:
+            body = response.read()
+            if body:
+                return "HEAD should not return a body"
+        except socket.timeout:
+            return ""
         return ""

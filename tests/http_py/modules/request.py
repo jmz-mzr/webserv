@@ -109,7 +109,7 @@ class Request(TestCase):
 
     @staticmethod
     def test_invalid_host() -> str:
-        request = "GET / HTTP/1.1\r\nHost: unknown@host\r\n\r\n"
+        request = "GET http://unknown@host/ HTTP/1.1\r\nHost: unknown@host\r\n\r\n"
         response = send_request(request)
         if response.getcode() != 400:
             return f"Status code: {response.getcode()}, expected: {400}"

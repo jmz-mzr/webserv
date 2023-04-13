@@ -22,7 +22,7 @@ class TestResult:
             char = "✅"
             color = C_GREEN
         else:
-            char = "❌"
+            char = "❌ "
             color = C_RED
         with lock:
             print(f"{self.test_name:42} {color}{char} {self.message}{RESET}")

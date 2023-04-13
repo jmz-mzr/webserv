@@ -3,7 +3,7 @@ from webtest import *
 
 class Config(TestCase):
     @staticmethod
-    def test_http_1_0_empty_host_server_name() -> str:
+    def test_server_name_http_1_0_empty_host() -> str:
         request = f"GET / HTTP/1.0\r\n\r\n"
         response = send_request(request)
         if response.getcode() != 403 and response.getcode() != 405:
@@ -11,7 +11,7 @@ class Config(TestCase):
         return ""
 
     @staticmethod
-    def test_case_insensitive_server_name() -> str:
+    def test_server_name_case_insensitive() -> str:
         request = f"GET / HTTP/1.1\r\nHost: test\r\n\r\n"
         response = send_request(request)
         if response.getcode() != 403 and response.getcode() != 405:
@@ -19,7 +19,7 @@ class Config(TestCase):
         return ""
 
     @staticmethod
-    def test_ip_server_name() -> str:
+    def test_server_name_ip() -> str:
         request = f"GET / HTTP/1.1\r\nHost: 127.127.127.127\r\n\r\n"
         response = send_request(request)
         if response.getcode() != 403 and response.getcode() != 405:
@@ -38,7 +38,7 @@ class Config(TestCase):
         return ""
 
     @staticmethod
-    def test_redirect_once() -> str:
+    def test_error_page_redirect_once() -> str:
         request = f"GET /redirect_once/ HTTP/1.1\r\nHost: test\r\n\r\n"
         response = send_request(request)
         if response.getcode() != 404:
@@ -70,7 +70,7 @@ class Config(TestCase):
             return "\"Location\" header field missing from response"
         if location_header != 'http://tESt/':
             return (f"\"Location\" header field value: \"{location_header}\""
-                        + ", expected: \"http://tESt/\"")
+                    + ", expected: \"http://tESt/\"")
         return ""
 
     @staticmethod
@@ -183,7 +183,7 @@ class Config(TestCase):
         if (response.getheader('Content-Length') and
                 response.getheader('Content-Length') != "0"):
             return (f"Content-Length: {response.getheader('Content-Length')}"
-                + ", expected: absent, or \"0\"")
+                    + ", expected: absent, or \"0\"")
         return ""
 
     @staticmethod
@@ -201,7 +201,7 @@ class Config(TestCase):
         if (response.getheader('Content-Length') and
                 response.getheader('Content-Length') != "0"):
             return (f"Content-Length: {response.getheader('Content-Length')}"
-                + ", expected: absent, or \"0\"")
+                    + ", expected: absent, or \"0\"")
         return ""
 
     @staticmethod
@@ -234,7 +234,7 @@ class Config(TestCase):
         return ""
 
     @staticmethod
-    def test_valid_root() -> str:
+    def test_root_redefined() -> str:
         request = f"GET /webserv.test/index.html HTTP/1.1\r\nHost: test\r\n\r\n"
         response = send_request(request)
         if response.getcode() != 200:
@@ -245,12 +245,102 @@ class Config(TestCase):
         return ""
 
     @staticmethod
-    def test_valid_alias() -> str:
+    def test_alias_redefined() -> str:
         request = f"GET /webserv.test/index.php HTTP/1.1\r\nHost: test\r\n\r\n"
         response = send_request(request)
         if response.getcode() != 301:
             return f"Status code: {response.getcode()}, expected: 301"
         if response.getheader('Location') != "http://test:8082/webserv.test/index.php/":
             return (f"Location: {response.getheader('Location')}"
-                + ", expected: \"http://test:8082/webserv.test/index.php/\"")
+                    + ", expected: \"http://test:8082/webserv.test/index.php/\"")
+        return ""
+
+    @staticmethod
+    def test_index_inherited() -> str:
+        request = f"GET /index/ HTTP/1.1\r\nHost: test\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 200:
+            return f"Status code: {response.getcode()}, expected: 200"
+        body = response.read()
+        if body != b'index\n':
+            return f"Body: {body}, expected: b'index\\n'"
+        return ""
+
+    @staticmethod
+    def test_index_redefined() -> str:
+        request = f"GET /index/php/ HTTP/1.1\r\nHost: test\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 200:
+            return f"Status code: {response.getcode()}, expected: 200"
+        body = response.read(25)
+        if body.find(b'php-cgi') == -1:
+            return f"Body(25): {body}, expected to find: b'php-cgi'"
+        return ""
+
+    @staticmethod
+    def test_autoindex_on() -> str:
+        request = f"GET /autoindex/ HTTP/1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 200:
+            return f"Status code: {response.getcode()}, expected: 200"
+        body = response.read()
+        if body.find(b'<a href="autoindex/">autoindex/</a>') == -1:
+            return (f"Body: {body}, expected to find: "
+                    + '<a href="autoindex/">autoindex/</a>')
+        return ""
+
+    @staticmethod
+    def test_autoindex_off() -> str:
+        request = f"GET /autoindex/switch.off/ HTTP/1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 403:
+            return f"Status code: {response.getcode()}, expected: 403"
+        return ""
+
+    @staticmethod
+    def test_hide_limit_rule_on() -> str:
+        request = f"POST /hide_rules/ HTTP/1.1\r\nHost: test\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 405:
+            return f"Status code: {response.getcode()}, expected: 405"
+        allow_header = response.headers.get('Allow')
+        if not allow_header:
+            return "\"Allow\" header field missing from response"
+        if allow_header != 'GET':
+            return f"\"Allow\" header field value: {allow_header}, expected: \"GET\""
+        return ""
+
+    @staticmethod
+    def test_hide_limit_rule_off() -> str:
+        request = f"GET /hide_rules/limit.off/ HTTP/1.1\r\nHost: test\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 403:
+            return f"Status code: {response.getcode()}, expected: 403"
+        return ""
+
+    @staticmethod
+    def test_hide_directory_on() -> str:
+        request = f"GET /hide_rules/ HTTP/1.1\r\nHost: test\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 404:
+            return f"Status code: {response.getcode()}, expected: 404"
+        return ""
+
+    @staticmethod
+    def test_hide_directory_off() -> str:
+        request = f"GET /hide_rules/dir.off/ HTTP/1.1\r\nHost: test\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 403:
+            return f"Status code: {response.getcode()}, expected: 403"
+        return ""
+
+    @staticmethod
+    def test_location_without_match() -> str:
+        request = f"GET / HTTP/1.1\r\nHost: empty\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 200:
+            return f"Status code: {response.getcode()}, expected: 200"
+        body = response.read()
+        if body != b'index\n':
+            return f"Body: {body}, expected: b'index\\n'"
         return ""

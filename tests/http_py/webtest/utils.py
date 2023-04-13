@@ -6,7 +6,7 @@ import time
 
 def send_request(*args) -> HTTPResponse:
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.settimeout(5.0)
+	s.settimeout(1.0)
 	s.connect((SERVER_HOST, SERVER_PORT))
 	for string in islice(args, len(args) - 1):
 		s.send(string.encode('utf-8'))

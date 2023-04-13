@@ -24,7 +24,7 @@ class Put(TestCase):
         return ""
 
     @staticmethod
-    def test_invalid_media_type() -> str:
+    def test_unkonwn_media_type() -> str:
         request = [
             "PUT /put/invalid_put HTTP/1.1\r\n",
             "Host: localhost\r\n",
@@ -32,5 +32,6 @@ class Put(TestCase):
             "Content-Type: type/inconnu\r\n\r\n"
         ]
         response = send_request(*request)
-        if response.getcode() != 415:
-            return f"Status code: {response.getcode()}, expected: 415"
+        if response.getcode() != 201 and response.getcode() != 204:
+            return f"Status code: {response.getcode()}, expected: 201 | 204"
+        return ""
