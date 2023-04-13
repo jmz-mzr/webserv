@@ -158,6 +158,7 @@ namespace	webserv
 									const char* filename);
 		void	_loadCgiHeaders(const Request& request, CgiHandler& cgi);
 
+		void			_loadBuffer(const Request& request);
 		bool			_handleBodyDrop(const Request& request);
 		void			_loadHeaders(const Request& request);
 		std::string		_getAllowedMethods(const Request& request) const;

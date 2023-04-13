@@ -1724,11 +1724,27 @@ namespace	webserv
 				|| _responseCode == 204 || _responseCode == 304
 				|| (_responseCode >= 100 && _responseCode < 200)) {
 			LOG_DEBUG("HTTP set discard body");
+			_contentLength = -1;
 			_isChunkedResponse = false;
 			_isFileResponse = false;
 			return (true);
 		}
 		return (false);
+	}
+
+	void	Response::_loadBuffer(const Request& request)
+	{
+		std::string		body;
+
+		if (!_handleBodyDrop(request) && (request.getRequestMethod() == "PUT"
+					|| request.getRequestMethod() == "POST")) {
+			body = _getPutPostResponseBody(request);
+			_contentLength = body.size();
+		}
+		if (_responseBuffer.empty())
+			_loadHeaders(request);
+		if (!body.empty())
+			_responseBuffer += body;
 	}
 
 	void	Response::prepareResponse(Request& request)
@@ -1750,11 +1766,7 @@ namespace	webserv
 		if (responseCode != 0)
 			return (prepareErrorResponse(request, responseCode));
 		_isKeepAlive = isKeepAlive(request);
-		if (_responseBuffer.empty())
-			_loadHeaders(request);
-		if (!_handleBodyDrop(request) && (request.getRequestMethod() == "PUT"
-					|| request.getRequestMethod() == "POST"))
-			_responseBuffer += _getPutPostResponseBody(request);
+		_loadBuffer(request);
 		_isResponseReady = true;
 	}
 
@@ -1815,8 +1827,10 @@ namespace	webserv
 			return (false);
 		} else if (returnCode < 0 || returnText.empty())
 			return (false);
-		_loadHeaders(request);
 		if (!_handleBodyDrop(request))
+			_contentLength = returnText.size();
+		_loadHeaders(request);
+		if (_contentLength > 0)
 			_responseBuffer += returnText;
 		_isResponseReady = true;
 		return (true);
@@ -1836,12 +1850,12 @@ namespace	webserv
 		if (request.getLocation() && _loadErrorPage(request))
 			return ;
 		specialBody = &(Response::_getSpecialResponseBody(_responseCode));
-		if (!specialBody->empty()) {
+		if (!_handleBodyDrop(request) && !specialBody->empty()) {
 			_contentType = "text/html";
 			_contentLength = static_cast<int64_t>(specialBody->length());
 		}
 		_loadHeaders(request);
-		if (!_handleBodyDrop(request))
+		if (_contentLength > 0 && !specialBody->empty())
 			_responseBuffer += *specialBody;
 		_isResponseReady = true;
 	}
