@@ -89,57 +89,9 @@ namespace webserv {
 		listen_set					_listens;
 		hostname_set				_serverNames;
 		error_page_map				_errorPages;
-
-		// 1) Can only be defined once on a level, and if another
-		// definition line appears, it must throw an exception
-		// (like '"client_max_body_size" directive is duplicate
-		// in /usr/local/etc/nginx/nginx.conf:45')
-		// 2) The max_body_size must have one parameter (the value),
-		// otherwise it must throw an exception (like 'invalid number of
-		// arguments in "client_max_body_size" directive in
-		// /usr/local/etc/nginx/nginx.conf:41')
-		// 3) The max_body_size parameter must be a valid unit ('' for bytes,
-		// 'k' or 'K' for KB, 'm' or 'M' for MB) otherwise it must throw an
-		// exception (like '"client_max_body_size" directive invalid value
-		// in /usr/local/etc/nginx/nginx.conf:41')
-		// 4) If the calculated size is more than LLONG_MAX, it must throw an
-		// exception (like '"client_max_body_size" directive invalid value
-		// in /usr/local/etc/nginx/nginx.conf:114')
-		// 5) If the definition was inherited from the Config, the first
-		// definition line replaces it
 		int64_t						_maxBodySize;
-
-		// 1) Can only be defined once on a level, and if another
-		// definition line appears, it must throw an exception
-		// (like '"limit_except/ignore_except" directive is duplicate
-		// in /usr/local/etc/nginx/nginx.conf:45')
-		// 2) Can only be set in a location context, and nested locations
-		// do not inherit them
 		limit_except_set			_limitExcept;
 		ignore_except_set			_ignoreExcept;
-
-		// 1) Can only be defined once on a level, so the 2nd, 3rd...
-		// definition lines will be ignored, but this doesn't prevent the rest
-		// of the location configuration to be parsed and checked for errors
-		// 2) If no code is given, but only a full URL, the default code is 302
-		// In this case (URL only), it must be a valid one (at least "http://"
-		// or "https://", but test other edge cases) and it cannot be a URI local
-		// to this server, otherwise, in either case, it must throw an exception
-		// (like 'invalid return code "http:/" in /usr/etc/nginx/nginx.conf:128'),
-		// 3) If giving a code, it must be: 0 <= 'code' <= 999, otherwise it
-		// must throw an exception (like 'invalid return code "-1"/"1000"
-		// in /usr/local/etc/nginx/nginx.conf:50')
-		// 4) When giving a correct redirection code (301, 302, 303, 307, and 308),
-		// if something else than the code is given, it is put in the "Location"
-		// response header, and if it starts with a '/', it is taken as a local
-		// URI relative to this server, which must be prefixed with:
-		// "http://'_host'(host header in lowercase)[':_serverPort'](if not 80)"
-		// (for example "http://localhost/abc", or "http://localhost:8080/abc")
-		// 5) For other explicit codes, if something else than the code is given,
-		// it becomes the response body text
-		// 6) For the 444 code, if nothing else is given, it closes the connection
-		// without sending a request, otherwise if some text is given, it is
-		// treated as other codes (the text goes in the response body)
 		return_pair					_returnPair;
 
 		// 1) Can only be defined once, and if another definition line

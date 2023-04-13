@@ -78,7 +78,7 @@ class Get(TestCase):
         response = send_request(request)
         if response.getcode() != 200:
             return f"Status code: {response.getcode()}, expected: 200"
-        content_length_header = response.headers.get('Content-length')
+        content_length_header = response.headers.get('Content-Length')
         if content_length_header and content_length_header != '6':
-            return f"\"Content-length\" header field value: {content_length_header}, expected: \"6\""
+            return f"\"Content-Length\" header field value: {content_length_header}, expected: \"6\""
         return ""
