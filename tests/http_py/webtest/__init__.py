@@ -16,8 +16,8 @@ Usage:
         runner.main()
 """
 
-from .case import TestCase
+from .test import TestCase
 from .utils import send_request
 from .utils import print_headers
-from .config import *
+from .env import *
 from .standard_tests import *

@@ -1,8 +1,9 @@
 import socket
 from http.client import HTTPResponse
-from .config import (SERVER_HOST, SERVER_PORT)
+from .env import (SERVER_HOST, SERVER_PORT)
 from itertools import islice
 import time
+
 
 def send_request(*args) -> HTTPResponse:
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
