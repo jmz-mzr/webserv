@@ -1651,8 +1651,6 @@ namespace	webserv
 
 	int	Response::_loadCgiPass(Request& request) try
 	{
-		// TO DO: Check leaks of sockets/fds/Logger in the child process?
-
 		CgiHandler		cgi(request.getLocation()->getCgiPass(),
 							_requestedFilename);
 		int				responseCode;
@@ -1736,7 +1734,9 @@ namespace	webserv
 	{
 		std::string		body;
 
-		if (!_handleBodyDrop(request) && (request.getRequestMethod() == "PUT"
+		if (!_handleBodyDrop(request)
+				&& request.getLocation()->getCgiPass().empty()
+				&& (request.getRequestMethod() == "PUT"
 					|| request.getRequestMethod() == "POST")) {
 			body = _getPutPostResponseBody(request);
 			_contentLength = body.size();

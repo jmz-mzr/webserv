@@ -185,4 +185,19 @@ namespace Log
 		}
 	}
 
+	void	Core::closeLogFile()
+	{
+		FileSink*	fileSink;
+
+		for (std::vector<Sink*>::iterator it = _sinks.begin();
+				it != _sinks.end();
+				++it) {
+			fileSink = dynamic_cast<FileSink*>(*it);
+			if (fileSink) {
+				const_cast<std::ofstream&>(fileSink->getLogfile()).close();
+				break ;
+			}
+		}
+	}
+
 }	// namespace Log

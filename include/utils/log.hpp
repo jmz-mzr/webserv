@@ -37,6 +37,8 @@
 # define LOG_INFO(msg)		LOG(Log::Level::kInfo, msg)
 # define LOG_DEBUG(msg)		LOG(Log::Level::kDebug, msg)
 
+# define CLOSE_LOG_FILE()	Log::Core::get().closeLogFile()
+
 namespace Log
 {
 	struct Level {
@@ -133,6 +135,7 @@ namespace Log
 		}
 		void		filter(const ContextInfo& data, const std::string& msg);
 		Level::l	getThreshold() const { return (_threshold); }
+		void		closeLogFile();
 
 	private:
 		Core();

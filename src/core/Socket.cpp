@@ -26,6 +26,11 @@ namespace	webserv
 			, _fd(-1)
 			, _addrLen(sizeof(address))
 	{
+		int		flags = SOCK_STREAM;
+
+#ifdef LINUX
+		flags |= SOCK_CLOEXEC;
+#endif
 		std::memset(&_addr, 0, _addrLen);
 		_addr.sin_addr.s_addr = address.sin_addr.s_addr;
 		_addr.sin_port = address.sin_port;
@@ -37,7 +42,7 @@ namespace	webserv
 			LOG_DEBUG("ip=" << _ip << " port=" << _port);
 			THROW_FATAL("Fatal error: invalid IP address");
 		}
-		if ((_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+		if ((_fd = socket(AF_INET, flags, IPPROTO_TCP)) < 0) {
 			LOG_DEBUG("ip=" << _ip << " port=" << _port);
 			THROW_FATAL("socket() error: " << strerror(errno));
 		}

@@ -8,10 +8,10 @@
 #include <unistd.h>		// close, chdir, dup2, execve, fork, (u)sleep,
 						// STD(IN/OUT/ERR)_FILENO
 
+#include <cctype>		// toupper
 #include <cerrno>		// errno
 #include <cstring>		// strerror
 #include <cstdio>		// clearerr, fclose, fgets, fprintf, rewind
-#include <cctype>		// toupper
 
 #include <list>
 #include <map>
@@ -288,10 +288,15 @@ namespace	webserv
 
 	void	CgiHandler::_handleCgiChildError(bool beforeExecve)
 	{
+		// NOTE: Prevent any leaks in the child process when an error occurs
+		// before the CGI launch by creating a time out with "sleep(2)" to
+		// let the parent process gracefully kill the child
+
 		std::fprintf(_errorFile, "(%d: %s)", errno, std::strerror(errno));
 		if (beforeExecve) {
 			close(_inputFd);
 			close(_outputFd);
+			sleep(2);
 		}
 	}
 
@@ -312,8 +317,6 @@ namespace	webserv
 	void	CgiHandler::_executeCgi(const Request& request,
 									const char* workingDir)
 	{
-		// TO DO: Check for fd leaks when success AND error
-
 		if (request.getRequestMethod() == "POST") {
 			if (dup2(_inputFd, STDIN_FILENO) < 0) {
 				_handleCgiChildError();
@@ -329,6 +332,9 @@ namespace	webserv
 			exit(CHDIR_ERROR);
 		}
 		close(_outputFd);
+		close(fileno(_errorFile));
+		const_cast<AcceptSocket&>(request.getClientSocket()).closeFd();
+		CLOSE_LOG_FILE();
 		execve(_argv[0], _argv, _envp.data());
 		_handleCgiChildError(false);
 		exit(EXECVE_ERROR);
@@ -336,19 +342,24 @@ namespace	webserv
 
 	int	CgiHandler::_waitChild(const Request& request, int* status) const
 	{
-		int		pid = waitpid(_pid, status, WNOHANG);
+		// NOTE: To let valgrind or another tool run through the CGI process
+		// without time out, sleep must be incremented (minimum "sleep(3)")
 
+		int		pid;
+		int		retry = 20;
+
+		while ((pid = waitpid(_pid, status, WNOHANG)) == 0 && --retry > 0)
+			usleep(50000);
 		if (pid == 0) {
 			sleep(1);
 			if ((pid = waitpid(_pid, status, WNOHANG)) == 0) {
 				if (kill(_pid, SIGTERM) < 0)
 					_logError(request, "Error with", "in CGI wait", "kill()");
 				usleep(10000);
-				if ((pid = waitpid(_pid, status, WNOHANG)) == 0) {
+				if ((pid = waitpid(_pid, status, WNOHANG)) == 0)
 					if (kill(_pid, SIGKILL) < 0)
 						_logError(request, "Error with", "in CGI wait",
 								"kill()");
-				}
 			}
 		}
 		if (pid < 0) {
