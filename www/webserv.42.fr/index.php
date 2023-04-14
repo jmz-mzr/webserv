@@ -2,7 +2,7 @@
 <?php
 ini_set('session.save_path', $_SERVER['CGI_SESSION']);
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-if (!isset($_SESSION['username'])) $_SESSION['username'] = "GUEST";
+if (!isset($_SESSION['username'])) $_SESSION['username'] = "guest";
 if (!empty($_POST)) {
 	if (isset($_POST['clearbtn'])) {
 		session_unset();

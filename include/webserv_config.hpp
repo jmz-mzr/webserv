@@ -47,9 +47,9 @@
 # define AUTOINDEX_NAME_LEN	50
 
 # if (defined(__GLIBCXX__) || defined(__GLIBCPP__))
-#  define MACOS
-# else
 #  define LINUX
+# else
+#  define MACOS
 # endif
 
 #endif	// WEBSERV_CONFIG_HPP
