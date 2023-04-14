@@ -180,7 +180,6 @@ namespace	webserv
 		std::string		_responseBuffer;
 		std::string		_requestedFilename;
 		std::string		_tmpCgiBodyFilename;
-//		int				_requestedFileFd;
 		std::fstream	_requestedFile;
 		char*			_fileBuffer;
 		size_t			_fileBufferSize;

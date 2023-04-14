@@ -1,5 +1,5 @@
 server {
 	location /error/ {
-		return https:/;
+		return -1;
 	}
 }

@@ -44,7 +44,6 @@ namespace	webserv
 	/**************************************************************************/
 
 	Response::Response(): _requestedFilename(XSTR(WEBSERV_ROOT)),
-//							_requestedFileFd(-1),
 							_fileBuffer(0),
 							_fileBufferSize(0),
 							_bufferPos(0),
@@ -63,7 +62,6 @@ namespace	webserv
 
 	Response::Response(const Response& src):
 									_requestedFilename(XSTR(WEBSERV_ROOT)),
-//									_requestedFileFd(src._requestedFileFd),
 									_fileBuffer(0),
 									_fileBufferSize(0),
 									_bufferPos(0),
@@ -86,7 +84,6 @@ namespace	webserv
 
 	Response::~Response()
 	{
-//		if (_requestedFileFd >= 0)
 		if (_requestedFile.is_open())
 			_closeRequestedFile();
 		if (_fileBuffer != 0)
@@ -183,7 +180,7 @@ namespace	webserv
 			<< Response::_getResponseStatus(_responseCode) << CRLF
 			<< "Server: webserv" << CRLF
 			<< "Date: " << Response::_getDate() << CRLF
-			<< "Content-Type: " << _contentType << CRLF;	// only if content?
+			<< "Content-Type: " << _contentType << CRLF;
 		if (_responseCode == 405)
 			headers << "Allow: " << _getAllowedMethods(request) << CRLF;
 		if (_contentLength != -1 && _responseCode > 199 && _responseCode != 204)
@@ -614,9 +611,6 @@ namespace	webserv
 
 	void	Response::_closeRequestedFile()
 	{
-//		if (close(_requestedFileFd) < 0)
-//			LOG_ERROR("Bad close() on fd=" << _requestedFileFd);
-//		_requestedFileFd = -1;
 		_requestedFile.clear();
 		if (_requestedFile.is_open())
 			_requestedFile.close();
@@ -633,11 +627,8 @@ namespace	webserv
 										struct stat* fileInfos)
 	{
 		LOG_DEBUG("HTTP filename: \"" << _requestedFilename << "\"");
-//		_requestedFileFd = open(_requestedFilename.c_str(),
-//				O_RDONLY | O_NONBLOCK);
 		_requestedFile.open(_requestedFilename.c_str(), std::ios::in
 				| std::ios::binary);
-//		if (_requestedFileFd < 0) {
 		if (_requestedFile.fail()) {
 			_logError(request, "open()", "failed");
 			return (false);
@@ -650,7 +641,6 @@ namespace	webserv
 			_closeRequestedFile();
 		else
 			LOG_DEBUG("HTTP file opened: " << _requestedFilename);
-//			LOG_DEBUG("HTTP file fd: " << _requestedFileFd);
 		return (true);
 	}
 
@@ -1884,7 +1874,6 @@ namespace	webserv
 			_deleteTmpCgiBodyFile(request);
 			_tmpCgiBodyFilename.clear();
 		}
-//		if (_requestedFileFd >= 0)
 		if (_requestedFile.is_open())
 			_closeRequestedFile();
 		if (_fileBuffer != 0) {

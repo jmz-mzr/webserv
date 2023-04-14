@@ -1,3 +1,5 @@
 server {
-	return 404;
+	location /error/ {
+		return ftp://test;
+	}
 }

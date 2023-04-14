@@ -1,5 +1,5 @@
 server {
 	location /error/ {
-		return ftp://test;
+		return https:/;
 	}
 }

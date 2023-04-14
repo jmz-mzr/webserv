@@ -1,5 +1,5 @@
 server {
 	location /error/ {
-		return -1;
+		return 99999;
 	}
 }

@@ -24,7 +24,7 @@ class Put(TestCase):
         return ""
 
     @staticmethod
-    def test_unkonwn_media_type() -> str:
+    def test_unknown_media_type() -> str:
         request = [
             "PUT /put/invalid_put HTTP/1.1\r\n",
             "Host: localhost\r\n",

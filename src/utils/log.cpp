@@ -58,7 +58,7 @@ namespace Log
 	{
 		for (std::vector<Sink*>::iterator it = _sinks.begin();
 				it != _sinks.end();
-				it++) {
+				++it) {
 			delete (*it);
 		}
 	}
@@ -177,7 +177,7 @@ namespace Log
 		if (_ostream != OutputStream::kNone) {
 			for (std::vector<Sink*>::iterator it = _sinks.begin();
 					it != _sinks.end();
-					it++) {
+					++it) {
 				if (data.level <= (*it)->getThreshold()) {
 					(*it)->write((*it)->format(data, msg));
 				}
