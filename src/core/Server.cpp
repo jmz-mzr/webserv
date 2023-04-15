@@ -38,7 +38,9 @@ namespace	webserv
 	{
 		_configs.push_back(serverConfig);
 		LOG_INFO("ServerConfig added to a Server");
-		LOG_DEBUG(this);
+		LOG_DEBUG("fd=" << _socket.getFd() << " ; "
+			<< "addr=" << _socket.getIpAddr() << " ; "
+			<< "port=" << _socket.getPort());
 	}
 
 	std::ostream&	operator<<(std::ostream& os, const Socket& socket)

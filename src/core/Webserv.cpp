@@ -89,7 +89,8 @@ namespace	webserv
 				listenPair.sin_addr.s_addr == serverAddr.sin_addr.s_addr);
 	}
 
-	Webserv::server_iter	Webserv::_findSameSocket(const sockaddr_in& listenPair)
+	Webserv::server_iter	Webserv::_findSameSocket(const sockaddr_in&
+														listenPair)
 	{
 		std::vector<Server>::iterator	server = _servers.begin();
 

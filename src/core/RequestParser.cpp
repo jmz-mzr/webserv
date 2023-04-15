@@ -264,7 +264,8 @@ namespace webserv
 					> REQUEST_LINE_MAX) || line.size() > REQUEST_LINE_MAX) {
 				_logError("Client sent a request line too long");
 				_errorCode = 414;
-			}
+			} else if (line == "\n")
+				return (_parseRequestLine(_readLine(false)));
 			return (false);
 		}
 		_requestLine = line;
