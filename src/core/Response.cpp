@@ -1573,19 +1573,20 @@ namespace	webserv
 	bool	Response::_loadTmpCgiBodyFile(const Request& request,
 											FILE* cgiOutputFile)
 	{
-		char		buffer[4096];
+		char		buffer[8192];
 		size_t		bytesRead;
 
 		if (!_createTmpCgiBodyFile(request))
 			return (false);
-		while (!std::feof(cgiOutputFile)) {
-			bytesRead = std::fread(buffer, sizeof(char), 4095, cgiOutputFile);
-			if (std::ferror(cgiOutputFile)) {
-				_logError(request, "Error in", "while reading CGI", "fread()");
-				return (false);
-			}
-			buffer[bytesRead] = '\0';
-			_requestedFile << buffer;
+		while (!std::feof(cgiOutputFile)
+				&& !std::ferror(cgiOutputFile) && !_requestedFile.fail()) {
+			bytesRead = std::fread(buffer, sizeof(char), 8192, cgiOutputFile);
+			_requestedFile.write(buffer, bytesRead);
+		}
+		if (std::ferror(cgiOutputFile) || _requestedFile.fail()) {
+			_logError(request, "fread()/write() error in", "while reading CGI",
+					_tmpCgiBodyFilename.c_str());
+			return (false);
 		}
 		LOG_DEBUG("CGI body recorded in: " << _tmpCgiBodyFilename);
 		_requestedFile.seekg(0, std::ios::beg);

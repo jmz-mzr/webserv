@@ -288,15 +288,17 @@ namespace	webserv
 
 	void	CgiHandler::_handleCgiChildError(bool beforeExecve)
 	{
-		// NOTE: Prevent any leaks in the child process when an error occurs
-		// before the CGI launch by creating a time out with "sleep(2)" to
+		// NOTE: 1) Prevent any leaks in the child process when an error occurs
+		// before the CGI launch by creating a time out with "sleep(4)" to
 		// let the parent process gracefully kill the child
+		// 2) To have details on the error if execve crashes, comment out the
+		// line "close(fileno(_errorFile))" in "_executeCgi()"
 
 		std::fprintf(_errorFile, "(%d: %s)", errno, std::strerror(errno));
 		if (beforeExecve) {
 			close(_inputFd);
 			close(_outputFd);
-			sleep(2);
+			sleep(4);
 		}
 	}
 
@@ -343,7 +345,7 @@ namespace	webserv
 	int	CgiHandler::_waitChild(const Request& request, int* status) const
 	{
 		// NOTE: To let valgrind or another tool run through the CGI process
-		// without time out, sleep must be incremented (minimum "sleep(3)")
+		// without time out, [ft_u]sleep must be incremented (minimum 3s)
 
 		int		pid;
 		int		retry = 20;
@@ -351,7 +353,7 @@ namespace	webserv
 		while ((pid = waitpid(_pid, status, WNOHANG)) == 0 && --retry > 0)
 			usleep(50000);
 		if (pid == 0) {
-			sleep(1);
+			ft_usleep(2, 200000);
 			if ((pid = waitpid(_pid, status, WNOHANG)) == 0) {
 				if (kill(_pid, SIGTERM) < 0)
 					_logError(request, "Error with", "in CGI wait", "kill()");

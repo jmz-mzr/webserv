@@ -26,6 +26,7 @@ namespace	webserv
 	uint64_t	getSockAddrId(sockaddr_in& addr);
 
 	void	ft_sleep(double seconds);
+	void	ft_usleep(double seconds, size_t uIncrement);
 
 	bool		isnotprint(int ch);
 

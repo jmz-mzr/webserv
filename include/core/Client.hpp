@@ -11,7 +11,8 @@
 # include "core/Request.hpp"
 # include "core/Response.hpp"
 
-# define CLIENT_TIMEOUT		60.0
+# define CLIENT_TIMEOUT			60.0
+# define CLIENT_CGI_TIMEOUT		120.0
 
 namespace	webserv
 {

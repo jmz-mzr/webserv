@@ -104,6 +104,13 @@ namespace	webserv
 		double	elapsedTime = std::difftime(std::time(0), _lastUpdateTime);
 
 		if (elapsedTime > CLIENT_TIMEOUT) {
+			if (_request.getLocation()
+					&& !_request.getLocation()->getCgiPass().empty()) {
+				LOG_DEBUG("Slow client (fd=" << _socket.getFd()
+						<< ") CGI processing (" << elapsedTime << "s)");
+				if (elapsedTime < CLIENT_CGI_TIMEOUT)
+					return (false);
+			}
 			LOG_DEBUG("The client (fd=" << _socket.getFd() << ") timed out"
 					<< " (" << elapsedTime << "s)");
 			return (true);
