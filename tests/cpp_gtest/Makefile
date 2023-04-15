@@ -8,7 +8,9 @@ override BUILD = debug
 
 # ===============================> Directories <============================== #
 
-INCLDIR		:=	$(addprefix $(WORKDIR)/,$(INCLDIR)) \
+INCLDIR		:=	$(addprefix $(WORKDIR)/,$(INCLDIR) \
+					tests/googletest/googlemock/include \
+					tests/googletest/googletest/include) \
 				/usr/local/include /usr/local/include/gtest
 BUILDIR		:=	$(addprefix $(WORKDIR)/,$(BUILDIR))
 DEPDIR		:=	$(addprefix $(WORKDIR)/,$(DEPDIR))
