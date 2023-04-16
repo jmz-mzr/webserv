@@ -48,17 +48,20 @@
 #include "gtest/gtest.h"
 #include "gtest/internal/gtest-port.h"
 
-#if defined(GTEST_OS_CYGWIN) || defined(GTEST_OS_LINUX) || defined(GTEST_OS_MAC)
+#if GTEST_OS_CYGWIN || GTEST_OS_LINUX || GTEST_OS_MAC
 #include <unistd.h>  // NOLINT
 #endif
-#ifdef GTEST_OS_QURT
+#if GTEST_OS_QURT
 #include <qurt_event.h>
 #endif
 
 // Silence C4800 (C4800: 'int *const ': forcing value
 // to bool 'true' or 'false') for MSVC 15
-#if defined(_MSC_VER) && (_MSC_VER == 1900)
-GTEST_DISABLE_MSC_WARNINGS_PUSH_(4800)
+#ifdef _MSC_VER
+#if _MSC_VER == 1900
+#pragma warning(push)
+#pragma warning(disable : 4800)
+#endif
 #endif
 
 namespace testing {
@@ -297,7 +300,7 @@ void ReportUninterestingCall(CallReaction reaction, const std::string& msg) {
               "See "
               "https://github.com/google/googletest/blob/main/docs/"
               "gmock_cook_book.md#"
-              "knowing-when-to-expect-useoncall for details.\n",
+              "knowing-when-to-expect for details.\n",
           stack_frames_to_skip);
       break;
     default:  // FAIL
@@ -503,7 +506,7 @@ class MockObjectRegistry {
       std::cout << internal::FormatFileLocation(state.first_used_file,
                                                 state.first_used_line);
       std::cout << " ERROR: this mock object";
-      if (!state.first_used_test.empty()) {
+      if (state.first_used_test != "") {
         std::cout << " (used in test " << state.first_used_test_suite << "."
                   << state.first_used_test << ")";
       }
@@ -526,7 +529,7 @@ class MockObjectRegistry {
       // RUN_ALL_TESTS() has already returned when this destructor is
       // called.  Therefore we cannot use the normal Google Test
       // failure reporting mechanism.
-#ifdef GTEST_OS_QURT
+#if GTEST_OS_QURT
       qurt_exception_raise_fatal();
 #else
       _exit(1);  // We cannot call exit() as it is not reentrant and
@@ -785,6 +788,8 @@ InSequence::~InSequence() {
 
 }  // namespace testing
 
-#if defined(_MSC_VER) && (_MSC_VER == 1900)
-GTEST_DISABLE_MSC_WARNINGS_POP_()  // 4800
+#ifdef _MSC_VER
+#if _MSC_VER == 1900
+#pragma warning(pop)
+#endif
 #endif

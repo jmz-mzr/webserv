@@ -33,13 +33,15 @@
 #include <stdio.h>
 
 #include <string>
-#include <tuple>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 // Silence C4100 (unreferenced formal parameter)
-GTEST_DISABLE_MSC_WARNINGS_PUSH_(4100)
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4100)
+#endif
 
 using testing::_;
 using testing::AnyNumber;
@@ -255,16 +257,12 @@ TEST_F(GMockOutputTest, CatchesLeakedMocks) {
 }
 
 MATCHER_P2(IsPair, first, second, "") {
-  return Value(std::get<0>(arg), first) && Value(std::get<1>(arg), second);
+  return Value(arg.first, first) && Value(arg.second, second);
 }
 
 TEST_F(GMockOutputTest, PrintsMatcher) {
   const testing::Matcher<int> m1 = Ge(48);
-  // Explicitly using std::tuple instead of std::pair due to differences between
-  // MSVC and other compilers. std::pair is printed as
-  // "struct std::pair<int,bool>" when using MSVC vs "std::pair<int,bool>" with
-  // other compilers.
-  EXPECT_THAT((std::tuple<int, bool>(42, true)), IsPair(m1, true));
+  EXPECT_THAT((std::pair<int, bool>(42, true)), IsPair(m1, true));
 }
 
 void TestCatchesLeakedMocksInAdHocTests() {
@@ -288,4 +286,6 @@ int main(int argc, char** argv) {
   return RUN_ALL_TESTS();
 }
 
-GTEST_DISABLE_MSC_WARNINGS_POP_()  // 4100
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

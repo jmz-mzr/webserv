@@ -7,8 +7,6 @@
 #include "gtest/gtest.h"
 #include "gtest/internal/gtest-port.h"
 
-#if GTEST_HAS_FILE_SYSTEM
-
 namespace {
 
 class SetEnv {
@@ -95,7 +93,5 @@ TEST(SrcDirTest, NotInEnvironment) {
   SetEnv set_env("TEST_SRCDIR", nullptr);
   EXPECT_NE(testing::SrcDir(), "");
 }
-
-#endif  // GTEST_HAS_FILE_SYSTEM
 
 }  // namespace

@@ -31,6 +31,19 @@
 //
 // This file tests the built-in actions.
 
+// Silence C4100 (unreferenced formal parameter) and C4503 (decorated name
+// length exceeded) for MSVC.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4100)
+#pragma warning(disable : 4503)
+#if _MSC_VER == 1900
+// and silence C4800 (C4800: 'int *const ': forcing value
+// to bool 'true' or 'false') for MSVC 15
+#pragma warning(disable : 4800)
+#endif
+#endif
+
 #include "gmock/gmock-actions.h"
 
 #include <algorithm>
@@ -45,15 +58,6 @@
 #include "gmock/internal/gmock-port.h"
 #include "gtest/gtest-spi.h"
 #include "gtest/gtest.h"
-
-// Silence C4100 (unreferenced formal parameter) and C4503 (decorated name
-// length exceeded) for MSVC.
-GTEST_DISABLE_MSC_WARNINGS_PUSH_(4100 4503)
-#if defined(_MSC_VER) && (_MSC_VER == 1900)
-// and silence C4800 (C4800: 'int *const ': forcing value
-// to bool 'true' or 'false') for MSVC 15
-GTEST_DISABLE_MSC_WARNINGS_PUSH_(4800)
-#endif
 
 namespace testing {
 namespace {
@@ -1406,7 +1410,7 @@ TEST(DoAll, ProvidesLvalueReferencesToInitialActions) {
       void operator()(Obj&&) const { FAIL() << "Unexpected call"; }
     };
 
-    MockFunction<void(Obj&&)> mock;
+    MockFunction<void(Obj &&)> mock;
     EXPECT_CALL(mock, Call)
         .WillOnce(DoAll(InitialAction{}, InitialAction{}, [](Obj&&) {}))
         .WillRepeatedly(DoAll(InitialAction{}, InitialAction{}, [](Obj&&) {}));
@@ -1434,7 +1438,7 @@ TEST(DoAll, ProvidesLvalueReferencesToInitialActions) {
       void operator()(Obj&) && {}
     };
 
-    MockFunction<void(Obj&&)> mock;
+    MockFunction<void(Obj &&)> mock;
     EXPECT_CALL(mock, Call)
         .WillOnce(DoAll(InitialAction{}, InitialAction{}, [](Obj&&) {}));
 
@@ -1592,7 +1596,7 @@ TEST(WithArgsTest, RefQualifiedInnerAction) {
   EXPECT_EQ(19, mock.AsStdFunction()(0, 17));
 }
 
-#ifndef GTEST_OS_WINDOWS_MOBILE
+#if !GTEST_OS_WINDOWS_MOBILE
 
 class SetErrnoAndReturnTest : public testing::Test {
  protected:
@@ -2161,8 +2165,3 @@ TEST(ActionMacro, LargeArity) {
 
 }  // namespace
 }  // namespace testing
-
-#if defined(_MSC_VER) && (_MSC_VER == 1900)
-GTEST_DISABLE_MSC_WARNINGS_POP_()  // 4800
-#endif
-GTEST_DISABLE_MSC_WARNINGS_POP_()  // 4100 4503

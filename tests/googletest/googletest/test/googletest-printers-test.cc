@@ -266,6 +266,7 @@ using ::std::set;
 using ::std::vector;
 using ::testing::PrintToString;
 using ::testing::internal::FormatForComparisonFailureMessage;
+using ::testing::internal::ImplicitCast_;
 using ::testing::internal::NativeArray;
 using ::testing::internal::RelationToSourceReference;
 using ::testing::internal::Strings;
@@ -431,7 +432,7 @@ TEST(PrintBuiltInTypeTest, Integer) {
 // Size types.
 TEST(PrintBuiltInTypeTest, Size_t) {
   EXPECT_EQ("1", Print(sizeof('a')));  // size_t.
-#ifndef GTEST_OS_WINDOWS
+#if !GTEST_OS_WINDOWS
   // Windows has no ssize_t type.
   EXPECT_EQ("-2", Print(static_cast<ssize_t>(-2)));  // ssize_t.
 #endif                                               // !GTEST_OS_WINDOWS
@@ -460,10 +461,10 @@ TEST(PrintBuiltInTypeTest, FloatingPoints) {
   // float (32-bit precision)
   EXPECT_EQ("1.5", Print(1.5f));
 
-  EXPECT_EQ("1.0999999", Print(1.09999990f));
-  EXPECT_EQ("1.1", Print(1.10000002f));
+  EXPECT_EQ("1.0999999",  Print(1.09999990f));
+  EXPECT_EQ("1.1",        Print(1.10000002f));
   EXPECT_EQ("1.10000014", Print(1.10000014f));
-  EXPECT_EQ("9e+09", Print(9e9f));
+  EXPECT_EQ("9e+09",      Print(9e9f));
 
   // double
   EXPECT_EQ("-2.5", Print(-2.5));  // double
@@ -1795,8 +1796,7 @@ TEST(UniversalPrintTest, SmartPointers) {
   std::shared_ptr<int> p3(new int(1979));
   EXPECT_EQ("(ptr = " + PrintPointer(p3.get()) + ", value = 1979)",
             PrintToString(p3));
-#if defined(__cpp_lib_shared_ptr_arrays) && \
-    (__cpp_lib_shared_ptr_arrays >= 201611L)
+#if __cpp_lib_shared_ptr_arrays >= 201611L
   std::shared_ptr<int[]> p4(new int[2]);
   EXPECT_EQ("(" + PrintPointer(p4.get()) + ")", PrintToString(p4));
 #endif
@@ -1815,8 +1815,7 @@ TEST(UniversalPrintTest, SmartPointers) {
   EXPECT_EQ("(nullptr)", PrintToString(std::shared_ptr<const int>()));
   EXPECT_EQ("(nullptr)", PrintToString(std::shared_ptr<volatile int>()));
   EXPECT_EQ("(nullptr)", PrintToString(std::shared_ptr<volatile const int>()));
-#if defined(__cpp_lib_shared_ptr_arrays) && \
-    (__cpp_lib_shared_ptr_arrays >= 201611L)
+#if __cpp_lib_shared_ptr_arrays >= 201611L
   EXPECT_EQ("(nullptr)", PrintToString(std::shared_ptr<int[]>()));
   EXPECT_EQ("(nullptr)", PrintToString(std::shared_ptr<const int[]>()));
   EXPECT_EQ("(nullptr)", PrintToString(std::shared_ptr<volatile int[]>()));

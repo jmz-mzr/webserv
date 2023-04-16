@@ -35,6 +35,7 @@ namespace {
 
 using ::testing::EmptyTestEventListener;
 using ::testing::InitGoogleTest;
+using ::testing::Message;
 using ::testing::Test;
 using ::testing::TestEventListeners;
 using ::testing::TestInfo;

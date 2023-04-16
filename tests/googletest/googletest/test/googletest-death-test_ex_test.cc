@@ -33,7 +33,7 @@
 #include "gtest/gtest-death-test.h"
 #include "gtest/gtest.h"
 
-#ifdef GTEST_HAS_DEATH_TEST
+#if GTEST_HAS_DEATH_TEST
 
 #if GTEST_HAS_SEH
 #include <windows.h>  // For RaiseException().

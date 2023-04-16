@@ -26,7 +26,8 @@ DEP			=	$(SRC:%.cpp=$(DEPDIR)/%.d)
 
 BIN			=	$(WORKDIR)/$(NAME)_test
 LIB			:=	$(addprefix $(WORKDIR)/,$(LIB))
-GTEST		:=	$(addprefix $(LIBDIR)/, libgtest_main.a libgtest.a)
+GTEST		:=	$(addprefix $(WORKDIR)/tests/googletest/build/lib/,\
+					libgtest_main.a libgtest.a)
 
 # ===============================> Environment <============================== #
 
@@ -38,7 +39,7 @@ UNAME		:=	$(shell uname -s)
 
 # ===============================> Compilation <============================== #
 
-CXXFLAGS	:= $(CXXFLAGS:c++98=c++14)
+CXXFLAGS	:=	$(CXXFLAGS:c++98=c++14)
 CPPFLAGS	+=	$(addprefix -I, $(INCLDIR))
 DEPFLAGS	=	-MT '$@ $(DEPDIR)/$(*F).d' -MMD -MP -MF $(DEPDIR)/$(*F).d
 LDDFLAGS	=	$(LIB) $(GTEST) -pthread
