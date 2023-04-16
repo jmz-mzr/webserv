@@ -25,6 +25,7 @@
 *.lai
 *.la
 *.a
+!tests/**/*.a
 *.lib
 
 # Executables
@@ -95,6 +96,7 @@ package-lock.json
 node_modules/
 .node_modules/
 build/
+!tests/*/build/
 build.json
 
 # Python
