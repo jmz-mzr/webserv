@@ -151,11 +151,10 @@ namespace	webserv
 		bool	_checkCgiEof(FILE* cgiOutputFile) const;
 		bool	_checkCgiLocation(const Request& request,
 									CgiHandler& cgi) const;
-		bool	_loadTmpCgiBodyFile(const Request& request,
-									FILE* cgiOutputFile);
-		bool	_createTmpCgiBodyFile(const Request& request);
+		bool	_loadCgiBodyFile(const Request& request, CgiHandler& cgi);
+		bool	_openCgiBodyFile(const Request& request);
 		bool	_checkCgiBodyLength(const Request& request,
-									const char* filename);
+										const char* filename, long int pos);
 		void	_loadCgiHeaders(const Request& request, CgiHandler& cgi);
 
 		void			_loadBuffer(const Request& request);
@@ -166,7 +165,7 @@ namespace	webserv
 
 		void	_clearBuffer();
 		void	_clearBuffersAndFiles(const Request& request);
-		void	_deleteTmpCgiBodyFile(const Request& request);
+		void	_deleteCgiBodyFile(const Request& request);
 
 		void	_logError(const Request& request, const char* errorAt,
 						const char* errorType, const char* filename = 0) const;
@@ -179,7 +178,7 @@ namespace	webserv
 
 		std::string		_responseBuffer;
 		std::string		_requestedFilename;
-		std::string		_tmpCgiBodyFilename;
+		std::string		_cgiBodyFilename;
 		std::fstream	_requestedFile;
 		char*			_fileBuffer;
 		size_t			_fileBufferSize;

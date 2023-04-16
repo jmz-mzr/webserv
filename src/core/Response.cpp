@@ -11,7 +11,7 @@
 
 #include <cctype>		// isalnum, isdigit, isprint
 #include <cerrno>		// errno
-#include <cstdio>		// feof, ferror, fgetc, fgets, fread, ungetc
+#include <cstdio>		// feof, ferror, fgetc, fgets, fread, ftell, ungetc
 #include <cstdlib>		// abs, atoi, strtoll
 #include <cstring>		// memset, strerror, strlen
 #include <ctime>		// gmtime, mktime, strftime, struct tm, time, time_t
@@ -90,8 +90,8 @@ namespace	webserv
 			delete[] _fileBuffer;
 		if (_indexDirectory != 0)
 			_closeIndexDirectory();
-		if (!_tmpCgiBodyFilename.empty())
-			unlink(_tmpCgiBodyFilename.c_str());
+		if (!_cgiBodyFilename.empty())
+			unlink(_cgiBodyFilename.c_str());
 	}
 
 	/**************************************************************************/
@@ -615,8 +615,8 @@ namespace	webserv
 		if (_requestedFile.is_open())
 			_requestedFile.close();
 		if (_requestedFile.fail()) {
-			if (!_tmpCgiBodyFilename.empty()) {
-				LOG_ERROR("Bad close() on \"" << _tmpCgiBodyFilename << "\"");
+			if (!_cgiBodyFilename.empty()) {
+				LOG_ERROR("Bad close() on \"" << _cgiBodyFilename << "\"");
 			} else
 				LOG_ERROR("Bad close() on \"" << _requestedFilename << "\"");
 			_requestedFile.clear();
@@ -1532,22 +1532,20 @@ namespace	webserv
 		return (true);
 	}
 
-	bool	Response::_createTmpCgiBodyFile(const Request& request)
+	bool	Response::_openCgiBodyFile(const Request& request)
 	{
-		_tmpCgiBodyFilename = createRandomFilename();
-		LOG_DEBUG("CGI body tmp filename: \"" << _tmpCgiBodyFilename << "\"");
-		_requestedFile.open(_tmpCgiBodyFilename.c_str(), std::ios::in
-				| std::ios::out | std::ios::binary | std::ios::trunc);
+		_requestedFile.open(_cgiBodyFilename.c_str(),
+								std::ios::in | std::ios::binary);
 		if (_requestedFile.fail()) {
-			_logError(request, "open()", "failed", _tmpCgiBodyFilename.c_str());
+			_logError(request, "open()", "failed", _cgiBodyFilename.c_str());
 			return (false);
 		}
-		LOG_DEBUG("CGI body tmp file created");
+		LOG_DEBUG("CGI body file opened");
 		return (true);
 	}
 
 	bool	Response::_checkCgiBodyLength(const Request& request,
-											const char* filename)
+											const char* filename, long int pos)
 	{
 		struct stat		fileInfos;
 		int64_t			fileSize;
@@ -1560,7 +1558,7 @@ namespace	webserv
 			_logError(request, "", "is not a regular file", filename);
 			return (false);
 		}
-		fileSize = fileInfos.st_size;
+		fileSize = fileInfos.st_size - pos;
 		if (_contentLength != fileSize) {
 			LOG_WARN("The CGI sent more data (" << fileSize
 					<< ") than specified in its \"Content-Length\" header ("
@@ -1570,32 +1568,24 @@ namespace	webserv
 		return (true);
 	}
 
-	bool	Response::_loadTmpCgiBodyFile(const Request& request,
-											FILE* cgiOutputFile)
+	bool	Response::_loadCgiBodyFile(const Request& request, CgiHandler& cgi)
 	{
-		char		buffer[8192];
-		size_t		bytesRead;
+		long int	pos = std::ftell(cgi.getOutputFile());
 
-		if (!_createTmpCgiBodyFile(request))
-			return (false);
-		while (!std::feof(cgiOutputFile)
-				&& !std::ferror(cgiOutputFile) && !_requestedFile.fail()) {
-			bytesRead = std::fread(buffer, sizeof(char), 8192, cgiOutputFile);
-			_requestedFile.write(buffer, bytesRead);
-		}
-		if (std::ferror(cgiOutputFile) || _requestedFile.fail()) {
-			_logError(request, "fread()/write() error in", "while reading CGI",
-					_tmpCgiBodyFilename.c_str());
+		_cgiBodyFilename = cgi.getOutputFilename();
+		LOG_DEBUG("CGI body filename: \"" << _cgiBodyFilename << "\"");
+		if (pos == -1L) {
+			_logError(request, "ftell()", "failed", _cgiBodyFilename.c_str());
 			return (false);
 		}
-		LOG_DEBUG("CGI body recorded in: " << _tmpCgiBodyFilename);
-		_requestedFile.seekg(0, std::ios::beg);
+		if (!_openCgiBodyFile(request))
+			return (false);
+		_requestedFile.seekg(pos, std::ios::beg);
 		if (_requestedFile.fail()) {
-			_logError(request, "seekg()", "failed",
-					_tmpCgiBodyFilename.c_str());
+			_logError(request, "seekg()", "failed", _cgiBodyFilename.c_str());
 			return (false);
 		}
-		return (_checkCgiBodyLength(request, _tmpCgiBodyFilename.c_str()));
+		return (_checkCgiBodyLength(request, _cgiBodyFilename.c_str(), pos));
 	}
 
 	void	Response::_loadCgiHeaders(const Request& request, CgiHandler& cgi)
@@ -1632,7 +1622,7 @@ namespace	webserv
 		if (!_location.empty() && _location[0] == '/')
 			return (_loadInternalRedirect(request, _location));
 		if (cgi.hasBody) {
-			if (!_loadTmpCgiBodyFile(request, cgi.getOutputFile()))
+			if (!_loadCgiBodyFile(request, cgi))
 				return (500);
 			_isFileResponse = true;
 		}
@@ -1851,29 +1841,29 @@ namespace	webserv
 		_isResponseReady = true;
 	}
 
-	void	Response::_deleteTmpCgiBodyFile(const Request& request)
+	void	Response::_deleteCgiBodyFile(const Request& request)
 	{
 		struct stat		fileInfos;
 
-		if (_tmpCgiBodyFilename.empty())
+		if (_cgiBodyFilename.empty())
 			return ;
-		if (stat(_tmpCgiBodyFilename.c_str(), &fileInfos) < 0) {
-			LOG_INFO("stat(" << _tmpCgiBodyFilename << "): "
+		if (stat(_cgiBodyFilename.c_str(), &fileInfos) < 0) {
+			LOG_INFO("stat(" << _cgiBodyFilename << "): "
 					<< std::strerror(errno));
-		} else if (unlink(_tmpCgiBodyFilename.c_str()) < 0) {
+		} else if (unlink(_cgiBodyFilename.c_str()) < 0) {
 			_logError(request, "unlink()", "failed",
-					_tmpCgiBodyFilename.c_str());
+					_cgiBodyFilename.c_str());
 		} else
-			_tmpCgiBodyFilename.clear();
+			_cgiBodyFilename.clear();
 	}
 
 	void	Response::_clearBuffersAndFiles(const Request& request)
 	{
 		_responseBuffer.clear();
 		_requestedFilename = XSTR(WEBSERV_ROOT);
-		if (!_tmpCgiBodyFilename.empty()) {
-			_deleteTmpCgiBodyFile(request);
-			_tmpCgiBodyFilename.clear();
+		if (!_cgiBodyFilename.empty()) {
+			_deleteCgiBodyFile(request);
+			_cgiBodyFilename.clear();
 		}
 		if (_requestedFile.is_open())
 			_closeRequestedFile();

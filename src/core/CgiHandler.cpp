@@ -59,7 +59,7 @@ namespace	webserv
 
 	CgiHandler::~CgiHandler()
 	{
-		_closeCgiFiles();
+		_closeCgiFiles(false);
 	}
 
 	/**************************************************************************/
@@ -220,7 +220,32 @@ namespace	webserv
 		return (_loadEnv2(request));
 	}
 
-	void	CgiHandler::_closeCgiFiles()
+	void	CgiHandler::_deleteOutputFile()
+	{
+		struct stat		fileInfos;
+
+		if (_outputFile) {
+			if (std::fclose(_outputFile) < 0) {
+				LOG_ERROR("Bad fclose() on cgiOutputFile");
+				std::clearerr(_outputFile);
+			} else {
+				_outputFd = -1;
+				_outputFile = 0;
+			}
+		}
+		if (_outputFilename.empty())
+			return ;
+		if (stat(_outputFilename.c_str(), &fileInfos) < 0) {
+			LOG_INFO("stat(" << _outputFilename << "): "
+					<< std::strerror(errno));
+		} else if (unlink(_outputFilename.c_str()) < 0) {
+			LOG_ERROR("unlink(" << _outputFilename << ") failed: "
+					<< std::strerror(errno));
+		} else
+			_outputFilename.clear();
+	}
+
+	void	CgiHandler::_closeCgiFiles(bool deleteOutputFile)
 	{
 		if (_inputFd >= 0) {
 			if (close(_inputFd) < 0) {
@@ -230,13 +255,15 @@ namespace	webserv
 		}
 		if (_outputFile) {
 			if (std::fclose(_outputFile) != 0) {
-				LOG_ERROR("Bad fclose() on temporary cgiOutputFile");
+				LOG_ERROR("Bad fclose() on cgiOutputFile");
 				std::clearerr(_outputFile);
 			} else {
 				_outputFd = -1;
 				_outputFile = 0;
 			}
 		}
+		if (deleteOutputFile)
+			_deleteOutputFile();
 		if (_errorFile) {
 			if (std::fclose(_errorFile) != 0) {
 				LOG_ERROR("Bad fclose() on temporary cgiErrorFile");
@@ -248,9 +275,10 @@ namespace	webserv
 
 	bool	CgiHandler::_prepareCgiIoFiles(const Request& request)
 	{
-		_outputFile = std::tmpfile();
+		_outputFilename = createRandomFilename();
+		_outputFile = std::fopen(_outputFilename.c_str(), "wb+");
 		if (!_outputFile) {
-			_logError(request, "tmpfile()", "failed", "(cgiOutputFile)");
+			_logError(request, "fopen()", "failed", "cgiOutputFile");
 			return (false);
 		}
 		_outputFd = fileno(_outputFile);
@@ -261,11 +289,12 @@ namespace	webserv
 		}
 		_errorFile = std::tmpfile();
 		if (!_errorFile) {
-			_logError(request, "tmpfile()", "failed", "(cgiErrorFile)");
+			_logError(request, "tmpfile()", "failed", "cgiErrorFile");
 			_closeCgiFiles();
 			return (false);
 		}
-		LOG_DEBUG("CGI tmp output file opened (fd=" << _outputFd << ")");
+		LOG_DEBUG("CGI output file opened: \"" << _outputFilename
+			   << "\" (fd=" << _outputFd << ")");
 		return (true);
 	}
 

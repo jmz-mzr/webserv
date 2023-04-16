@@ -25,7 +25,9 @@ namespace	webserv
 		bool	prepareCgiIo(const Request& request);
 		int		launchCgiProcess(const Request& request);
 
-		FILE*	getOutputFile() { return (_outputFile); }
+		FILE*				getOutputFile() { return (_outputFile); }
+		const std::string&	getOutputFilename() const
+											{ return (_outputFilename); }
 
 		int				responseCode;
 		std::string		headers;
@@ -55,7 +57,8 @@ namespace	webserv
 		void		_loadChildErrorLog(const Request& request,
 										int status) const;
 		int			_waitChild(const Request& request, int* status) const;
-		void		_closeCgiFiles();
+		void		_closeCgiFiles(bool deleteOutputFile = true);
+		void		_deleteOutputFile();
 
 		const std::string&		_cgiPass;
 		const std::string&		_requestedFilename;
@@ -64,6 +67,7 @@ namespace	webserv
 		std::list<std::string>	_env;
 		std::vector<char*>		_envp;
 		int						_inputFd;
+		std::string				_outputFilename;
 		FILE*					_outputFile;
 		int						_outputFd;
 		FILE*					_errorFile;
