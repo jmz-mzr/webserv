@@ -7,18 +7,25 @@
 NAME		=	webserv
 AUTHOR		=	jmazoyer flohrel mtogbe
 
-BUILD		?=	debug
+BUILD		?=	release
 PREFIX		?=	# defined by configure file
 
 ifneq ($(filter-out debug release,$(BUILD)),)
   $(error '$(BUILD)' is incorrect. Build options are 'debug' or 'release')
 endif
 
-ifneq ($(filter install uninstall, $(strip $(MAKECMDGOALS))),)
+ifeq ($(filter clean fclean, $(strip $(MAKECMDGOALS))),)
   ifeq ($(PREFIX),)
     $(error 'Installation directory undefined')
   endif
+endif
+
+ifneq ($(filter install uninstall, $(strip $(MAKECMDGOALS))),)
   override BUILD = release
+endif
+
+ifneq ($(filter debug, $(strip $(MAKECMDGOALS))),)
+  override BUILD = debug
 endif
 
 # ===============================> Directories <============================== #
@@ -30,6 +37,7 @@ LIBPERLDIR	=	include/lib
 LIBPERLCGI	=	perl_cgi
 BUILDIR		=	build/$(BUILD)
 DEPDIR		=	$(BUILDIR)/.deps
+GTESTDIR	=	tests/googletest/build
 TESTDIR		=	tests/cpp_gtest
 WORKDIR		?=	$(realpath .)
 
@@ -147,11 +155,11 @@ export NAME
 export DEPDIR
 export BUILDIR
 export INCLDIR
-export LIBDIR
 export CPPFLAGS
 export CXXFLAGS
 export WORKDIR
 export LIB
+
 
 
 ################################################################################
@@ -165,7 +173,7 @@ $(BUILDIR)/%.o:	%.cpp | $(DEPDIR)
 	@$(call run,$(RULE),$(COMPIL_MSG),$(B_CYAN))
 	$(eval F=0)
 
-$(DEPDIR):
+$(DEPDIR):		| header
 	$(eval RULE = mkdir -p $@)
 	@$(call run,$(RULE),$(MKDIR_MSG),$(B_BLUE))
 
@@ -175,16 +183,16 @@ ifneq ($(MAKECMDGOALS),clean)
   endif
 endif
 
-$(BIN):			$(OBJ)
+$(BIN):			$(OBJ) | header
 	$(eval RULE = $(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $^)
 	@$(call run,$(RULE),$(LINK_MSG),$(B_CYAN))
 	$(eval F=1)
 
-$(INSTALLDIRS):
+$(INSTALLDIRS):	| header
 	$(eval RULE = mkdir -p $@)
 	@$(call run,$(RULE),$(MKDIR_MSG),$(B_BLUE))
 
-$(WEBSERVLNK):
+$(WEBSERVLNK):	| header
 	$(eval RULE = ln -s $(WORKDIR)/www $(WEBSERVLNK))
 	@$(call run,$(RULE),$(LN_MSG),$(B_BLUE))
 
@@ -202,12 +210,19 @@ uninstall:		header
 	$(eval RULE = $(RM) -rf $(BINDIR)/$(NAME) $(WEBSERVLNK) $(CONFDIR))
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
-test:			header $(LIB)
+$(GTESTDIR):	| header
+	$(eval RULE = mkdir -p $@; CXXFLAGS=""; CPPFLAGS=""; cd $@ && \
+					cmake .. -DBUILD_GMOCK=OFF && $(MAKE) -C .)
+	@$(call run,$(RULE),$(MAKE_MSG),$(GTESTDIR))
+
+test:			header $(LIB) | $(GTESTDIR)
 	$(eval RULE = $(MAKE) -C $(TESTDIR))
 	@$(call run,$(RULE),$(MAKE_MSG),$(TESTDIR))
 	@chmod +x $(TESTBIN)
 	$(eval RULE = ./$(TESTBIN) > /dev/null)
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
+
+debug:			header all
 
 clean:			header
 	$(eval RULE = $(RM) -rf build *.log www/webserv.test/chunked ;\
@@ -229,4 +244,4 @@ include $(WORKDIR)/.functions.mk
 .SUFFIXES:
 .SUFFIXES:		.cpp .hpp .o .d
 
-.PHONY:			all install uninstall test clean fclean re
+.PHONY:			all install uninstall test debug clean fclean re
