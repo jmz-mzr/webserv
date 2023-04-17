@@ -147,11 +147,11 @@ namespace	webserv
 
 	void	CgiHandler::_loadEnv3(const Request& request)
 	{
-		Request::header_map					headers = request.getHeaders();
-		Request::header_map::const_iterator	it = headers.begin();
+		Request::header_map					headrs = request.getHeaders();
+		Request::header_map::const_iterator	it = headrs.begin();
 		std::string							fieldName;
 
-		while (it != headers.end()) {
+		while (it != headrs.end()) {
 			if (!ft_strcmp_icase(it->first, "Content-Length")
 					&& !ft_strcmp_icase(it->first, "Content-Type")
 					&& !ft_strcmp_icase(it->first, "Authorization")

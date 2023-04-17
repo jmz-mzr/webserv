@@ -113,7 +113,20 @@ else
 endif
 
 ifeq (debug,$(BUILD))
-  CXXFLAGS	+=	-fsanitize=address,undefined -Og -g3
+  CXXFLAGS	+=	-fsanitize=address,undefined -Og -g3 -fno-omit-frame-pointer \
+				-fstack-protector-all \
+				-Wpedantic \
+				-Wshadow \
+				-Wnon-virtual-dtor \
+				-Wold-style-cast \
+				-Wcast-align \
+				-Wunused \
+				-Wnull-dereference \
+				-Wdouble-promotion \
+				-Wformat=2 \
+				-Wmisleading-indentation
+				# -Wconversion \
+				# -Wsign-conversion
   CPPFLAGS	+=	-DLOG_FILE=/tmp/webserv.log \
 				-DLOG_LEVEL=Log::Level::kDebug \
 				-DCONF_FILE=$(WORKDIR)/default.conf \
