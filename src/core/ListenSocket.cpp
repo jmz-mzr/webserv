@@ -18,8 +18,13 @@ namespace	webserv
 	ListenSocket::ListenSocket(const sockaddr_in& address)
 			: Socket(kListen, address)
 	{
-		const int enable = 1;
-		setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
+		const int	enable = 1;
+		int			options = SO_REUSEADDR;
+
+#ifdef MACOS
+		options |= SO_NOSIGPIPE;
+#endif
+		setsockopt(_fd, SOL_SOCKET, options, &enable, sizeof(int));
 		if (bind(_fd,
 					reinterpret_cast<struct sockaddr*>(&_addr), _addrLen) < 0) {
 			closeFd();
