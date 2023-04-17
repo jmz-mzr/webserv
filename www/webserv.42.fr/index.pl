@@ -33,7 +33,7 @@ if ($ENV{'REQUEST_METHOD'} eq 'POST') {
 	exit();
 }
 
-print $cgi->header(-cookie=>$cookie);
+print $cgi->header(-type=>'text/html; charset=utf-8', -cookie=>$cookie);
 
 # print "session id: ", $session->id(), "<br>";
 # print "username: ", $session->param('username');

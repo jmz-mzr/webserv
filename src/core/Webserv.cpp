@@ -39,9 +39,8 @@ namespace	webserv
 #ifdef MACOS
 		_ioFlags = 0;
 #else
-		_ioFlags = MSG_DONTWAIT;
+		_ioFlags = MSG_DONTWAIT | MSG_NOSIGNAL;
 #endif
-		_ioFlags |= MSG_NOSIGNAL;
 	}
 
 	Webserv::~Webserv()
@@ -301,7 +300,7 @@ namespace	webserv
 		if (response.getResponseCode() == 408)
 			return (false);
 		if (client.hasResponseReady() && (pollFd->revents & ~POLLIN) != 0) {
-			if (!client.sendResponse(_ioFlags) || _showOtherRevents(pollFd))
+			if (_showOtherRevents(pollFd) || !client.sendResponse(_ioFlags))
 				return (false);
 			if (response.isPartialResponse() || client.hasResponseReady())
 				return (true);
