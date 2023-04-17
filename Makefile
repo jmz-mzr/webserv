@@ -20,7 +20,7 @@ ifeq ($(filter clean fclean, $(strip $(MAKECMDGOALS))),)
   endif
 endif
 
-ifneq ($(filter install uninstall, $(strip $(MAKECMDGOALS))),)
+ifneq ($(filter install, $(strip $(MAKECMDGOALS))),)
   override BUILD = release
 endif
 
@@ -113,26 +113,7 @@ else
 endif
 
 ifeq (debug,$(BUILD))
-  CXXFLAGS	+=	-fsanitize=address,undefined -Og -g3# -fno-omit-frame-pointer
-# 				-fstack-protector-all \
-# 				-Wpedantic \
-# 				-Wshadow \
-# 				-Wnon-virtual-dtor \
-# 				-Wold-style-cast \
-# 				-Wcast-align \
-# 				-Wunused \
-# 				-Wconversion \
-# 				-Wsign-conversion \
-# 				-Wnull-dereference \
-# 				-Wdouble-promotion \
-# 				-Wformat=2 \
-# 				-Wmisleading-indentation
-# ifeq (Linux,$(UNAME))
-#  CXXFLAGS	+=	-Wduplicated-cond \
-# 				-Wduplicated-branches \
-# 				-Wlogical-op \
-# 				-Wuseless-cast
-# endif
+  CXXFLAGS	+=	-fsanitize=address,undefined -Og -g3
   CPPFLAGS	+=	-DLOG_FILE=/tmp/webserv.log \
 				-DLOG_LEVEL=Log::Level::kDebug \
 				-DCONF_FILE=$(WORKDIR)/default.conf \
@@ -219,7 +200,7 @@ test:			header $(LIB) | $(GTESTDIR)
 	$(eval RULE = $(MAKE) -C $(TESTDIR))
 	@$(call run,$(RULE),$(MAKE_MSG),$(TESTDIR))
 	@chmod +x $(TESTBIN)
-	$(eval RULE = ./$(TESTBIN) > /dev/null)
+	$(eval RULE = ./$(TESTBIN))
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
 debug:			header all

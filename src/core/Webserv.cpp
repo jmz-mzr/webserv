@@ -41,6 +41,7 @@ namespace	webserv
 #else
 		_ioFlags = MSG_DONTWAIT;
 #endif
+		_ioFlags |= MSG_NOSIGNAL;
 	}
 
 	Webserv::~Webserv()
