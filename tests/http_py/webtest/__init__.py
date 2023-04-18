@@ -17,7 +17,6 @@ Usage:
 """
 
 from .test import TestCase
-from .utils import send_request
-from .utils import print_headers
+from .utils import send_request, print_headers
 from .env import *
 from .standard_tests import *

@@ -22,7 +22,6 @@ namespace	webserv
 	AcceptSocket::AcceptSocket(const int fdListened): Socket(kAccept)
 	{
 		const int	sendBufSize = SEND_BUFFER_SIZE;
-		const int	enable = 1;
 
 		_fd = accept(fdListened,
 				reinterpret_cast<struct sockaddr*>(&_addr), &_addrLen);
@@ -33,6 +32,7 @@ namespace	webserv
 		if (setsockopt(_fd, SOL_SOCKET, SO_SNDBUF, &sendBufSize, sizeof(int)))
 			LOG_ERROR("setsockopt(SO_SNDBUF) error: " << std::strerror(errno));
 #ifdef MACOS
+		const int	enable = 1;
 		fcntl(_fd, F_SETFL, O_NONBLOCK);
 		if (setsockopt(_fd, SOL_SOCKET, SO_NOSIGPIPE, &enable, sizeof(int)))
 			LOG_ERROR("setsockopt(SO_NOSIGPIPE) error: "
