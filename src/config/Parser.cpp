@@ -612,7 +612,8 @@ void	Parser::_addListen(Directive& currDirective)
 			std::stringstream ss;
 			ss << "Duplicated \"listen\" on \"" << ft_inet_ntoa(it->sin_addr)
 						<< ":" << ntohs(it->sin_port);
-			LOG_INFO(ss.str().c_str() << "\", ignored");
+//			LOG_INFO(ss.str().c_str() << "\", ignored");
+			_errorHandler(ss.str().c_str());
 		}
 	}
 }

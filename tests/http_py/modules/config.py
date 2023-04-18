@@ -123,8 +123,8 @@ class Config(TestCase):
             return f"Location header missing"
         else:
             url = response.getheader('Location')
-            if url != "http://localhost:8082/":
-                return f'Location header value: {url}, expected: "http://localhost:8082/"'
+            if url != "http://localhost:8080/":
+                return f'Location header value: {url}, expected: "http://localhost:8080/"'
         request = f"GET {url} HTTP/1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
         response = send_request(request)
         if response.getcode() != 200:
