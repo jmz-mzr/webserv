@@ -19,12 +19,15 @@ namespace	webserv
 			: Socket(kListen, address)
 	{
 		const int	enable = 1;
-		int			options = SO_REUSEADDR;
 
+		if (setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)))
+			LOG_ERROR("setsockopt(SO_REUSEADDR) error: "
+						<< std::strerror(errno));
 #ifdef MACOS
-		options |= SO_NOSIGPIPE;
+		if (setsockopt(_fd, SOL_SOCKET, SO_NOSIGPIPE, &enable, sizeof(int)))
+			LOG_ERROR("setsockopt(SO_NOSIGPIPE) error: "
+						<< std::strerror(errno));
 #endif
-		setsockopt(_fd, SOL_SOCKET, options, &enable, sizeof(int));
 		if (bind(_fd,
 					reinterpret_cast<struct sockaddr*>(&_addr), _addrLen) < 0) {
 			closeFd();

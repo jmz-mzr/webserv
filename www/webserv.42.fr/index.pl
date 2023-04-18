@@ -406,12 +406,12 @@ print <<'END';
 function updateUploadAction() {
   var filename = document.querySelector('input[type=file]').files[0].name;
   var form = document.getElementById('uploadForm');
-  form.action = form.action + filename;
+  form.action = "/upload/" + filename;
 }
 
 function updateDownloadAction(select) {
   var form = document.getElementById('download-form');
-  form.action = form.action + select.value;
+  form.action = "/upload/" + select.value;
 }
 
 function handleDownloadFormSubmit(event) {

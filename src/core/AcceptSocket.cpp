@@ -21,8 +21,8 @@ namespace	webserv
 
 	AcceptSocket::AcceptSocket(const int fdListened): Socket(kAccept)
 	{
-		const int	sendBufferSize = SEND_BUFFER_SIZE;
-		int			options = SO_SNDBUF;
+		const int	sendBufSize = SEND_BUFFER_SIZE;
+		const int	enable = 1;
 
 		_fd = accept(fdListened,
 				reinterpret_cast<struct sockaddr*>(&_addr), &_addrLen);
@@ -30,13 +30,16 @@ namespace	webserv
 			LOG_DEBUG("ip=" << _ip << " port=" << _port);
 			THROW_FATAL("accept() error: " << std::strerror(errno));
 		}
+		if (setsockopt(_fd, SOL_SOCKET, SO_SNDBUF, &sendBufSize, sizeof(int)))
+			LOG_ERROR("setsockopt(SO_SNDBUF) error: " << std::strerror(errno));
 #ifdef MACOS
 		fcntl(_fd, F_SETFL, O_NONBLOCK);
-		options |= SO_NOSIGPIPE;
+		if (setsockopt(_fd, SOL_SOCKET, SO_NOSIGPIPE, &enable, sizeof(int)))
+			LOG_ERROR("setsockopt(SO_NOSIGPIPE) error: "
+						<< std::strerror(errno));
 #endif
 		_port = ntohs(_addr.sin_port);
 		_ip = ft_inet_ntoa(_addr.sin_addr);
-		setsockopt(_fd, SOL_SOCKET, options, &sendBufferSize, sizeof(int));
 		LOG_INFO("New accepted socket");
 		LOG_DEBUG("fd=" << _fd << " ; addr=" << _ip << " ; port=" << _port);
 	}

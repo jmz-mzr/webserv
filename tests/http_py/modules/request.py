@@ -31,8 +31,24 @@ class Request(TestCase):
     def test_request_line_empty_lines_before() -> str:
         request = f"\n\r\nGET /lines HTTP/1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
         response = send_request(request)
+        if response.getcode() != 404:
+            return f"Status code: {response.getcode()}, expected: {404}"
+        return ""
+
+    @staticmethod
+    def test_request_line_pct_encoded1() -> str:
+        request = f"\n\r\nGET /in%64ex.html HTTP/1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
+        response = send_request(request)
         if response.getcode() != 200:
-            f"Status code: {response.getcode()}, expected: {200}"
+            return f"Status code: {response.getcode()}, expected: {200}"
+        return ""
+
+    @staticmethod
+    def test_request_line_pct_encoded2() -> str:
+        request = f"\n\r\nGET /in%65ex.html HTTP/1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
+        response = send_request(request)
+        if response.getcode() != 404:
+            return f"Status code: {response.getcode()}, expected: {404}"
         return ""
 
     @staticmethod
@@ -40,7 +56,7 @@ class Request(TestCase):
         request = f"GET / HTTP /1.1\r\nHost: {SERVER_HOST}\r\n\r\n"
         response = send_request(request)
         if response.getcode() != 400:
-            f"Status code: {response.getcode()}, expected: {400}"
+            return f"Status code: {response.getcode()}, expected: {400}"
         return ""
 
     @staticmethod
