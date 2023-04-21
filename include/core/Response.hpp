@@ -189,6 +189,7 @@ namespace	webserv
 		std::string		_contentType;
 		int64_t			_contentLength;
 		time_t			_lastModifiedTime;
+		std::string		_eTag;
 		bool			_isKeepAlive;
 		std::string		_location;
 		bool			_isChunkedResponse;

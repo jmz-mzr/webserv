@@ -128,6 +128,8 @@ namespace	webserv
 		int64_t					size;
 		std::ostringstream		eTag;
 
+		if (!_eTag.empty())
+			return (_eTag);
 		if (fileInfos) {
 			lastModified = fileInfos->st_mtime;
 			size = fileInfos->st_size;
@@ -139,15 +141,13 @@ namespace	webserv
 			return ("");
 		eTag << std::hex << "\"";
 		if (static_cast<int64_t>(lastModified) < 0)
-			eTag << "-" << static_cast<uint64_t>(-lastModified);
+			eTag << "-" << static_cast<uint64_t>(-lastModified) << "-";
 		else
-			eTag << static_cast<uint64_t>(lastModified);
-		eTag << "-";
+			eTag << static_cast<uint64_t>(lastModified) << "-";
 		if (size < 0)
-			eTag << "-" << static_cast<uint64_t>(-size);
+			eTag << "-" << static_cast<uint64_t>(-size) << "\"";
 		else
-			eTag << static_cast<uint64_t>(size);
-		eTag << "\"";
+			eTag << static_cast<uint64_t>(size) << "\"";
 		return (eTag.str());
 	}
 
@@ -661,6 +661,7 @@ namespace	webserv
 		_contentLength = fileInfos->st_size;
 		_lastModifiedTime = fileInfos->st_mtime;
 		_contentType = _getContentType(getFileExtension(_requestedFilename));
+		_eTag = _getETag(fileInfos);
 	}
 
 	bool	Response::_findMatch(const std::string& value,
@@ -1885,8 +1886,10 @@ namespace	webserv
 		_responseCode = responseCodeToKeep;
 		_contentType = "application/octet-stream";
 		_contentLength = -1;
-		if (responseCodeToKeep != 304)
+		if (responseCodeToKeep != 304) {
 			_lastModifiedTime = -1;
+			_eTag.clear();
+		}
 		_isKeepAlive = request.isKeepAlive();
 		if (responseCodeToKeep == 0)
 			_location.clear();

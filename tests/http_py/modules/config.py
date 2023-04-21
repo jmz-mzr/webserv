@@ -284,9 +284,9 @@ class Config(TestCase):
         if response.getcode() != 200:
             return f"Status code: {response.getcode()}, expected: 200"
         body = response.read()
-        if body.find(b'<a href="autoindex/">autoindex/</a>') == -1:
+        if body.find(b'<a href="dummy.html">dummy.html</a>') == -1:
             return (f"Body: {body}, expected to find: "
-                    + '<a href="autoindex/">autoindex/</a>')
+                    + '<a href="dummy.html">dummy.html</a>')
         return ""
 
     @staticmethod
