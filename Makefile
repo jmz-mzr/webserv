@@ -210,11 +210,8 @@ $(GTESTDIR):	| header
 	@$(call run,$(RULE),$(MAKE_MSG),$(GTESTDIR))
 
 test:			header $(LIB) | $(GTESTDIR)
-	$(eval RULE = $(MAKE) -C $(TESTDIR))
+	$(eval RULE = $(MAKE) -C $(TESTDIR) && chmod +x $(TESTBIN) && ./tests/run_tests.sh)
 	@$(call run,$(RULE),$(MAKE_MSG),$(TESTDIR))
-	@chmod +x $(TESTBIN)
-	$(eval RULE = ./$(TESTBIN))
-	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
 debug:			header all
 

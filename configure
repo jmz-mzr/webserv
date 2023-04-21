@@ -7,11 +7,11 @@ INSTALLDIR="$HOME/.local"
 if [ "$1" = "-u" -o "$1" = "--uninstall" ]; then
 	echo "Uninstalling \"webserv\""
 	export PATH="$(echo "$PATH" | sed -e "s|${INSTALLDIR//|/\\|}/bin:||g")"
-	echo -n "Deleting \"$INSTALLDIR\"? "
+	echo -n "Deleting \"$INSTALLDIR/*\"? "
 	read -r CONFIRM
 	if [[ "${CONFIRM:0:1}" =~ ^[Yy]$ ]]; then
-		rm -fr "$INSTALLDIR"
-		echo "\"$INSTALLDIR\" has been removed"
+		rm -ri $INSTALLDIR/*
+		echo "Removing \"$INSTALLDIR/*\" done"
 	fi
 	return
 fi
@@ -36,9 +36,9 @@ else
 	CONF_FILE="$WORKDIR/default.conf"
 	PLATFORM=$(uname -s)
 
-	if [[ "$PLATFORM" = "Linux" ]]; then
+	if [[ "$PLATFORM" == "Linux" ]]; then
 		sed -i 's/macos/ubuntu/g' "$CONF_FILE"
-	elif [[ "$PLATFORM" = "Darwin" ]]; then
+	elif [[ "$PLATFORM" == "Darwin" ]]; then
 		sed -i "" -e 's/ubuntu/macos/g' "$CONF_FILE"
 	fi
 

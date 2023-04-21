@@ -40,3 +40,5 @@ if __name__ == "__main__":
 	except Exception as err:
 		print(f"Error: {err}")
 		exit(1)
+	finally:
+		exit(TestResult.failed_test_count)

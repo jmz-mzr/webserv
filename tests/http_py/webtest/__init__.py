@@ -16,7 +16,7 @@ Usage:
         runner.main()
 """
 
-from .test import TestCase
+from .test import TestCase, TestResult
 from .utils import send_request, print_headers
 from .env import *
 from .standard_tests import *
