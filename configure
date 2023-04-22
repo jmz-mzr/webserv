@@ -10,7 +10,7 @@ if [ "$1" = "-u" -o "$1" = "--uninstall" ]; then
 	echo -n "Deleting \"$INSTALLDIR/*\"? "
 	read -r CONFIRM
 	if [[ "${CONFIRM:0:1}" =~ ^[Yy]$ ]]; then
-		rm -ri $INSTALLDIR/*
+		find -d $INSTALLDIR/* -type d -ok rm -r '{}' ';'
 		echo "Removing \"$INSTALLDIR/*\" done"
 	fi
 	return

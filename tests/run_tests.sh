@@ -57,7 +57,7 @@ while true; do
 	select opt in "${options[@]}"
 	do
 		case $opt in
-			$'\033[0;36mUnit tests\033[m') $WORKDIR/webserv_test ; ret="$?" ; break ;;
+			$'\033[0;36mUnit tests\033[m') install_webserv && $WORKDIR/webserv_test ; ret="$?" ; break ;;
 			$'\033[0;36m42 tester\033[m') install_webserv && run_webserv && run_42_tester ; ret="$?" ; break ;;
 			$'\033[0;36mPython tester\033[m') install_webserv && run_webserv && python3 "$WORKDIR/tests/http_py/main.py" ; ret="$?" ; break ;;
 			$'\033[0;90mQuit\033[m') kill_webserv ; break 2 ;;
@@ -65,7 +65,7 @@ while true; do
 		esac
 	done
 	print_header
-	[[ "$ret" -ne 0 ]] && echo -e "❌ $opt\t\033[0;31mYou n00b, you failed!!!\033[m\n" || echo -e "✅ $opt\t\033[0;32mYou're a roxXxor, GG!!!\033[m\n"
+	[[ "$ret" -ne 0 ]] && echo -e "❌  $opt\t\033[0;31mYou n00b, you failed!!!\033[m\n" || echo -e "✅  $opt\t\033[0;32mYou're a roxXxor, GG!!!\033[m\n"
 done
 
 exit 0
