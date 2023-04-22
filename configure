@@ -7,11 +7,13 @@ INSTALLDIR="$HOME/.local"
 if [ "$1" = "-u" -o "$1" = "--uninstall" ]; then
 	echo "Uninstalling \"webserv\""
 	export PATH="$(echo "$PATH" | sed -e "s|${INSTALLDIR//|/\\|}/bin:||g")"
-	echo -n "Deleting \"$INSTALLDIR/*\"? "
+	unset PREFIX
+	echo -n "Delete webserv related files in \"$INSTALLDIR/*\"? "
 	read -r CONFIRM
 	if [[ "${CONFIRM:0:1}" =~ ^[Yy]$ ]]; then
-		find -d $INSTALLDIR/* -type d -ok rm -r '{}' ';'
-		echo "Removing \"$INSTALLDIR/*\" done"
+		find $INSTALLDIR/* -depth -not -path '*share*' -name "webserv*" -ok rm -r '{}' ';'
+		find $INSTALLDIR/* -depth -not -path '*share*' -name "perl_cgi" -ok rm -r '{}' ';'
+		echo "Removing webserv related files in \"$INSTALLDIR/*\" done"
 	fi
 	return
 fi
