@@ -1,7 +1,7 @@
 # Webserv
 
 <p align="center">
-  <img src="https://github.com/jmz-mzr/readme_tests/assets/60391881/a1f5e47c-8d24-498f-9647-29b422394f37">
+  <img src="https://github.com/jmz-mzr/webserv/assets/60391881/55091ea5-d1fc-474f-aef5-94695ce98072">
 </p>
 
 <details align="center">
@@ -155,7 +155,7 @@ make test
 > To run correctly, the testers expect the `default.conf` file of this repository, and `$INSTALLDIR/var/www/webserv` to have at least the content of the `www` directory of this repository.
 
 <div align="center">
-  <video src="https://github.com/jmz-mzr/readme_tests/assets/60391881/adc26c19-6469-453c-9a1a-b40087c63a11" height="1080" width="1920" />
+  <video src="https://github.com/jmz-mzr/webserv/assets/60391881/19abd646-6048-4dc2-af2f-50f958e42858" height="1080" width="1920" />
 </div>
 
 <br>
