@@ -40,7 +40,7 @@ It implements the HTTP protocol standards as defined in [RFC 9112](https://www.r
 - Limit on allowed request methods & client body size, directory listing on/off toggling
 - CGI support for external program execution ([RFC 3875](https://www.rfc-editor.org/rfc/rfc3875))
 - PHP and Perl interactive website examples with cookie and session management
-- Multiple testers allowing a perfect CI/CD flow
+- Multiple testers allowing a perfect CI flow
 
 <br>
 
