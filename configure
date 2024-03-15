@@ -6,43 +6,57 @@ INSTALLDIR="$HOME/.local"
 
 if [ "$1" = "-u" -o "$1" = "--uninstall" ]; then
 	echo "Uninstalling \"webserv\""
-	export PATH="$(echo "$PATH" | sed -e "s|${INSTALLDIR//|/\\|}/bin:||g")"
+    non_webserv_files=$(find "${INSTALLDIR}/bin" -mindepth 1 -maxdepth 1 \
+		! -name "webserv" -print | wc -l | tr -d ' ')
+    if [ "$non_webserv_files" = "0" ]; then
+		PATH="$(echo "$PATH" | sed -e "s|${INSTALLDIR}/bin:||g")"
+		export PATH
+	fi
+	unset WORKDIR
 	unset PREFIX
 	echo -n "Delete webserv related files in \"$INSTALLDIR/*\"? "
 	read -r CONFIRM
-	if [[ "${CONFIRM:0:1}" =~ ^[Yy]$ ]]; then
-		find $INSTALLDIR/* -depth -not -path '*share*' -name "webserv*" -ok rm -r '{}' ';'
-		find $INSTALLDIR/* -depth -not -path '*share*' -name "perl_cgi" -ok rm -r '{}' ';'
-		echo "Removing webserv related files in \"$INSTALLDIR/*\" done"
-	fi
+	case "$CONFIRM" in
+		[Yy]*)
+			find "$INSTALLDIR" -path '*bin*' -name "webserv" -exec rm -i '{}' \;
+			find "$INSTALLDIR" -depth \! -path '*share*' \! -path '*bin*' \( -name "sessions" -or -name "webserv*" \) -exec rm -rI '{}' \;
+			find "$INSTALLDIR" -depth \! -path '*share*' -name "perl_cgi" -exec rm -r '{}' \;
+			echo "Removing webserv related files in \"$INSTALLDIR\" done"
+			;;
+	esac
 	return
 fi
 
 ft_realpath() {
-	[[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+	case "$1" in
+		/*) echo "$1" ;;
+		*) echo "$PWD/${1#./}" ;;
+	esac
 }
 
 case $SHELL in
-*/bash)
-	export SELF_PATH="${BASH_SOURCE[0]}"
-	;;
-*)
-	export SELF_PATH="$0"
+	*/bash)
+		SELF_PATH="${BASH_SOURCE[0]}" ;;
+	*)
+		SELF_PATH="$0" ;;
 esac
+export SELF_PATH
 
 if [ -z "$INSTALLDIR" ]; then
-	echo "Installation directory undefined, please open $SELF_PATH"
+	echo "Installation directory undefined, please edit the '$SELF_PATH' file"
 else
-	export WORKDIR="$(dirname "$(ft_realpath "$SELF_PATH")")"
+	WORKDIR="$(dirname "$(ft_realpath "$SELF_PATH")")"
+	export WORKDIR
 	WWWDIR=$WORKDIR/www
 	CONF_FILE="$WORKDIR/default.conf"
 	PLATFORM=$(uname -s)
 
-	if [[ "$PLATFORM" == "Linux" ]]; then
-		sed -i 's/macos/ubuntu/g' "$CONF_FILE"
-	elif [[ "$PLATFORM" == "Darwin" ]]; then
-		sed -i "" -e 's/ubuntu/macos/g' "$CONF_FILE"
-	fi
+ 	case "$PLATFORM" in
+		Linux)
+			sed -i 's/macos/ubuntu/g' "$CONF_FILE" ;;
+		Darwin)
+			sed -i "" -e 's/ubuntu/macos/g' "$CONF_FILE"
+	esac
 
 	chmod +x $WWWDIR/webserv.42.fr/{index.php,index.pl,cgi-bin/info.php}
 	chmod -R +x $WWWDIR/webserv.42.test/cgi-bin/
@@ -57,9 +71,11 @@ else
 	elif [ ! -w "$INSTALLDIR" ]; then
 		echo "You do not have write permission on \"$INSTALLDIR\""
 	else
-		export PREFIX=$INSTALLDIR
-		if [[ -z "$(echo "$PATH" | grep "$PREFIX/bin")" ]]; then
-			export PATH="$PREFIX/bin:$PATH"
+		PREFIX=$INSTALLDIR
+		export PREFIX
+		if [ -z "$(echo "$PATH" | grep "$PREFIX/bin")" ]; then
+			PATH="$PREFIX/bin:$PATH"
+			export PATH
 		fi
 		echo "\"webserv\"'s installation directory is \"$INSTALLDIR\""
 	fi
