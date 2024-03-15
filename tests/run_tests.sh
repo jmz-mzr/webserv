@@ -23,13 +23,13 @@ print_header() {
 
 install_webserv() {
 	which webserv &> /dev/null
-	if [[ $? ]]; then
+	if [[ $? != 0 ]]; then
 		make -sC "$WORKDIR" install
 	fi
 }
 
 run_webserv() {
-	webserv &> /dev/null &
+	webserv $WORKDIR/default.conf &> /dev/null &
 }
 
 kill_webserv() {

@@ -3,10 +3,10 @@ import os
 
 
 def init_test_folder():
-	root_dir = os.environ.get("WORKDIR")
+	root_dir = os.environ.get("PREFIX")
 	if not root_dir:
-		raise NameError("WORKDIR environment variable undefined")
-	upload_dir = os.path.join(root_dir, "www/webserv.test/upload")
+		raise NameError("PREFIX environment variable undefined")
+	upload_dir = os.path.join(root_dir, "var/www/webserv/webserv.test/upload")
 	if not os.path.isdir(upload_dir):
 		raise FileNotFoundError(f"{upload_dir} not found")
 	for filename in os.listdir(upload_dir):
