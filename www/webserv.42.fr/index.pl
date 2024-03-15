@@ -227,7 +227,7 @@ print qq(  <h3 class="w3-center w3-text-teal">WELCOME DEAR @{[uc($session->param
   <p class="w3-center"><em>Do you love surfing?</em></p>
   <div class="w3-row">
     <div class="w3-center w3-padding-large">
-      <img src="https://lepetitjournal.com/sites/default/files/2020-02/Kelly%20Slater.jpg" class="w3-round w3-image w3-opacity w3-hover-opacity-off" alt="Photo of Me" width="500" height="333">
+      <img src="https://backoffice.lepetitjournal.com/sites/default/files/2020-02/Kelly%20Slater.jpg" class="w3-round w3-image opacity-min w3-hover-opacity" alt="Photo of Me" width="500" height="333">
     </div>
     <div class="w3-center w3-padding-large">
 	  <p>Well, since you're here we guess that you do young @{[$session->param('username')]}!<br><br>But you feel ignored and misunderstood as you're not the one pictured here?<br>Tell us then who you are right away!</p>);
@@ -311,7 +311,7 @@ END
 my $dir = File::Spec->catfile($ENV{'DOCUMENT_ROOT'}, 'upload');
 my @files;
 if (opendir(my $dh, $dir)) {
-	@files = grep { !/^\.|upload\.php$/ && !-d $_ } readdir($dh);
+	@files = grep { !/^\.|upload\.(php|pl)$/ && !-d $_ } readdir($dh);
 	closedir($dh);
 }
 print <<END;
@@ -360,7 +360,7 @@ print <<'END';
     <div class="w3-col m8 w3-panel">
       <div class="w3-large w3-margin-bottom">
         <i class="fa fa-map-marker fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Paris, FR<br>
-        <i class="fa fa-phone fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Discord: jmazoyer#7419 / (⌐◉_◉)#1446 / Masylk#8775<br>
+        <i class="fa fa-phone fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Discord: Discord: jmazoyer / morizur / masylk<br>
         <i class="fa fa-envelope fa-fw w3-hover-text-black w3-xlarge w3-margin-right"></i> Email: jmazoyer/flohrel/mtogbe@student.42.fr<br>
       </div>
       <p>Swing by 42 for a cup of <i class="fa fa-coffee"></i>, or leave us a loud & clear note:</p>
