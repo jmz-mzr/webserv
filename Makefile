@@ -16,7 +16,7 @@ endif
 
 ifeq ($(filter clean fclean, $(strip $(MAKECMDGOALS))),)
   ifeq ($(PREFIX),)
-    $(error 'Installation directory undefined')
+    $(error Installation directory undefined, run 'source configure')
   endif
 endif
 
@@ -26,6 +26,12 @@ endif
 
 ifneq ($(filter debug, $(strip $(MAKECMDGOALS))),)
   override BUILD = debug
+endif
+
+ifeq ($(filter clean fclean, $(strip $(MAKECMDGOALS))),)
+  ifeq ($(shell which cmake && echo 0 || echo 1), 1)
+    $(error Please install cmake first)
+  endif
 endif
 
 # ===============================> Directories <============================== #
@@ -52,7 +58,7 @@ LOGDIR		=	$(DATADIR)/log
 
 INSTALLDIRS	=	$(BINDIR) $(CONFDIR) $(LIBDIR) $(DATADIR) $(LOGDIR) $(WWWDIR)
 
-WEBSERVLNK	=	$(WWWDIR)/$(NAME)
+WEBSERVDIR	=	$(WWWDIR)/$(NAME)
 
 VPATH		:=	$(addprefix $(SRCDIR)/,$(SUBDIR)) $(SRCDIR)
 
@@ -129,17 +135,21 @@ ifeq (debug,$(BUILD))
 				# -Wsign-conversion
   CPPFLAGS	+=	-DLOG_FILE=/tmp/webserv.log \
 				-DLOG_LEVEL=Log::Level::kDebug \
-				-DCONF_FILE=$(WORKDIR)/default.conf \
-				-DWEBSERV_ROOT=$(WORKDIR)/www \
-				-DCGI_SESSION=$(WORKDIR)/www/sessions \
-				-DLIB_PERL_CGI=$(WORKDIR)/$(LIBPERLDIR)/$(LIBPERLCGI)
+				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf \
+				-DWEBSERV_ROOT=$(WEBSERVDIR) \
+				-DCGI_SESSION=$(WEBSERVDIR)/sessions \
+				-DLIB_PERL_CGI=$(LIBDIR)/$(LIBPERLCGI)
+				# -DCONF_FILE=$(WORKDIR)/default.conf \
+				# -DWEBSERV_ROOT=$(WORKDIR)/www \
+				# -DCGI_SESSION=$(WORKDIR)/www/sessions \
+				# -DLIB_PERL_CGI=$(WORKDIR)/$(LIBPERLDIR)/$(LIBPERLCGI)
 else
   CXXFLAGS	+=	-O3
   CPPFLAGS	+=	-DLOG_FILE=$(LOGDIR)/webserv.log \
 				-DLOG_LEVEL=Log::Level::kError \
 				-DCONF_FILE=$(SYSCONFDIR)/$(NAME)/default.conf \
-				-DWEBSERV_ROOT=$(WEBSERVLNK) \
-				-DCGI_SESSION=$(WEBSERVLNK)/sessions \
+				-DWEBSERV_ROOT=$(WEBSERVDIR) \
+				-DCGI_SESSION=$(WEBSERVDIR)/sessions \
 				-DLIB_PERL_CGI=$(LIBDIR)/$(LIBPERLCGI)
 endif
 
@@ -186,22 +196,22 @@ $(INSTALLDIRS):	| header
 	$(eval RULE = mkdir -p $@)
 	@$(call run,$(RULE),$(MKDIR_MSG),$(B_BLUE))
 
-$(WEBSERVLNK):	| header
-	$(eval RULE = ln -s $(WORKDIR)/www $(WEBSERVLNK))
-	@$(call run,$(RULE),$(LN_MSG),$(B_BLUE))
+$(WEBSERVDIR):	| header
+	$(eval RULE = cp -R $(WORKDIR)/www/ $(WEBSERVDIR))
+	@$(call run,$(RULE),$(CP_MSG),$(B_BLUE))
 
 $(LIB):			$(filter-out $(BUILDIR)/main.o, $(OBJ)) | header
 	$(eval RULE = $(AR) rcs $@ $?)
 	@$(call run,$(RULE),$(AR_MSG),$(B_BLUE))
 
-install:		header $(BIN) $(LIB) | $(INSTALLDIRS) $(WEBSERVLNK)
+install:		header $(BIN) $(LIB) | $(INSTALLDIRS) $(WEBSERVDIR)
 	$(eval RULE = install -m 755 $(BIN) $(BINDIR)/$(NAME) ;\
-		cp default.conf $(CONFDIR)/ ;\
+		cp -i default.conf $(CONFDIR)/ ;\
 		cp -Rf $(LIBPERLDIR)/$(LIBPERLCGI) $(LIBDIR))
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
 uninstall:		header
-	$(eval RULE = $(RM) -rf $(BINDIR)/$(NAME) $(WEBSERVLNK) $(CONFDIR))
+	$(eval RULE = $(RM) -rf $(BINDIR)/$(NAME) $(WEBSERVDIR) $(CONFDIR))
 	@$(call run,$(RULE),$(PROCESS_MSG),$(B_BLUE))
 
 $(GTESTDIR):	| header

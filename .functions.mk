@@ -52,6 +52,7 @@ NO_COLOR	=	\033[m
 
 MKDIR_MSG	=	Creating directory
 LN_MSG		=	Creating softlink
+CP_MSG		=	Copying directory
 AR_MSG		=	Creating/Updating
 PROCESS_MSG	=	Processing
 FLAGS_MSG	=	Compiler flags
