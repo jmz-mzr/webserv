@@ -61,7 +61,6 @@ namespace	webserv
 		void			_closeRequestedFile();
 		void			_loadDirLocation(const Request& request);
 		void			_loadFileHeaders(const struct stat* fileInfos);
-		std::string		_getFileExtension();
 		int				_checkConditionalHeaders(const Request& request,
 											const struct stat* fileInfos) const;
 		int				_checkIfMatch(const Request& request,

@@ -24,13 +24,15 @@ ConfigParser::ConfigParser(const std::string& path)
 {
 	_file.open(_filePath.c_str());
 	if (!_file.good()) {
-		LOG_WARN("Cannot open \"" << _filePath << "\"");
-		if (_filePath == XSTR(CONF_FILE))
+		if (_filePath == XSTR(CONF_FILE)) {
+			LOG_ERROR("Cannot open the default \"" << _filePath << "\" file");
 			THROW_LOGIC("Loading configuration failed");
+		}
+		LOG_WARN("Cannot open \"" << _filePath << "\"");
 		_filePath = XSTR(CONF_FILE);
 		_file.open(_filePath.c_str());
 		if (!_file.good()) {
-			LOG_WARN("Cannot open \"" << _filePath << "\"");
+			LOG_ERROR("Cannot open the default \"" << _filePath << "\" file");
 			THROW_LOGIC("Loading configuration failed");
 		}
 	}

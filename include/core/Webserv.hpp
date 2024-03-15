@@ -59,9 +59,7 @@ namespace	webserv
 		ssize_t		_receiveClientRequest(Client& client, pollFd_iter pollFd);
 		bool		_handleClientRequest(Client& client);
 		bool		_handleClientResponse(Client& client, pollFd_iter pollFd);
-		bool		_sendResponse(Client& client, int clientFd);
 		void		_usageHelper();
-		void		_parseConfig(std::string configFilePath);
 
 		char						_buffer[RECV_BUFFER_SIZE];
 		std::string					_recvBuffer;

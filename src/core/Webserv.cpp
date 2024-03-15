@@ -261,7 +261,7 @@ namespace	webserv
 			return (-1);
 		if (client.isProcessingRequest()) {
 			LOG_DEBUG("Finish responding to the last request before listening"
-					<< " to this client (fd=" << clientFd << ")");
+					<< " again to this client (fd=" << clientFd << ")");
 			return (1);
 		}
 		if (!(pollFd->revents & POLLIN))
