@@ -1,7 +1,7 @@
 # Webserv
 
 <p align="center">
-  <img src="https://github.com/jmz-mzr/webserv/assets/60391881/55091ea5-d1fc-474f-aef5-94695ce98072">
+  <img alt="GIF showing an interactive website served with Webserv" src="https://github.com/jmz-mzr/webserv/assets/60391881/55091ea5-d1fc-474f-aef5-94695ce98072">
 </p>
 
 <details align="center">
