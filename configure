@@ -55,7 +55,7 @@ else
 		Linux)
 			sed -i 's/macos/ubuntu/g' "$CONF_FILE" ;;
 		Darwin)
-			sed -i "" -e 's/ubuntu/macos/g' "$CONF_FILE"
+			sed -i "" -e 's/ubuntu/macos/g' "$CONF_FILE" ;;
 	esac
 
 	chmod +x $WWWDIR/webserv.42.fr/{index.php,index.pl,cgi-bin/info.php}
